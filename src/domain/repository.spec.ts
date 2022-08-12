@@ -96,3 +96,44 @@ describe("isCheckedOut", () => {
     expect(repository.isCheckedOut()).toEqual(true);
   });
 });
+
+describe("equals", () => {
+  test("true when two repositories have the same owner and name", () => {
+    const a = new Repository("foo", "bar");
+    const b = new Repository("foo", "bar");
+    expect(a.equals(b)).toEqual(true);
+  });
+
+  test("true when one is checked out", async () => {
+    const a = new Repository("foo", "bar");
+    await a.checkout();
+    const b = new Repository("foo", "bar");
+    expect(a.equals(b)).toEqual(true);
+  });
+
+  test("false when two repositories have different name", () => {
+    const a = new Repository("foo", "bar");
+    const b = new Repository("moo", "bar");
+    expect(a.equals(b)).toEqual(false);
+  });
+
+  test("false when two repositories have different owner", () => {
+    const a = new Repository("foo", "bar");
+    const b = new Repository("foo", "cow");
+    expect(a.equals(b)).toEqual(false);
+  });
+
+  test("commutative", () => {
+    const a = new Repository("foo", "bar");
+    const b = new Repository("foo", "bar");
+
+    expect(a.equals(b)).toEqual(true);
+    expect(b.equals(a)).toEqual(true);
+  });
+
+  test("idempotent", () => {
+    const a = new Repository("foo", "bar");
+
+    expect(a.equals(a)).toEqual(true);
+  });
+});

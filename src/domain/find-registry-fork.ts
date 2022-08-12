@@ -2,7 +2,10 @@ import { GitHubClient } from "../infrastructure/github.js";
 import { Repository } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
 
-const CANONICAL_BCR = "bazelbuild/bazel-central-registry";
+export const CANONICAL_BCR = new Repository(
+  "bazel-central-regisrty",
+  "bazelbuild"
+);
 
 export class FindRegistryForkService {
   constructor(private readonly githubClient: GitHubClient) {}
@@ -34,9 +37,8 @@ export class FindRegistryForkService {
       candidateForks.map((fork) => this.githubClient.getSourceRepository(fork))
     );
 
-    const verifiedCandidateForks = candidateForks.filter(
-      (bcrFork, index) =>
-        candidateForkSourceRepos[index].canonicalName === CANONICAL_BCR
+    const verifiedCandidateForks = candidateForks.filter((bcrFork, index) =>
+      candidateForkSourceRepos[index].equals(CANONICAL_BCR)
     );
     return verifiedCandidateForks;
   }

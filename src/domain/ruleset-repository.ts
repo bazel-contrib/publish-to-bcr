@@ -1,5 +1,5 @@
-import { globbySync } from "globby";
 import path from "node:path";
+import fs from "node:fs";
 import { Repository } from "./repository.js";
 
 export class RulesetRepository extends Repository {
@@ -13,24 +13,26 @@ export class RulesetRepository extends Repository {
     const rulesetRepo = new RulesetRepository(name, owner);
     await rulesetRepo.checkout(verifyAtRef);
 
-    const templateFiles = [
+    const requiredFiles = [
       path.join("MODULE.bazel"),
       path.join(RulesetRepository.BCR_TEMPLATE_DIR, "metadata.template.json"),
       path.join(RulesetRepository.BCR_TEMPLATE_DIR, "presubmit.yml"),
       path.join(RulesetRepository.BCR_TEMPLATE_DIR, "source.template.json"),
     ];
 
-    const resolvedFiles = globbySync(templateFiles, {
-      onlyFiles: true,
-      dot: true,
-      cwd: rulesetRepo.diskPath,
-    });
-    if (resolvedFiles.length !== templateFiles.length) {
+    const missingFiles = [];
+    for (let file of requiredFiles) {
+      if (!fs.existsSync(path.join(rulesetRepo.diskPath, file))) {
+        missingFiles.push(file);
+      }
+    }
+
+    if (missingFiles.length) {
       throw new Error(
         `Ruleset repository ${
           rulesetRepo.canonicalName
-        } is missing one of the following required files: ${JSON.stringify(
-          templateFiles
+        } is missing the following required files: ${JSON.stringify(
+          missingFiles
         )}.`
       );
     }
