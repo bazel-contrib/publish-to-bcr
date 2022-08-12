@@ -9,9 +9,15 @@ instance, see [Setup for existing deployment](#setup-for-existing-deployment).
 
 Follow these steps to deploy an app environment for the first time.
 
-### Create GitHub app
+### Create GitHub apps
 
-Create a new GitHub application.
+You must create two GitHub applications, the Webhook App which will respond to ruleset release
+events and publish an new entry to a fork, as well as a Bot App which posts pull requests to the
+Bazel Central Registry.
+
+The purpose of the Bot App is to use a more restricted set of permissions when installed to
+the Bazel Central Registry compared to the more permissive permissions required on the Webhook
+App which is installed to ruleset repositories and BCR forks.
 
 ### Create project
 
@@ -56,51 +62,65 @@ yarn build
 
 ### Deploy the app
 
-Run terraform apply to deploy the application, passing the id of the GitHub app you created.
+Run terraform apply to deploy the application, passing the id of the GitHub apps you created.
 Note that you may wish to customize other variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
-terraform apply --var "github_app_id=<GITHUB_APP_ID>"
+terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>"
 ```
 
 ### Setup webhook
 
-Activate the Webhook in your GitHub app settings and set the url to the trigger url of the deployed cloud function.
+Activate the Webhook in the GitHub Webhook App settings and set the url to the trigger url of the deployed cloud function.
 Generate a Webhook Secret and copy it for the next step. The secret lets us verify that incoming requests to our
 cloud function are indeed from GitHub.
 
 ### Set app permissions
 
-The GitHub app requires the following permissions to be set in order to function correctly.
+The two GitHub apps requires the following permissions to be set in order to function correctly.
 Enable these under the app settings.
+
+#### Webhook App
 
 Under Repository permissions, set:
 
 - Contents (read & write)
-- Pull requests (read & write)
 
 Under Event subscriptions, check:
 
 - Release
 
+### Bot App
+
+Under Repository permissions, set:
+
+- Pull requests (read & write)
+
 ### Input secrets
 
 Open the [Secret Manager](https://console.cloud.google.com/security/secret-manager) for your Google Cloud Project
-and new secret versions for each of the secrets:
+and new secret versions for each of the Webhook App secrets:
 
 - `github-app-webhook-secret` (see [Setup webhook](#setup-webhook))
 - `github-app-client-id` (visible in app settings)
 - `github-app-client-secret` (generated in app settings)
 - `github-app-private-key` (generated in app settings)
 
-### Add app to dev environment and BCR
+Similarly enter secrets for the Bot App:
 
-You may wish to setup a ruleset, BCR fork, and (fake) BCR for testing. Install the GitHub app you
-created for this environment to those repositories.
+- `github-bot-app-client-id` (visible in app settings)
+- `github-bot-app-client-secret` (generated in app settings)
+- `github-bot-app-private-key` (generated in app settings)
+
+### Add apps to dev environment and BCR
+
+You may wish to setup a ruleset, BCR fork, and (fake) BCR for testing. Install the Webhook App you
+created for this environment to the ruleset repository and the BCR fork. Install the Bot App to
+the fake BCR.
 
 ## Setup for existing deployment
 
-Follow these steps if a GitHub already exists and has been deployed to a Google Cloud Platform project.
+Follow these steps if an environment has already been setup and deployed to a Google Cloud Platform project.
 
 ### Initialize terraform backend
 
@@ -127,5 +147,5 @@ Run terraform apply to deploy the application, passing the id of the existing Gi
 Note that you may wish to customize other variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
-terraform apply --var "github_app_id=<GITHUB_APP_ID>"
+terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>"
 ```

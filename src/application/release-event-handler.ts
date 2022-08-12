@@ -24,8 +24,12 @@ export class ReleaseEventHandler {
       const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
       const releaser = event.payload.sender.login;
 
-      const appAuth = await this.getGitHubAppAuth();
-      this.githubClient.setAppAuth(appAuth);
+      const [webhookAppAuth, botAppAuth] = await Promise.all([
+        this.getGitHubWebhookAppAuth(),
+        this.getGitHubBotAppAuth(),
+      ]);
+
+      this.githubClient.setAppAuth(webhookAppAuth);
 
       console.log(
         `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser}`
@@ -68,6 +72,8 @@ export class ReleaseEventHandler {
             `Pushed bcr entry to fork ${bcrFork.canonicalName} on branch ${branch}`
           );
 
+          this.githubClient.setAppAuth(botAppAuth);
+
           await this.publishEntryService.sendRequest(
             rulesetRepo,
             tag,
@@ -88,7 +94,7 @@ export class ReleaseEventHandler {
       }
     };
 
-  private async getGitHubAppAuth(): Promise<GitHubAuth> {
+  private async getGitHubWebhookAppAuth(): Promise<GitHubAuth> {
     const [githubAppPrivateKey, githubAppClientId, githubAppClientSecret] =
       await Promise.all([
         this.secretsClient.accessSecret("github-app-private-key"),
@@ -97,6 +103,21 @@ export class ReleaseEventHandler {
       ]);
     return {
       appId: process.env.GITHUB_APP_ID,
+      privateKey: githubAppPrivateKey,
+      clientId: githubAppClientId,
+      clientSecret: githubAppClientSecret,
+    };
+  }
+
+  private async getGitHubBotAppAuth(): Promise<GitHubAuth> {
+    const [githubAppPrivateKey, githubAppClientId, githubAppClientSecret] =
+      await Promise.all([
+        this.secretsClient.accessSecret("github-bot-app-private-key"),
+        this.secretsClient.accessSecret("github-bot-app-client-id"),
+        this.secretsClient.accessSecret("github-bot-app-client-secret"),
+      ]);
+    return {
+      appId: process.env.GITHUB_BOT_APP_ID,
       privateKey: githubAppPrivateKey,
       clientId: githubAppClientId,
       clientSecret: githubAppClientSecret,
