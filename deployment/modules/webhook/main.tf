@@ -30,7 +30,8 @@ resource "google_cloudfunctions_function" "publish_to_bcr_function" {
   timeout = 240
 
   environment_variables = {
-    GITHUB_APP_ID = var.github_app_id
+    GITHUB_APP_ID = var.github_app_id,
+    GITHUB_BOT_APP_ID = var.github_bot_app_id,
     BAZEL_CENTRAL_REGISTRY = var.bazel_central_registry
   }
 }
@@ -129,3 +130,67 @@ resource "google_secret_manager_secret_iam_binding" "github_app_client_secret_bi
     "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
   ]
 }
+
+resource "google_secret_manager_secret" "github_bot_app_private_key" {
+  secret_id = "github-bot-app-private-key"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_iam_binding" "github_bot_app_private_key_binding" {
+  project = var.project_id
+  secret_id = google_secret_manager_secret.github_bot_app_private_key.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  members = [
+    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+  ]
+}
+
+resource "google_secret_manager_secret" "github_bot_app_client_id" {
+  secret_id = "github-bot-app-client-id"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_iam_binding" "github_bot_app_client_id_binding" {
+  project = var.project_id
+  secret_id = google_secret_manager_secret.github_bot_app_client_id.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  members = [
+    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+  ]
+}
+
+resource "google_secret_manager_secret" "github_bot_app_client_secret" {
+  secret_id = "github-bot-app-client-secret"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_iam_binding" "github_bot_app_client_secret_binding" {
+  project = var.project_id
+  secret_id = google_secret_manager_secret.github_bot_app_client_secret.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  members = [
+    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+  ]
+}
+
