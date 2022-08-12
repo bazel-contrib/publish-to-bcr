@@ -40,4 +40,8 @@ export class Repository {
 
     await Repository.gitClient.checkout(this._diskPath, ref);
   }
+
+  public equals(other: Repository): boolean {
+    return this.name == other.name && this.owner === other.owner;
+  }
 }
