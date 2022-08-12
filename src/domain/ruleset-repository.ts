@@ -3,7 +3,7 @@ import fs from "node:fs";
 import { Repository } from "./repository.js";
 
 export class RulesetRepository extends Repository {
-  private static readonly BCR_TEMPLATE_DIR = ".bcr";
+  public static readonly BCR_TEMPLATE_DIR = ".bcr";
 
   public static async create(
     name: string,
