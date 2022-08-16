@@ -25,3 +25,20 @@ variable "bazel_central_registry" {
     description = "Bazel central registry to publish to"
     default = "bazelbuild/bazel-central-registry"
 }
+
+variable "notifications_email" {
+    type = string
+    description = "Email address that will send notifications"
+}
+
+variable "smtp_host" {
+    type = string
+    description = "SMTP host to use for sending emails"
+    default = "in-v3.mailjet.com"
+}
+
+variable "smtp_port" {
+    type = number
+    description = "SMTP port to use for sending emails"
+    default = 465
+}

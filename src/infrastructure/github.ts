@@ -1,6 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { createAppAuth, StrategyOptions } from "@octokit/auth-app";
 import { Repository } from "../domain/repository.js";
+import { User } from "../domain/user.js";
 
 export class GitHubClient {
   // Cache installation tokens as they expire after an hour, which is more than
@@ -96,6 +97,15 @@ export class GitHubClient {
       pull_number: pullNumber,
       reviewers: reviewers,
     });
+  }
+
+  public async getRepoUser(
+    username: string,
+    repository: Repository
+  ): Promise<User> {
+    const octokit = await this.getRepoAuthorizedOctokit(repository);
+    const { data } = await octokit.rest.users.getByUsername({ username });
+    return { username, email: data.email };
   }
 
   private async getRepositoryInstallation(

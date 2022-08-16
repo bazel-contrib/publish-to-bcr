@@ -8,6 +8,8 @@ import { ReleasePublishedEvent } from "@octokit/webhooks-types";
 import { RulesetRepository } from "../domain/ruleset-repository.js";
 import { StrategyOptions as GitHubAuth } from "@octokit/auth-app";
 import { GitHubClient } from "../infrastructure/github.js";
+import { EmailClient } from "../infrastructure/email.js";
+import { NotificationsService } from "./notifications.js";
 
 export class ReleaseEventHandler {
   constructor(
@@ -15,82 +17,101 @@ export class ReleaseEventHandler {
     private readonly secretsClient: SecretsClient,
     private readonly findRegistryForkService: FindRegistryForkService,
     private readonly createEntryService: CreateEntryService,
-    private readonly publishEntryService: PublishEntryService
+    private readonly publishEntryService: PublishEntryService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   public readonly handle: HandlerFunction<"release.published", unknown> =
     async (event) => {
-      const tag = event.payload.release.tag_name;
-      const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
-      const releaser = event.payload.sender.login;
-
       const [webhookAppAuth, botAppAuth] = await Promise.all([
         this.getGitHubWebhookAppAuth(),
         this.getGitHubBotAppAuth(),
       ]);
-
       this.githubClient.setAppAuth(webhookAppAuth);
+
+      const tag = event.payload.release.tag_name;
+      const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
+      const releaser = await this.githubClient.getRepoUser(
+        event.payload.sender.login,
+        rulesetRepo
+      );
 
       console.log(
         `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser}`
       );
 
-      const candidateBcrForks =
-        await this.findRegistryForkService.findCandidateForks(
-          rulesetRepo,
-          releaser
-        );
-
-      if (candidateBcrForks.length === 0) {
-        console.log(
-          `Could not find bcr fork for repository ${rulesetRepo.canonicalName}`
-        );
-        return;
-      }
-
-      console.log(
-        `Found ${candidateBcrForks.length} candidate forks: ${JSON.stringify(
-          candidateBcrForks.map((fork) => fork.canonicalName)
-        )}.`
-      );
-
-      for (let bcrFork of candidateBcrForks) {
-        try {
-          console.log(`Selecting fork ${bcrFork.canonicalName}.`);
-
-          const bcr = Repository.fromCanonicalName(
-            process.env.BAZEL_CENTRAL_REGISTRY
-          );
-          const branch = await this.createEntryService.newEntry(
+      try {
+        const candidateBcrForks =
+          await this.findRegistryForkService.findCandidateForks(
             rulesetRepo,
-            bcrFork,
-            bcr,
-            tag
-          );
-
-          console.log(
-            `Pushed bcr entry to fork ${bcrFork.canonicalName} on branch ${branch}`
-          );
-
-          this.githubClient.setAppAuth(botAppAuth);
-
-          await this.publishEntryService.sendRequest(
-            rulesetRepo,
-            tag,
-            bcrFork,
-            bcr,
-            branch,
             releaser
           );
 
-          console.log(`Created pull request against ${bcr.canonicalName}`);
-          break;
-        } catch (e) {
+        if (candidateBcrForks.length === 0) {
           console.log(
-            `Failed to create pull request using fork ${bcrFork.canonicalName}`
+            `Could not find bcr fork for repository ${rulesetRepo.canonicalName}`
           );
-          console.log(e);
+          this.notificationsService.notifyError(releaser);
+          return;
         }
+
+        console.log(
+          `Found ${candidateBcrForks.length} candidate forks: ${JSON.stringify(
+            candidateBcrForks.map((fork) => fork.canonicalName)
+          )}.`
+        );
+
+        const errors: Error[] = [];
+        for (let bcrFork of candidateBcrForks) {
+          try {
+            console.log(`Selecting fork ${bcrFork.canonicalName}.`);
+
+            const bcr = Repository.fromCanonicalName(
+              process.env.BAZEL_CENTRAL_REGISTRY
+            );
+            const branch = await this.createEntryService.newEntry(
+              rulesetRepo,
+              bcrFork,
+              bcr,
+              tag
+            );
+
+            console.log(
+              `Pushed bcr entry to fork ${bcrFork.canonicalName} on branch ${branch}`
+            );
+
+            this.githubClient.setAppAuth(botAppAuth);
+
+            await this.publishEntryService.sendRequest(
+              rulesetRepo,
+              tag,
+              bcrFork,
+              bcr,
+              branch,
+              releaser
+            );
+
+            console.log(`Created pull request against ${bcr.canonicalName}`);
+            break;
+          } catch (error) {
+            console.log(
+              `Failed to create pull request using fork ${bcrFork.canonicalName}`
+            );
+
+            console.log(error);
+            errors.push(error);
+          }
+        }
+
+        if (errors.length > 0) {
+          await this.notificationsService.notifyError(releaser);
+          return;
+        }
+
+        await this.notificationsService.notifySuccess(releaser);
+      } catch (error) {
+        await this.notificationsService.notifyError(releaser);
+        return;
       }
     };
 

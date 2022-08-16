@@ -1,5 +1,6 @@
 import { GitHubClient } from "../infrastructure/github.js";
 import { Repository } from "./repository.js";
+import { User } from "./user.js";
 
 export class PublishEntryService {
   constructor(private readonly githubClient: GitHubClient) {}
@@ -10,7 +11,7 @@ export class PublishEntryService {
     bcrForkRepo: Repository,
     bcr: Repository,
     branch: string,
-    releaser: string
+    releaser: User
   ): Promise<void> {
     const pullNumber = await this.githubClient.createPullRequest(
       bcrForkRepo,
@@ -19,6 +20,6 @@ export class PublishEntryService {
       "main",
       `Publish ${rulesetRepo.canonicalName}@${tag}`
     );
-    await this.githubClient.requestReview(bcr, pullNumber, [releaser]);
+    await this.githubClient.requestReview(bcr, pullNumber, [releaser.username]);
   }
 }

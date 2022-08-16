@@ -23,3 +23,18 @@ variable "bazel_central_registry" {
     type = string
     description = "Bazel central registry to publish to"
 }
+
+variable "notifications_email" {
+    type = string
+    description = "Email address that will send notifications"
+}
+
+variable "smtp_host" {
+    type = string
+    description = "SMTP host to use for sending emails"
+}
+
+variable "smtp_port" {
+    type = number
+    description = "SMTP port to use for sending emails"
+}

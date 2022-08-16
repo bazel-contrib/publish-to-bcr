@@ -1,6 +1,7 @@
 import { GitHubClient } from "../infrastructure/github.js";
 import { Repository } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
+import { User } from "./user.js";
 
 export const CANONICAL_BCR = new Repository(
   "bazel-central-regisrty",
@@ -15,11 +16,11 @@ export class FindRegistryForkService {
   // if either exist.
   public async findCandidateForks(
     rulesetRepo: RulesetRepository,
-    releaser: string
+    releaser: User
   ): Promise<Repository[]> {
     const potentialForkOwners = new Set<string>();
     potentialForkOwners.add(rulesetRepo.owner);
-    potentialForkOwners.add(releaser);
+    potentialForkOwners.add(releaser.username);
 
     const allForks = (
       await Promise.all(
