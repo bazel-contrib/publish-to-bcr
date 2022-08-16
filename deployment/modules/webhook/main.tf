@@ -32,7 +32,10 @@ resource "google_cloudfunctions_function" "publish_to_bcr_function" {
   environment_variables = {
     GITHUB_APP_ID = var.github_app_id,
     GITHUB_BOT_APP_ID = var.github_bot_app_id,
-    BAZEL_CENTRAL_REGISTRY = var.bazel_central_registry
+    BAZEL_CENTRAL_REGISTRY = var.bazel_central_registry,
+    NOTIFICATIONS_EMAIL = var.notifications_email,
+    SMTP_HOST = var.smtp_host,
+    SMTP_PORT = var.smtp_port,
   }
 }
 
@@ -194,3 +197,45 @@ resource "google_secret_manager_secret_iam_binding" "github_bot_app_client_secre
   ]
 }
 
+
+resource "google_secret_manager_secret" "notifications_email_user" {
+  secret_id = "notifications-email-user"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_iam_binding" "notifications_email_user_binding" {
+  project = var.project_id
+  secret_id = google_secret_manager_secret.notifications_email_user.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  members = [
+    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+  ]
+}
+
+resource "google_secret_manager_secret" "notifications_email_password" {
+  secret_id = "notifications-email-password"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_iam_binding" "notifications_email_password_binding" {
+  project = var.project_id
+  secret_id = google_secret_manager_secret.notifications_email_password.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  members = [
+    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+  ]
+}

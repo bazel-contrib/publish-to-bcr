@@ -62,11 +62,11 @@ yarn build
 
 ### Deploy the app
 
-Run terraform apply to deploy the application, passing the id of the GitHub apps you created.
+Run terraform apply to deploy the application, passing the id of the GitHub apps you created and the notification sender email.
 Note that you may wish to customize other variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
-terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>"
+terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>"  --var "notifications_email=<NOTIFICATIONS_EMAIL>"
 ```
 
 ### Setup webhook
@@ -112,6 +112,11 @@ Similarly enter secrets for the Bot App:
 - `github-bot-app-client-secret` (generated in app settings)
 - `github-bot-app-private-key` (generated in app settings)
 
+Enter secrets to authenticate with an SMTP server for sending notifications:
+
+- `notifications-email-user`
+- `notifications-email-password`
+
 ### Add apps to dev environment and BCR
 
 You may wish to setup a ruleset, BCR fork, and (fake) BCR for testing. Install the Webhook App you
@@ -143,9 +148,9 @@ yarn build
 
 ### Deploy the app
 
-Run terraform apply to deploy the application, passing the id of the existing GitHub app.
+Run terraform apply to deploy the application, passing the ids of the two github apps and the notification sender email.
 Note that you may wish to customize other variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
-terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>"
+terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>" --var "notifications_email=<NOTIFICATIONS_EMAIL>"
 ```

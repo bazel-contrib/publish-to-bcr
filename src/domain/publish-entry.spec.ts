@@ -21,7 +21,7 @@ describe("sendRequest", () => {
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
-    const releaser = "releaser";
+    const releaser = { username: "releaser", email: "releaser@bar.org" };
 
     await publishEntryService.sendRequest(
       rulesetRepo,
@@ -47,7 +47,7 @@ describe("sendRequest", () => {
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
-    const releaser = "releaser";
+    const releaser = { username: "releaser", email: "releaser@bar.org" };
 
     await publishEntryService.sendRequest(
       rulesetRepo,
@@ -82,7 +82,7 @@ describe("sendRequest", () => {
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
-    const releaser = "releaser";
+    const releaser = { username: "releaser", email: "releaser@bar.org" };
 
     await publishEntryService.sendRequest(
       rulesetRepo,
@@ -93,7 +93,7 @@ describe("sendRequest", () => {
       releaser
     );
     expect(mockGithubClient.requestReview).toHaveBeenCalledWith(bcr, 42, [
-      releaser,
+      releaser.username,
     ]);
   });
 });

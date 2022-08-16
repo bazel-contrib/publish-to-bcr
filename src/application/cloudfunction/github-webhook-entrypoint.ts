@@ -8,20 +8,29 @@ import { SecretsClient } from "../../infrastructure/secrets.js";
 import { ReleaseEventHandler } from "../release-event-handler.js";
 import { GitClient } from "../../infrastructure/git.js";
 import { Repository } from "../../domain/repository.js";
+import { EmailClient } from "../../infrastructure/email.js";
+import { NotificationsService } from "../notifications.js";
 
 // Setup application dependencies using constructor dependency injection.
 const secretsClient = new SecretsClient();
 const gitClient = new GitClient();
 const githubClient = new GitHubClient();
+const emailClient = new EmailClient();
 const findRegistryForkService = new FindRegistryForkService(githubClient);
 const createEntryService = new CreateEntryService(gitClient, githubClient);
 const publishEntryService = new PublishEntryService(githubClient);
+const notificationsService = new NotificationsService(
+  emailClient,
+  secretsClient
+);
+
 const releaseEventHandler = new ReleaseEventHandler(
   githubClient,
   secretsClient,
   findRegistryForkService,
   createEntryService,
-  publishEntryService
+  publishEntryService,
+  notificationsService
 );
 Repository.gitClient = gitClient;
 

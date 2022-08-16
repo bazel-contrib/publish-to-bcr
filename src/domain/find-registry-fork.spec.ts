@@ -28,7 +28,7 @@ beforeEach(() => {
 describe("findCandidateForks", () => {
   test("finds fork in same account as ruleset repo", async () => {
     const owner = "foo-company";
-    const releaser = "jason";
+    const releaser = { username: "jason", email: "jason@foo.org" };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,
@@ -64,18 +64,21 @@ describe("findCandidateForks", () => {
 
   test("finds fork in releaser's account", async () => {
     const owner = "foo-company";
-    const releaser = "jason";
+    const releaser = { username: "jason", email: "jason@foo.org" };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,
       "main"
     );
-    const releaserBcrFork = new Repository("bazel-central-registry", releaser);
+    const releaserBcrFork = new Repository(
+      "bazel-central-registry",
+      releaser.username
+    );
 
     mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
-        if (repoOwner === releaser) {
-          return [new Repository("a", releaser), releaserBcrFork];
+        if (repoOwner === releaser.username) {
+          return [new Repository("a", releaser.username), releaserBcrFork];
         }
         return [];
       }
@@ -100,14 +103,17 @@ describe("findCandidateForks", () => {
 
   test("prioritizes fork in ruleset account before releaser's account", async () => {
     const owner = "foo-company";
-    const releaser = "jason";
+    const releaser = { username: "jason", email: "jason@foo.org" };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,
       "main"
     );
     const ownerBcrFork = new Repository("bazel-central-registry", owner);
-    const releaserBcrFork = new Repository("bazel-central-registry", releaser);
+    const releaserBcrFork = new Repository(
+      "bazel-central-registry",
+      releaser.username
+    );
 
     mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
@@ -115,7 +121,7 @@ describe("findCandidateForks", () => {
           return [new Repository("a", owner), ownerBcrFork];
         } else {
           // repoOwner === releaser
-          return [new Repository("b", releaser), releaserBcrFork];
+          return [new Repository("b", releaser.username), releaserBcrFork];
         }
       }
     );
@@ -144,7 +150,7 @@ describe("findCandidateForks", () => {
 
   test("does not return a fork named bazel-central-registry that is not sourced from the canonical BCR", async () => {
     const owner = "foo-company";
-    const releaser = "jason";
+    const releaser = { username: "jason", email: "jason@foo.org" };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,
