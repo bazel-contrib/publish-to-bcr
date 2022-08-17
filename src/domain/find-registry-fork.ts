@@ -4,7 +4,7 @@ import { RulesetRepository } from "./ruleset-repository.js";
 import { User } from "./user.js";
 
 export const CANONICAL_BCR = new Repository(
-  "bazel-central-regisrty",
+  "bazel-central-registry",
   "bazelbuild"
 );
 
