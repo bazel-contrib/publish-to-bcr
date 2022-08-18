@@ -37,7 +37,7 @@ export class ReleaseEventHandler {
       );
 
       console.log(
-        `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser}`
+        `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
       );
 
       try {
