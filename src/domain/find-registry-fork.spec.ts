@@ -28,7 +28,11 @@ beforeEach(() => {
 describe("findCandidateForks", () => {
   test("finds fork in same account as ruleset repo", async () => {
     const owner = "foo-company";
-    const releaser = { username: "jason", email: "jason@foo.org" };
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,
@@ -64,7 +68,11 @@ describe("findCandidateForks", () => {
 
   test("finds fork in releaser's account", async () => {
     const owner = "foo-company";
-    const releaser = { username: "jason", email: "jason@foo.org" };
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,
@@ -103,7 +111,11 @@ describe("findCandidateForks", () => {
 
   test("prioritizes fork in ruleset account before releaser's account", async () => {
     const owner = "foo-company";
-    const releaser = { username: "jason", email: "jason@foo.org" };
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,
@@ -150,7 +162,11 @@ describe("findCandidateForks", () => {
 
   test("does not return a fork named bazel-central-registry that is not sourced from the canonical BCR", async () => {
     const owner = "foo-company";
-    const releaser = { username: "jason", email: "jason@foo.org" };
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
     const rulesetRepo = await RulesetRepository.create(
       "ruleset",
       owner,

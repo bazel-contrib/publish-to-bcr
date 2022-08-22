@@ -105,7 +105,7 @@ export class GitHubClient {
   ): Promise<User> {
     const octokit = await this.getRepoAuthorizedOctokit(repository);
     const { data } = await octokit.rest.users.getByUsername({ username });
-    return { username, email: data.email };
+    return { name: data.name, username, email: data.email };
   }
 
   private async getRepositoryInstallation(

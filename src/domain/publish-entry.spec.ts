@@ -21,7 +21,11 @@ describe("sendRequest", () => {
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
-    const releaser = { username: "releaser", email: "releaser@bar.org" };
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
 
     await publishEntryService.sendRequest(
       rulesetRepo,
@@ -47,7 +51,11 @@ describe("sendRequest", () => {
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
-    const releaser = { username: "releaser", email: "releaser@bar.org" };
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
 
     await publishEntryService.sendRequest(
       rulesetRepo,
@@ -82,7 +90,11 @@ describe("sendRequest", () => {
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
-    const releaser = { username: "releaser", email: "releaser@bar.org" };
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
 
     await publishEntryService.sendRequest(
       rulesetRepo,

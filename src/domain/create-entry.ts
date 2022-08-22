@@ -5,6 +5,7 @@ import { RulesetRepository } from "./ruleset-repository.js";
 import { GitHubClient } from "../infrastructure/github.js";
 import { GitClient } from "../infrastructure/git.js";
 import { ReleaseHashService } from "./release-hash.js";
+import { User } from "./user.js";
 
 export class CreateEntryService {
   constructor(
@@ -60,15 +61,16 @@ export class CreateEntryService {
   public async checkoutBranchAndCommitEntry(
     rulesetRepo: Repository,
     bcrRepo: Repository,
-    tag: string
+    tag: string,
+    releaser: User
   ): Promise<string> {
     const repoAndVersion = `${rulesetRepo.canonicalName}@${tag}`;
     const branchName = repoAndVersion;
 
     await this.gitClient.setUserNameAndEmail(
       bcrRepo.diskPath,
-      "Publish to BCR",
-      "noreply@aspect.dev"
+      releaser.name,
+      releaser.email
     );
     await this.gitClient.checkoutNewBranchFromHead(
       bcrRepo.diskPath,
