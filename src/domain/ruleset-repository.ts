@@ -5,6 +5,8 @@ import { Repository } from "./repository.js";
 export class RulesetRepository extends Repository {
   public static readonly BCR_TEMPLATE_DIR = ".bcr";
 
+  private _moduleName: string;
+
   public static async create(
     name: string,
     owner: string,
@@ -37,11 +39,32 @@ export class RulesetRepository extends Repository {
       );
     }
 
+    rulesetRepo._moduleName = rulesetRepo.parseModuleName();
+
     return rulesetRepo;
   }
 
   private constructor(readonly name: string, readonly owner: string) {
     super(name, owner);
+  }
+
+  private parseModuleName() {
+    const moduleContent = fs.readFileSync(this.moduleFilePath, {
+      encoding: "utf-8",
+    });
+
+    const regex = /module\(.*?name\s*=\s*"(\w+)"/s;
+    const match = moduleContent.match(regex);
+    if (match) {
+      return match[1];
+    }
+    throw new Error(
+      `Could not parse module name from module file ${this.moduleFilePath}`
+    );
+  }
+
+  public get moduleName(): string {
+    return this._moduleName;
   }
 
   public get moduleFilePath(): string {
