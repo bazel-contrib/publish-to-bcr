@@ -78,7 +78,8 @@ export class ReleaseEventHandler {
               await this.createEntryService.checkoutBranchAndCommitEntry(
                 rulesetRepo,
                 bcr,
-                tag
+                tag,
+                releaser
               );
             await this.createEntryService.pushEntryToFork(bcrFork, bcr, branch);
 
