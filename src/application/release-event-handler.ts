@@ -69,12 +69,18 @@ export class ReleaseEventHandler {
             const bcr = Repository.fromCanonicalName(
               process.env.BAZEL_CENTRAL_REGISTRY
             );
-            const branch = await this.createEntryService.newEntry(
+            await this.createEntryService.createEntryFiles(
               rulesetRepo,
-              bcrFork,
               bcr,
               tag
             );
+            const branch =
+              await this.createEntryService.checkoutBranchAndCommitEntry(
+                rulesetRepo,
+                bcr,
+                tag
+              );
+            await this.createEntryService.pushEntryToFork(bcrFork, bcr, branch);
 
             console.log(
               `Pushed bcr entry to fork ${bcrFork.canonicalName} on branch ${branch}`

@@ -5,41 +5,28 @@ import { Repository } from "./repository";
 import fs from "node:fs";
 import path from "node:path";
 import { RulesetRepository } from "./ruleset-repository";
+import { fakeModuleFile } from "../test/mock-template-files";
 
+jest.mock("node:fs");
 jest.mock("../infrastructure/git");
 
 let gitClient: Mocked<GitClient>;
 
 beforeEach(() => {
-  mocked(GitClient, true).mockClear();
+  jest.clearAllMocks();
   gitClient = mocked(new GitClient());
   Repository.gitClient = gitClient;
 });
 
 describe("create", () => {
   test("creates repository when requried files exist", async () => {
-    mockAllRequiredFiles(gitClient);
+    mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
     expect(rulesetRepo.canonicalName).toEqual("bar/foo");
   });
 
   test("complains about missing required files", async () => {
-    gitClient.clone.mockImplementationOnce((url, repoPath) => {
-      const bcrTemplatesPath = path.join(
-        repoPath,
-        RulesetRepository.BCR_TEMPLATE_DIR
-      );
-      fs.mkdirSync(repoPath, { recursive: true });
-      fs.mkdirSync(bcrTemplatesPath);
-      fs.writeFileSync(
-        path.join(bcrTemplatesPath, "metadata.template.json"),
-        ""
-      );
-      fs.writeFileSync(path.join(bcrTemplatesPath, "presubmit.yml"), "");
-
-      return Promise.resolve();
-    });
-
+    mockRulesetFiles({ skipModuleFile: true, skipSourceFile: true });
     let throwError: Error;
     try {
       await RulesetRepository.create("foo", "bar", "main");
@@ -51,11 +38,23 @@ describe("create", () => {
     expect(throwError.message.includes("MODULE.bazel"));
     expect(throwError.message.includes("source.template.json"));
   });
+
+  test("complains if it cannot parse the module name from the module file", async () => {
+    mockRulesetFiles({ invalidModuleContents: true });
+    let throwError: Error;
+    try {
+      await RulesetRepository.create("foo", "bar", "main");
+    } catch (e) {
+      throwError = e;
+    }
+
+    expect(throwError).toBeTruthy();
+  });
 });
 
 describe("moduleFilePath", () => {
   test("gets path to the MODULE.bazel file", async () => {
-    mockAllRequiredFiles(gitClient);
+    mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
     expect(rulesetRepo.moduleFilePath).toEqual(
@@ -66,7 +65,7 @@ describe("moduleFilePath", () => {
 
 describe("metadataTemplatePath", () => {
   test("gets path to the metadata.template.json file", async () => {
-    mockAllRequiredFiles(gitClient);
+    mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
     expect(rulesetRepo.metadataTemplatePath).toEqual(
@@ -81,7 +80,7 @@ describe("metadataTemplatePath", () => {
 
 describe("presubmitPath", () => {
   test("gets path to the presubmit.yml file", async () => {
-    mockAllRequiredFiles(gitClient);
+    mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
     expect(rulesetRepo.presubmitPath).toEqual(
@@ -96,7 +95,7 @@ describe("presubmitPath", () => {
 
 describe("sourceTemplatePath", () => {
   test("gets path to the source.template.json file", async () => {
-    mockAllRequiredFiles(gitClient);
+    mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
     expect(rulesetRepo.sourceTemplatePath).toEqual(
@@ -109,19 +108,70 @@ describe("sourceTemplatePath", () => {
   });
 });
 
-function mockAllRequiredFiles(gitClient: Mocked<GitClient>) {
-  gitClient.clone.mockImplementationOnce((url, repoPath) => {
-    const bcrTemplatesPath = path.join(
-      repoPath,
-      RulesetRepository.BCR_TEMPLATE_DIR
-    );
-    fs.mkdirSync(repoPath, { recursive: true });
-    fs.mkdirSync(bcrTemplatesPath);
-    fs.writeFileSync(path.join(repoPath, "MODULE.bazel"), "");
-    fs.writeFileSync(path.join(bcrTemplatesPath, "metadata.template.json"), "");
-    fs.writeFileSync(path.join(bcrTemplatesPath, "presubmit.yml"), "");
-    fs.writeFileSync(path.join(bcrTemplatesPath, "source.template.json"), "");
+describe("moduleName", () => {
+  test("returns the correct module name", async () => {
+    mockRulesetFiles({ moduleName: "rules_foo" });
+    const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
-    return Promise.resolve();
+    expect(rulesetRepo.moduleName).toEqual("rules_foo");
+  });
+});
+
+function mockRulesetFiles(
+  options: {
+    moduleName?: string;
+    skipModuleFile?: boolean;
+    skipMetadataFile?: boolean;
+    skipPresubmitFile?: boolean;
+    skipSourceFile?: boolean;
+    invalidModuleContents?: boolean;
+  } = {}
+) {
+  gitClient.clone.mockImplementationOnce(async (url, repoPath) => {
+    mocked(fs.existsSync).mockImplementation(((p: string) => {
+      if (p === path.join(repoPath, "MODULE.bazel")) {
+        return !options.skipModuleFile;
+      } else if (
+        p ===
+        path.join(
+          repoPath,
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "metadata.template.json"
+        )
+      ) {
+        return !options.skipModuleFile;
+      } else if (
+        p ===
+        path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "presubmit.yml")
+      ) {
+        return !options.skipPresubmitFile;
+      } else if (
+        p ===
+        path.join(
+          repoPath,
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "source.template.json"
+        )
+      ) {
+        return !options.skipSourceFile;
+      }
+      return (jest.requireActual("node:fs") as any).existsSync(path);
+    }) as any);
+
+    mocked(fs.readFileSync).mockImplementation(((p: string, ...args: any[]) => {
+      if (
+        !options.skipModuleFile &&
+        p === path.join(repoPath, "MODULE.bazel")
+      ) {
+        return fakeModuleFile({
+          moduleName: options.moduleName,
+          invalidContents: options.invalidModuleContents,
+        });
+      }
+      return (jest.requireActual("node:fs") as any).readFileSync.apply([
+        path,
+        ...args,
+      ]);
+    }) as any);
   });
 }

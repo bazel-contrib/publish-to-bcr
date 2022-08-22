@@ -28,18 +28,7 @@ describe("canonicalName", () => {
 });
 
 describe("diskPath", () => {
-  test("throws when not checked out", () => {
-    const repository = new Repository("foo", "bar");
-    expect(() => repository.diskPath).toThrow();
-  });
-
-  test("does not throw when checked out", async () => {
-    const repository = new Repository("foo", "bar");
-    await repository.checkout();
-    expect(() => repository.diskPath).not.toThrow();
-  });
-
-  test("is in the temp dir", async () => {
+  test("is a temp dir", async () => {
     const repository = new Repository("foo", "bar");
     await repository.checkout();
     expect(repository.diskPath.startsWith(os.tmpdir())).toEqual(true);
