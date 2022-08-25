@@ -4,7 +4,11 @@ import { GitClient } from "../infrastructure/git";
 import { Repository } from "./repository";
 import fs from "node:fs";
 import path from "node:path";
-import { RulesetRepository } from "./ruleset-repository";
+import {
+  InvalidModuleFileError,
+  MissingFilesError,
+  RulesetRepository,
+} from "./ruleset-repository";
 import { fakeModuleFile } from "../test/mock-template-files";
 
 jest.mock("node:fs");
@@ -27,28 +31,33 @@ describe("create", () => {
 
   test("complains about missing required files", async () => {
     mockRulesetFiles({ skipModuleFile: true, skipSourceFile: true });
-    let throwError: Error;
+    let thrownError!: Error;
     try {
       await RulesetRepository.create("foo", "bar", "main");
     } catch (e) {
-      throwError = e;
+      thrownError = e;
     }
 
-    expect(throwError).toBeTruthy();
-    expect(throwError.message.includes("MODULE.bazel"));
-    expect(throwError.message.includes("source.template.json"));
+    expect(thrownError).toBeInstanceOf(MissingFilesError);
+    expect((thrownError as MissingFilesError).missingFiles.length).toEqual(2);
+    expect((thrownError as MissingFilesError).missingFiles).toContain(
+      "MODULE.bazel"
+    );
+    expect((thrownError as MissingFilesError).missingFiles).toContain(
+      path.join(RulesetRepository.BCR_TEMPLATE_DIR, "source.template.json")
+    );
   });
 
   test("complains if it cannot parse the module name from the module file", async () => {
     mockRulesetFiles({ invalidModuleContents: true });
-    let throwError: Error;
+    let thrownError!: Error;
     try {
       await RulesetRepository.create("foo", "bar", "main");
     } catch (e) {
-      throwError = e;
+      thrownError = e;
     }
 
-    expect(throwError).toBeTruthy();
+    expect(thrownError).toBeInstanceOf(InvalidModuleFileError);
   });
 });
 
@@ -115,11 +124,39 @@ describe("moduleName", () => {
 
     expect(rulesetRepo.moduleName).toEqual("rules_foo");
   });
+
+  test("throws when the module name is missing", async () => {
+    mockRulesetFiles({ missingModuleName: true });
+
+    let thrownError: Error;
+    try {
+      await RulesetRepository.create("foo", "bar", "main");
+    } catch (e) {
+      thrownError = e;
+    }
+
+    expect(thrownError!).toBeInstanceOf(InvalidModuleFileError);
+  });
+
+  test("throws when there is no module name and does not mistakenly parse the name attribute from a dep", async () => {
+    mockRulesetFiles({ missingModuleName: true, moduleFileDeps: true });
+
+    let thrownError: Error;
+    try {
+      await RulesetRepository.create("foo", "bar", "main");
+    } catch (e) {
+      thrownError = e;
+    }
+
+    expect(thrownError!).toBeInstanceOf(InvalidModuleFileError);
+  });
 });
 
 function mockRulesetFiles(
   options: {
     moduleName?: string;
+    missingModuleName?: boolean;
+    moduleFileDeps?: boolean;
     skipModuleFile?: boolean;
     skipMetadataFile?: boolean;
     skipPresubmitFile?: boolean;
@@ -139,7 +176,7 @@ function mockRulesetFiles(
           "metadata.template.json"
         )
       ) {
-        return !options.skipModuleFile;
+        return !options.skipMetadataFile;
       } else if (
         p ===
         path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "presubmit.yml")
@@ -165,7 +202,9 @@ function mockRulesetFiles(
       ) {
         return fakeModuleFile({
           moduleName: options.moduleName,
+          missingName: options.missingModuleName,
           invalidContents: options.invalidModuleContents,
+          deps: options.moduleFileDeps,
         });
       }
       return (jest.requireActual("node:fs") as any).readFileSync.apply([

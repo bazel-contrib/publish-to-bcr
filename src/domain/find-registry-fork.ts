@@ -1,4 +1,5 @@
 import { GitHubClient } from "../infrastructure/github.js";
+import { UserFacingError } from "./error.js";
 import { Repository } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
 import { User } from "./user.js";
@@ -7,6 +8,14 @@ export const CANONICAL_BCR = new Repository(
   "bazel-central-registry",
   "bazelbuild"
 );
+
+export class NoCandidateForksError extends UserFacingError {
+  constructor(public readonly rulesetRepo: RulesetRepository) {
+    super(
+      `Could not find candidate bazel-central-registry forks to push to. Did you configure the GitHub app for a BCR with the same owner as your ruleset, or for you personal fork? https://github.com/apps/publish-to-bcr.`
+    );
+  }
+}
 
 export class FindRegistryForkService {
   constructor(private readonly githubClient: GitHubClient) {}
@@ -41,6 +50,10 @@ export class FindRegistryForkService {
     const verifiedCandidateForks = candidateForks.filter((bcrFork, index) =>
       candidateForkSourceRepos[index].equals(CANONICAL_BCR)
     );
+
+    if (!verifiedCandidateForks.length) {
+      throw new NoCandidateForksError(rulesetRepo);
+    }
     return verifiedCandidateForks;
   }
 }

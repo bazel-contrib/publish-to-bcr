@@ -1,3 +1,4 @@
+import { UserFacingError } from "../domain/error.js";
 import { User } from "../domain/user.js";
 import { Authentication, EmailClient } from "../infrastructure/email.js";
 import { SecretsClient } from "../infrastructure/secrets.js";
@@ -31,23 +32,39 @@ export class NotificationsService {
     this.emailClient.setAuth(this.emailAuth);
   }
 
-  public async notifySuccess(recipient: User): Promise<void> {
+  public async notifyError(
+    recipient: User,
+    repoCanonicalName: string,
+    tag: string,
+    errors: Error[]
+  ): Promise<void> {
     await this.setAuth();
-    await this.emailClient.sendEmail(
-      recipient.email,
-      this.sender,
-      "Publish to BCR [no-reply]",
-      "Successfully published pull request to the Bazel Central Registry."
-    );
-  }
 
-  public async notifyError(recipient: User): Promise<void> {
-    await this.setAuth();
+    const subject = `Publish to BCR [${repoCanonicalName}]`;
+
+    let content = `\
+Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Registry.
+
+`;
+
+    const friendlyErrors = errors.filter(
+      (error) => error instanceof UserFacingError
+    );
+
+    for (let error of friendlyErrors) {
+      content += `${error.message}\n\n`;
+    }
+
+    if (!friendlyErrors.length) {
+      content +=
+        "An unknown error occurred. Please report an issue here: https://github.com/bazel-contrib/publish-to-bcr/issues.";
+    }
+
     await this.emailClient.sendEmail(
       recipient.email,
       this.sender,
-      "Publish to BCR [no-reply]",
-      "Failed"
+      subject,
+      content
     );
   }
 }

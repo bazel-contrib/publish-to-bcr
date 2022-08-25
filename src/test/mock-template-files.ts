@@ -1,20 +1,36 @@
 import { randomUUID } from "crypto";
 
-export function fakeModuleFile(overrides?: {
-  moduleName?: string;
-  version?: string;
-  invalidContents?: boolean;
-}): string {
+export function fakeModuleFile(
+  overrides: {
+    moduleName?: string;
+    version?: string;
+    invalidContents?: boolean;
+    deps?: boolean;
+    missingName?: boolean;
+  } = {}
+): string {
   if (overrides.invalidContents) {
     return randomUUID();
   }
-  return `\
+  let content = `\
   module(
-    name = "${overrides.moduleName || "fake_ruleset"}",
+    ${
+      overrides.missingName
+        ? ""
+        : `name = "${overrides.moduleName || "fake_ruleset"}",`
+    }
     compatibility_level = 1,
     version = "${overrides.version || "0.0.0"}",
   )
   `;
+  if (overrides.deps) {
+    content += `\
+bazel_dep(name = "bazel_skylib", version = "1.1.1")
+bazel_dep(name = "platforms", version = "0.0.4")
+`;
+  }
+
+  return content;
 }
 
 export function fakeSourceFile(
