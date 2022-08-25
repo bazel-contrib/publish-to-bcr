@@ -1,6 +1,34 @@
 import path from "node:path";
 import fs from "node:fs";
 import { Repository } from "./repository.js";
+import { UserFacingError } from "./error.js";
+
+export class MissingFilesError extends UserFacingError {
+  constructor(
+    public readonly repoName: string,
+    public readonly repoOwner: string,
+    public readonly missingFiles: string[]
+  ) {
+    super(
+      `\
+Could not locate the following required files:
+${missingFiles.map((missingFile) => `  ${missingFile}`).join("\n")}
+Did you forget to add them to your ruleset repository? See instructions here: https://github.com/bazel-contrib/publish-to-bcr/blob/main/templates`
+    );
+  }
+}
+
+export class InvalidModuleFileError extends UserFacingError {
+  constructor(
+    public readonly repoName: string,
+    public readonly repoOwner: string,
+    public readonly message: string
+  ) {
+    super(
+      `Unable to parse the MODULE.bazel file in ${repoOwner}/${repoName}. Please double check that it is correct.`
+    );
+  }
+}
 
 export class RulesetRepository extends Repository {
   public static readonly BCR_TEMPLATE_DIR = ".bcr";
@@ -30,13 +58,7 @@ export class RulesetRepository extends Repository {
     }
 
     if (missingFiles.length) {
-      throw new Error(
-        `Ruleset repository ${
-          rulesetRepo.canonicalName
-        } is missing the following required files: ${JSON.stringify(
-          missingFiles
-        )}.`
-      );
+      throw new MissingFilesError(name, owner, missingFiles);
     }
 
     rulesetRepo._moduleName = rulesetRepo.parseModuleName();
@@ -53,13 +75,15 @@ export class RulesetRepository extends Repository {
       encoding: "utf-8",
     });
 
-    const regex = /module\(.*?name\s*=\s*"(\w+)"/s;
+    const regex = /module\([^)]*?name\s*=\s*"(\w+)"/s;
     const match = moduleContent.match(regex);
     if (match) {
       return match[1];
     }
-    throw new Error(
-      `Could not parse module name from module file ${this.moduleFilePath}`
+    throw new InvalidModuleFileError(
+      this.name,
+      this.owner,
+      `Could not parse your module's name from MODULE.bazel.`
     );
   }
 

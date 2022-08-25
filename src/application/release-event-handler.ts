@@ -8,8 +8,8 @@ import { ReleasePublishedEvent } from "@octokit/webhooks-types";
 import { RulesetRepository } from "../domain/ruleset-repository.js";
 import { StrategyOptions as GitHubAuth } from "@octokit/auth-app";
 import { GitHubClient } from "../infrastructure/github.js";
-import { EmailClient } from "../infrastructure/email.js";
 import { NotificationsService } from "./notifications.js";
+import { User } from "../domain/user.js";
 
 export class ReleaseEventHandler {
   constructor(
@@ -23,37 +23,36 @@ export class ReleaseEventHandler {
 
   public readonly handle: HandlerFunction<"release.published", unknown> =
     async (event) => {
-      const [webhookAppAuth, botAppAuth] = await Promise.all([
-        this.getGitHubWebhookAppAuth(),
-        this.getGitHubBotAppAuth(),
-      ]);
-      this.githubClient.setAppAuth(webhookAppAuth);
-
+      let releaser: User;
+      const repoCanonicalName = `${event.payload.repository.owner.login}/${event.payload.repository.name}`;
       const tag = event.payload.release.tag_name;
-      const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
-      const releaser = await this.githubClient.getRepoUser(
-        event.payload.sender.login,
-        rulesetRepo
-      );
-
-      console.log(
-        `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
-      );
 
       try {
+        const [webhookAppAuth, botAppAuth] = await Promise.all([
+          this.getGitHubWebhookAppAuth(),
+          this.getGitHubBotAppAuth(),
+        ]);
+        this.githubClient.setAppAuth(webhookAppAuth);
+
+        releaser = await this.githubClient.getRepoUser(
+          event.payload.sender.login,
+          new Repository(
+            event.payload.repository.name,
+            event.payload.repository.owner.login
+          )
+        );
+
+        const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
+
+        console.log(
+          `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
+        );
+
         const candidateBcrForks =
           await this.findRegistryForkService.findCandidateForks(
             rulesetRepo,
             releaser
           );
-
-        if (candidateBcrForks.length === 0) {
-          console.log(
-            `Could not find bcr fork for repository ${rulesetRepo.canonicalName}`
-          );
-          this.notificationsService.notifyError(releaser);
-          return;
-        }
 
         console.log(
           `Found ${candidateBcrForks.length} candidate forks: ${JSON.stringify(
@@ -110,13 +109,24 @@ export class ReleaseEventHandler {
         }
 
         if (errors.length > 0) {
-          await this.notificationsService.notifyError(releaser);
+          await this.notificationsService.notifyError(
+            releaser,
+            repoCanonicalName,
+            tag,
+            errors
+          );
           return;
         }
-
-        await this.notificationsService.notifySuccess(releaser);
       } catch (error) {
-        await this.notificationsService.notifyError(releaser);
+        console.log(error);
+        if (releaser) {
+          await this.notificationsService.notifyError(
+            releaser,
+            repoCanonicalName,
+            tag,
+            [error]
+          );
+        }
         return;
       }
     };

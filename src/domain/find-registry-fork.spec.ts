@@ -1,7 +1,11 @@
 import { describe, expect, test, beforeEach, jest } from "@jest/globals";
 import { mocked, Mocked } from "jest-mock";
 import { GitHubClient } from "../infrastructure/github";
-import { CANONICAL_BCR, FindRegistryForkService } from "./find-registry-fork";
+import {
+  CANONICAL_BCR,
+  FindRegistryForkService,
+  NoCandidateForksError,
+} from "./find-registry-fork";
 import { Repository } from "./repository";
 import { RulesetRepository } from "./ruleset-repository";
 
@@ -192,11 +196,13 @@ describe("findCandidateForks", () => {
       }
     );
 
-    const forks = await findRegistryForkService.findCandidateForks(
-      rulesetRepo,
-      releaser
-    );
+    let thrownError!: Error;
+    try {
+      await findRegistryForkService.findCandidateForks(rulesetRepo, releaser);
+    } catch (e) {
+      thrownError = e;
+    }
 
-    expect(forks).toEqual([]);
+    expect(thrownError).toBeInstanceOf(NoCandidateForksError);
   });
 });
