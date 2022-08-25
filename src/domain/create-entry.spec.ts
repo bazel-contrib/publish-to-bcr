@@ -16,6 +16,7 @@ import {
   fakePresubmitFile,
   fakeSourceFile,
 } from "../test/mock-template-files";
+import { User } from "./user";
 
 let createEntryService: CreateEntryService;
 let mockGitClient: Mocked<GitClient>;
@@ -334,6 +335,206 @@ describe("createEntryFiles", () => {
         `${rulesetRepo.name}-1.2.3`
       );
     });
+  });
+});
+
+describe("commitEntryToNewBranch", () => {
+  test("sets the commit author to the releaser", async () => {
+    mockRulesetTemplateFiles();
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+    const releaser: User = {
+      name: "Json Bearded",
+      email: "json@bearded.ca",
+      username: "json",
+    };
+
+    await createEntryService.commitEntryToNewBranch(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      releaser
+    );
+
+    expect(mockGitClient.setUserNameAndEmail).toHaveBeenCalledWith(
+      bcrRepo.diskPath,
+      releaser.name,
+      releaser.email
+    );
+  });
+
+  test("checks out a new branch on the bcr repo", async () => {
+    mockRulesetTemplateFiles();
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+    const releaser: User = {
+      name: "Json Bearded",
+      email: "json@bearded.ca",
+      username: "json",
+    };
+
+    await createEntryService.commitEntryToNewBranch(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      releaser
+    );
+
+    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledWith(
+      bcrRepo.diskPath,
+      expect.any(String)
+    );
+  });
+
+  test("branch contains the repo name and release tag", async () => {
+    mockRulesetTemplateFiles();
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+    const releaser: User = {
+      name: "Json Bearded",
+      email: "json@bearded.ca",
+      username: "json",
+    };
+
+    await createEntryService.commitEntryToNewBranch(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      releaser
+    );
+
+    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledTimes(1);
+    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.stringContaining(rulesetRepo.canonicalName)
+    );
+    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.stringContaining(tag)
+    );
+  });
+
+  test("returns the created branch name", async () => {
+    mockRulesetTemplateFiles();
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+    const releaser: User = {
+      name: "Json Bearded",
+      email: "json@bearded.ca",
+      username: "json",
+    };
+
+    const returnedBranch = await createEntryService.commitEntryToNewBranch(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      releaser
+    );
+    const createdBranch =
+      mockGitClient.checkoutNewBranchFromHead.mock.calls[0][1];
+
+    expect(returnedBranch).toEqual(createdBranch);
+  });
+
+  test("commit message contains the repo name and release tag", async () => {
+    mockRulesetTemplateFiles();
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+    const releaser: User = {
+      name: "Json Bearded",
+      email: "json@bearded.ca",
+      username: "json",
+    };
+
+    await createEntryService.commitEntryToNewBranch(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      releaser
+    );
+
+    expect(mockGitClient.commitChanges).toHaveBeenCalledTimes(1);
+    expect(mockGitClient.commitChanges).toHaveBeenCalledWith(
+      bcrRepo.diskPath,
+      expect.stringContaining(rulesetRepo.canonicalName)
+    );
+    expect(mockGitClient.commitChanges).toHaveBeenCalledWith(
+      bcrRepo.diskPath,
+      expect.stringContaining(tag)
+    );
+  });
+});
+
+describe("pushEntryToFork", () => {
+  test("acquires an authenticated remote url for the bcr fork", async () => {
+    const bcrRepo = CANONICAL_BCR;
+    const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
+    const branchName = `repo/owner@v1.2.3`;
+
+    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    expect(mockGithubClient.getAuthenticatedRemoteUrl).toHaveBeenCalledWith(
+      bcrForkRepo
+    );
+  });
+
+  test("adds a remote with the authenticated url for the fork to the local bcr repo", async () => {
+    const bcrRepo = CANONICAL_BCR;
+    const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
+    const branchName = `repo/owner@v1.2.3`;
+    const authenticatedUrl = randomUUID();
+
+    mockGithubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
+      Promise.resolve(authenticatedUrl)
+    );
+
+    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    expect(mockGitClient.addRemote).toHaveBeenCalledWith(
+      bcrRepo.diskPath,
+      expect.any(String),
+      authenticatedUrl
+    );
+  });
+
+  test("named the authenticated remote 'authed-fork'", async () => {
+    const bcrRepo = CANONICAL_BCR;
+    const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
+    const branchName = `repo/owner@v1.2.3`;
+    const authenticatedUrl = randomUUID();
+
+    mockGithubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
+      Promise.resolve(authenticatedUrl)
+    );
+
+    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    expect(mockGitClient.addRemote).toHaveBeenCalledWith(
+      expect.any(String),
+      "authed-fork",
+      expect.any(String)
+    );
+  });
+
+  test("pushes the entry branch to the fork using the authorized remote", async () => {
+    const bcrRepo = CANONICAL_BCR;
+    const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
+    const branchName = `repo/owner@v1.2.3`;
+
+    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+
+    expect(mockGitClient.push).toHaveBeenCalledWith(
+      bcrRepo.diskPath,
+      "authed-fork",
+      branchName
+    );
   });
 });
 

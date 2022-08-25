@@ -58,7 +58,7 @@ export class CreateEntryService {
     );
   }
 
-  public async checkoutBranchAndCommitEntry(
+  public async commitEntryToNewBranch(
     rulesetRepo: Repository,
     bcrRepo: Repository,
     tag: string,
