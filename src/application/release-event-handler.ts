@@ -74,13 +74,12 @@ export class ReleaseEventHandler {
               bcr,
               tag
             );
-            const branch =
-              await this.createEntryService.checkoutBranchAndCommitEntry(
-                rulesetRepo,
-                bcr,
-                tag,
-                releaser
-              );
+            const branch = await this.createEntryService.commitEntryToNewBranch(
+              rulesetRepo,
+              bcr,
+              tag,
+              releaser
+            );
             await this.createEntryService.pushEntryToFork(bcrFork, bcr, branch);
 
             console.log(
