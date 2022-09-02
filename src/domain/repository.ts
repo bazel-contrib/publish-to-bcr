@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
-import { v4 as uuid } from "uuid";
 import { GitClient } from "../infrastructure/git.js";
 
 export class Repository {
@@ -34,7 +34,7 @@ export class Repository {
 
   public async checkout(ref?: string): Promise<void> {
     if (!this.isCheckedOut()) {
-      this._diskPath = path.join(os.tmpdir(), uuid(), this.name);
+      this._diskPath = path.join(os.tmpdir(), randomUUID(), this.name);
       await Repository.gitClient.clone(this.url, this._diskPath);
     }
 

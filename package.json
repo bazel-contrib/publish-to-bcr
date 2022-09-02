@@ -21,7 +21,6 @@
     "nodemailer": "^6.7.8",
     "simple-git": "^3.10.0",
     "source-map-support": "^0.5.21",
-    "uuid": "^8.3.2",
     "yaml": "^2.1.1"
   },
   "devDependencies": {
