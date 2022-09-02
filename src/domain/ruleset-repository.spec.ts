@@ -5,11 +5,20 @@ import { Repository } from "./repository";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  InvalidMetadataTemplateError,
   InvalidModuleFileError,
+  InvalidPresubmitFileError,
+  InvalidSourceTemplateError,
   MissingFilesError,
   RulesetRepository,
 } from "./ruleset-repository";
-import { fakeModuleFile } from "../test/mock-template-files";
+import {
+  fakeMetadataFile,
+  fakeModuleFile,
+  fakePresubmitFile,
+  fakeSourceFile,
+} from "../test/mock-template-files";
+import { expectThrownError } from "../test/util";
 
 jest.mock("node:fs");
 jest.mock("../infrastructure/git");
@@ -31,14 +40,12 @@ describe("create", () => {
 
   test("complains about missing required files", async () => {
     mockRulesetFiles({ skipModuleFile: true, skipSourceFile: true });
-    let thrownError!: Error;
-    try {
-      await RulesetRepository.create("foo", "bar", "main");
-    } catch (e) {
-      thrownError = e;
-    }
 
-    expect(thrownError).toBeInstanceOf(MissingFilesError);
+    const thrownError = await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      MissingFilesError
+    );
+
     expect((thrownError as MissingFilesError).missingFiles.length).toEqual(2);
     expect((thrownError as MissingFilesError).missingFiles).toContain(
       "MODULE.bazel"
@@ -50,14 +57,65 @@ describe("create", () => {
 
   test("complains if it cannot parse the module name from the module file", async () => {
     mockRulesetFiles({ invalidModuleContents: true });
-    let thrownError!: Error;
-    try {
-      await RulesetRepository.create("foo", "bar", "main");
-    } catch (e) {
-      thrownError = e;
-    }
 
-    expect(thrownError).toBeInstanceOf(InvalidModuleFileError);
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidModuleFileError
+    );
+  });
+
+  test("complains if the metadata template cannot be parsed", async () => {
+    mockRulesetFiles({ invalidMetadataFile: true });
+
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidMetadataTemplateError
+    );
+  });
+
+  test("complains if the metadata template is missing 'versions'", async () => {
+    mockRulesetFiles({ metadataMissingVersions: true });
+
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidMetadataTemplateError
+    );
+  });
+
+  test("complains if the source template is missing cannot be parsed", async () => {
+    mockRulesetFiles({ invalidSourceFile: true });
+
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidSourceTemplateError
+    );
+  });
+
+  test("complains if the source template is missing 'strip_prefix'", async () => {
+    mockRulesetFiles({ sourceMissingStripPrefix: true });
+
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidSourceTemplateError
+    );
+  });
+
+  test("complains if the source template is missing 'url'", async () => {
+    mockRulesetFiles({ sourceMissingUrl: true });
+
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidSourceTemplateError
+    );
+  });
+
+  test("complains if the presubmit file cannot be parsed", async () => {
+    mockRulesetFiles({ invalidPresubmit: true });
+
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidPresubmitFileError
+    );
   });
 });
 
@@ -128,27 +186,19 @@ describe("moduleName", () => {
   test("throws when the module name is missing", async () => {
     mockRulesetFiles({ missingModuleName: true });
 
-    let thrownError: Error;
-    try {
-      await RulesetRepository.create("foo", "bar", "main");
-    } catch (e) {
-      thrownError = e;
-    }
-
-    expect(thrownError!).toBeInstanceOf(InvalidModuleFileError);
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidModuleFileError
+    );
   });
 
   test("throws when there is no module name and does not mistakenly parse the name attribute from a dep", async () => {
     mockRulesetFiles({ missingModuleName: true, moduleFileDeps: true });
 
-    let thrownError: Error;
-    try {
-      await RulesetRepository.create("foo", "bar", "main");
-    } catch (e) {
-      thrownError = e;
-    }
-
-    expect(thrownError!).toBeInstanceOf(InvalidModuleFileError);
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidModuleFileError
+    );
   });
 });
 
@@ -162,6 +212,12 @@ function mockRulesetFiles(
     skipPresubmitFile?: boolean;
     skipSourceFile?: boolean;
     invalidModuleContents?: boolean;
+    invalidMetadataFile?: boolean;
+    metadataMissingVersions?: boolean;
+    invalidSourceFile?: boolean;
+    sourceMissingStripPrefix?: boolean;
+    sourceMissingUrl?: boolean;
+    invalidPresubmit?: boolean;
   } = {}
 ) {
   gitClient.clone.mockImplementationOnce(async (url, repoPath) => {
@@ -206,6 +262,36 @@ function mockRulesetFiles(
           invalidContents: options.invalidModuleContents,
           deps: options.moduleFileDeps,
         });
+      } else if (
+        p ===
+        path.join(
+          repoPath,
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "metadata.template.json"
+        )
+      ) {
+        return fakeMetadataFile({
+          malformed: options.invalidMetadataFile,
+          missingVersions: options.metadataMissingVersions,
+        });
+      } else if (
+        p ===
+        path.join(
+          repoPath,
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "source.template.json"
+        )
+      ) {
+        return fakeSourceFile({
+          malformed: options.invalidSourceFile,
+          missingStripPrefix: options.sourceMissingStripPrefix,
+          missingUrl: options.sourceMissingUrl,
+        });
+      } else if (
+        p ===
+        path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "presubmit.yml")
+      ) {
+        return fakePresubmitFile({ malformed: options.invalidPresubmit });
       }
       return (jest.requireActual("node:fs") as any).readFileSync.apply([
         path,

@@ -34,46 +34,80 @@ bazel_dep(name = "platforms", version = "0.0.4")
 }
 
 export function fakeSourceFile(
-  overrides: { url?: string; stripPrefix?: string } = {}
+  overrides: {
+    url?: string;
+    stripPrefix?: string;
+    malformed?: boolean;
+    missingStripPrefix?: boolean;
+    missingUrl?: boolean;
+  } = {}
 ): string {
+  if (overrides.malformed) {
+    return `{"foo:`;
+  }
   return `\
   {
     "integrity": "**leave this alone**",
-    "strip_prefix": "${overrides.stripPrefix || "{REPO}-{VERSION}"}",
-    "url": "${
-      overrides.url ||
-      "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
-    }"
+    ${
+      overrides.missingStripPrefix
+        ? ""
+        : `"strip_prefix": "${overrides.stripPrefix || "{REPO}-{VERSION}"}",`
+    }
+    ${
+      overrides.missingUrl
+        ? ""
+        : `"url": "${
+            overrides.url ||
+            "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
+          }"`
+    }
   }
   `;
 }
 
-export function fakePresubmitFile(): string {
+export function fakePresubmitFile(
+  options: { malformed?: boolean } = {}
+): string {
+  if (options.malformed) {
+    return `
+    ---
+    buildifier: latest
+      tasks
+`;
+  }
   return `\
-  ---
-  buildifier: latest
-  tasks:
-    ubuntu2004:
-      build_targets:
-        - "//..."
-      test_targets:
-        - "//..."
-    macos:
-      build_targets:
-        - "//..."
-      test_targets:
-        - "//..."
-    windows:
-      build_targets:
-        - "//..."
-      test_targets:
-        - "//..."  
-  `;
+---
+buildifier: latest
+tasks:
+  ubuntu2004:
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
+  macos:
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
+  windows:
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
+`;
 }
 
 export function fakeMetadataFile(
-  options: { versions?: string[]; homepage?: string } = {}
+  options: {
+    versions?: string[];
+    homepage?: string;
+    malformed?: boolean;
+    missingVersions?: boolean;
+  } = {}
 ): string {
+  if (options.malformed) {
+    return `{"foo":`;
+  }
   return `\
     {
       "homepage": "${options.homepage || "https://docs.aspect.dev/bazel-lib"}",
@@ -84,7 +118,11 @@ export function fakeMetadataFile(
           "name": "Json Bearded"
         }
       ],
-      "versions": ${JSON.stringify(options.versions || [])},
+      ${
+        options.missingVersions
+          ? ""
+          : `"versions": ${JSON.stringify(options.versions || [])},`
+      }
       "yanked_versions": {}
     }
   `;

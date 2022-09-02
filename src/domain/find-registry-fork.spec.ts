@@ -1,6 +1,7 @@
 import { describe, expect, test, beforeEach, jest } from "@jest/globals";
 import { mocked, Mocked } from "jest-mock";
 import { GitHubClient } from "../infrastructure/github";
+import { expectThrownError } from "../test/util";
 import {
   CANONICAL_BCR,
   FindRegistryForkService,
@@ -196,13 +197,9 @@ describe("findCandidateForks", () => {
       }
     );
 
-    let thrownError!: Error;
-    try {
-      await findRegistryForkService.findCandidateForks(rulesetRepo, releaser);
-    } catch (e) {
-      thrownError = e;
-    }
-
-    expect(thrownError).toBeInstanceOf(NoCandidateForksError);
+    await expectThrownError(
+      () => findRegistryForkService.findCandidateForks(rulesetRepo, releaser),
+      NoCandidateForksError
+    );
   });
 });

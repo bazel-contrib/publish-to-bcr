@@ -1,5 +1,9 @@
 import { describe, expect, test, beforeEach, jest } from "@jest/globals";
-import { CreateEntryService } from "./create-entry";
+import {
+  CreateEntryService,
+  MetadataParseError,
+  VersionAlreadyPublishedError,
+} from "./create-entry";
 import { mocked, Mocked } from "jest-mock";
 import { GitClient } from "../infrastructure/git";
 import { GitHubClient } from "../infrastructure/github";
@@ -17,6 +21,7 @@ import {
   fakeSourceFile,
 } from "../test/mock-template-files";
 import { User } from "./user";
+import { expectThrownError } from "../test/util";
 
 let createEntryService: CreateEntryService;
 let mockGitClient: Mocked<GitClient>;
@@ -169,15 +174,11 @@ describe("createEntryFiles", () => {
     mockBcrMetadataExists(rulesetRepo, bcrRepo, true);
     mockBcrMetadataFile(rulesetRepo, bcrRepo, { versions: ["1.0.0"] });
 
-    let thrownError: Error;
-    try {
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag);
-    } catch (error) {
-      thrownError = error;
-    }
-
-    expect(thrownError).toBeTruthy();
-    expect(thrownError.message.includes("1.0.0")).toEqual(true);
+    const thrownError = await expectThrownError(
+      () => createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag),
+      VersionAlreadyPublishedError
+    );
+    expect(thrownError!.message.includes("1.0.0")).toEqual(true);
   });
 
   describe("metadata.json", () => {
@@ -244,6 +245,22 @@ describe("createEntryFiles", () => {
         JSON.parse(
           fakeMetadataFile({ versions: ["1.2.3"], homepage: "foo.bar.com" })
         )
+      );
+    });
+
+    test("complains when the bcr metadata file cannot be parsed", async () => {
+      mockRulesetTemplateFiles();
+
+      const tag = "v1.2.3";
+      const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      mockBcrMetadataExists(rulesetRepo, bcrRepo, true);
+      mockBcrMetadataFile(rulesetRepo, bcrRepo, { malformed: true });
+
+      await expectThrownError(
+        () => createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag),
+        MetadataParseError
       );
     });
   });
@@ -603,7 +620,7 @@ function mockBcrMetadataExists(
 function mockBcrMetadataFile(
   rulesetRepo: RulesetRepository,
   bcrRepo: Repository,
-  options?: { versions?: string[]; homepage?: string }
+  options?: { versions?: string[]; homepage?: string; malformed?: boolean }
 ) {
   mockedFileReads[
     path.join(
