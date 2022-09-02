@@ -134,7 +134,6 @@ export class CreateEntryService {
     // Compute the integrity hash
     const sourceJson = JSON.parse(substituted);
 
-    console.log(`Calculating sha256 for ${sourceJson.url}`);
     const digest = await this.releaseHashService.calculate(sourceJson.url);
     sourceJson.integrity = `sha256-${digest}`;
 
