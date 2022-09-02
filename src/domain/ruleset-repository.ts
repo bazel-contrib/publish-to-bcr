@@ -1,17 +1,17 @@
 import path from "node:path";
 import fs from "node:fs";
+import yaml from "yaml";
 import { Repository } from "./repository.js";
 import { UserFacingError } from "./error.js";
 
 export class MissingFilesError extends UserFacingError {
   constructor(
-    public readonly repoName: string,
-    public readonly repoOwner: string,
+    repository: RulesetRepository,
     public readonly missingFiles: string[]
   ) {
     super(
       `\
-Could not locate the following required files:
+Could not locate the following required files in ${repository.canonicalName}:
 ${missingFiles.map((missingFile) => `  ${missingFile}`).join("\n")}
 Did you forget to add them to your ruleset repository? See instructions here: https://github.com/bazel-contrib/publish-to-bcr/blob/main/templates`
     );
@@ -19,13 +19,33 @@ Did you forget to add them to your ruleset repository? See instructions here: ht
 }
 
 export class InvalidModuleFileError extends UserFacingError {
-  constructor(
-    public readonly repoName: string,
-    public readonly repoOwner: string,
-    public readonly message: string
-  ) {
+  constructor(repository: RulesetRepository) {
     super(
-      `Unable to parse the MODULE.bazel file in ${repoOwner}/${repoName}. Please double check that it is correct.`
+      `Unable to parse the MODULE.bazel file in ${repository.canonicalName}. Please double check that it is correct.`
+    );
+  }
+}
+
+export class InvalidMetadataTemplateError extends UserFacingError {
+  constructor(repository: RulesetRepository, reason: string) {
+    super(
+      `Invalid metadata.template.json file in ${repository.canonicalName}: ${reason}`
+    );
+  }
+}
+
+export class InvalidSourceTemplateError extends UserFacingError {
+  constructor(repository: RulesetRepository, reason: string) {
+    super(
+      `Invalid source.template.json file in ${repository.canonicalName}: ${reason}`
+    );
+  }
+}
+
+export class InvalidPresubmitFileError extends UserFacingError {
+  constructor(repository: RulesetRepository, reason: string) {
+    super(
+      `Invalid presubmit.yml file in ${repository.canonicalName}: ${reason}`
     );
   }
 }
@@ -58,10 +78,13 @@ export class RulesetRepository extends Repository {
     }
 
     if (missingFiles.length) {
-      throw new MissingFilesError(name, owner, missingFiles);
+      throw new MissingFilesError(rulesetRepo, missingFiles);
     }
 
     rulesetRepo._moduleName = rulesetRepo.parseModuleName();
+    validateMetadataTemplate(rulesetRepo);
+    validateSourceTemplate(rulesetRepo);
+    validatePrecommitFile(rulesetRepo);
 
     return rulesetRepo;
   }
@@ -80,11 +103,7 @@ export class RulesetRepository extends Repository {
     if (match) {
       return match[1];
     }
-    throw new InvalidModuleFileError(
-      this.name,
-      this.owner,
-      `Could not parse your module's name from MODULE.bazel.`
-    );
+    throw new InvalidModuleFileError(this);
   }
 
   public get moduleName(): string {
@@ -116,6 +135,81 @@ export class RulesetRepository extends Repository {
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
       "source.template.json"
+    );
+  }
+}
+
+function validateMetadataTemplate(rulesetRepo: RulesetRepository) {
+  let metadata: Record<string, unknown>;
+  try {
+    metadata = JSON.parse(
+      fs.readFileSync(rulesetRepo.metadataTemplatePath, "utf-8")
+    );
+  } catch (error) {
+    throw new InvalidMetadataTemplateError(
+      rulesetRepo,
+      "cannot parse file as json"
+    );
+  }
+
+  if (!metadata.versions) {
+    throw new InvalidMetadataTemplateError(
+      rulesetRepo,
+      "missing versions field"
+    );
+  }
+
+  if (!Array.isArray(metadata.versions)) {
+    throw new InvalidMetadataTemplateError(
+      rulesetRepo,
+      "invalid versions field"
+    );
+  }
+}
+
+function validateSourceTemplate(rulesetRepo: RulesetRepository) {
+  let source: Record<string, unknown>;
+  try {
+    source = JSON.parse(
+      fs.readFileSync(rulesetRepo.sourceTemplatePath, "utf-8")
+    );
+  } catch (error) {
+    throw new InvalidSourceTemplateError(
+      rulesetRepo,
+      "cannot parse file as json"
+    );
+  }
+
+  if (!source.strip_prefix) {
+    throw new InvalidSourceTemplateError(
+      rulesetRepo,
+      "missing strip_prefix field"
+    );
+  }
+
+  if (typeof source.strip_prefix !== "string") {
+    throw new InvalidSourceTemplateError(
+      rulesetRepo,
+      "invalid strip_prefix field"
+    );
+  }
+
+  if (!source.url) {
+    throw new InvalidSourceTemplateError(rulesetRepo, "missing url field");
+  }
+
+  if (typeof source.url !== "string") {
+    throw new InvalidSourceTemplateError(rulesetRepo, "invalid url field");
+  }
+}
+
+function validatePrecommitFile(rulesetRepo: RulesetRepository) {
+  try {
+    yaml.parse(fs.readFileSync(rulesetRepo.presubmitPath, "utf-8"));
+  } catch (error) {
+    throw new InvalidPresubmitFileError(
+      rulesetRepo,
+      "cannot parse file as yaml"
     );
   }
 }

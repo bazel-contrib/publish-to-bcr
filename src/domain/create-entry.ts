@@ -6,6 +6,21 @@ import { GitHubClient } from "../infrastructure/github.js";
 import { GitClient } from "../infrastructure/git.js";
 import { ReleaseHashService } from "./release-hash.js";
 import { User } from "./user.js";
+import { UserFacingError } from "./error.js";
+
+export class VersionAlreadyPublishedError extends UserFacingError {
+  public constructor(version: string) {
+    super(`Version ${version} has already been published.`);
+  }
+}
+
+export class MetadataParseError extends UserFacingError {
+  public constructor(repository: Repository, path: string) {
+    super(
+      `Could not parse metadata file ${path} from repository ${repository.canonicalName}.`
+    );
+  }
+}
 
 export class CreateEntryService {
   constructor(
@@ -32,6 +47,7 @@ export class CreateEntryService {
 
     updateMetadataFile(
       rulesetRepo.metadataTemplatePath,
+      bcrRepo,
       path.join(bcrEntryPath, "metadata.json"),
       version
     );
@@ -130,19 +146,24 @@ export class CreateEntryService {
 
 function updateMetadataFile(
   sourcePath: string,
+  bcrRepo: Repository,
   destPath: string,
   version: string
 ) {
   let publishedVersions = [];
   if (fs.existsSync(destPath)) {
-    const existingMetadata = JSON.parse(
-      fs.readFileSync(destPath, { encoding: "utf-8" })
-    );
-    publishedVersions = existingMetadata.versions;
+    try {
+      const existingMetadata = JSON.parse(
+        fs.readFileSync(destPath, { encoding: "utf-8" })
+      );
+      publishedVersions = existingMetadata.versions;
+    } catch (error) {
+      throw new MetadataParseError(bcrRepo, destPath);
+    }
   }
 
   if (publishedVersions.includes(version)) {
-    throw new Error(`Version ${version} is already published to this registry`);
+    throw new VersionAlreadyPublishedError(version);
   }
 
   const metadata = JSON.parse(
