@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "source_archive_bucket" {
-  name     = "source-archive-bucket"
+  name     = "${var.project_id}-source-archive-bucket"
   location = var.region
 }
 
