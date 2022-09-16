@@ -2,22 +2,21 @@
 
 This will walk you through deploying the Publish to BCR app.
 
-To deploy a new instance of the app, see [First time setup](#first-time-setup). To deploy to an already existing
-instance, see [Setup for existing deployment](#setup-for-existing-deployment).
+If the app has already been deployed, see [Setup for existing deployment](#setup-for-existing-deployment).
 
 ## First time setup
 
-Follow these steps to deploy an app environment for the first time.
-
 ### Create GitHub apps
 
-You must create two GitHub applications, the Webhook App which will respond to ruleset release
-events and publish an new entry to a fork, as well as a Bot App which posts pull requests to the
-Bazel Central Registry.
+Create two GitHub applications:
 
-The purpose of the Bot App is to use a more restricted set of permissions when installed to
-the Bazel Central Registry compared to the more permissive permissions required on the Webhook
-App which is installed to ruleset repositories and BCR forks.
+1. Webhook app: responds to ruleset release events and publish an new entry to a Bazel Central Registry fork.
+2. Bot App: posts pull requests to the Bazel Central Registry.
+
+Technically we could use one Github app, but we want to minimize the permissions granted to any
+app by the BCR. The Bot app's permissions are restricted to posting pull requests and is the one
+that gets installed to the BCR. The Webhook app is installed onto ruleset repos and BCR forks, and
+is responsible for pushing new entries to the fork.
 
 ### Create project
 
@@ -90,7 +89,7 @@ Under Event subscriptions, check:
 
 - Release
 
-### Bot App
+#### Bot App
 
 Under Repository permissions, set:
 
