@@ -13,11 +13,13 @@ variable "region" {
 variable "github_app_id" {
     type = string
     description = "ID of the publish-to-bcr GitHub app"
+    default = "196878"
 }
 
 variable "github_bot_app_id" {
     type = string
     description = "ID of the GitHub app that publishes pull requests to a BCR"
+    default = "234555"
 }
 
 variable "bazel_central_registry" {
@@ -29,6 +31,7 @@ variable "bazel_central_registry" {
 variable "notifications_email" {
     type = string
     description = "Email address that will send notifications"
+    default = "no-reply@aspect.dev"
 }
 
 variable "smtp_host" {
