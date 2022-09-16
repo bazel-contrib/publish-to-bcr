@@ -61,11 +61,11 @@ yarn build
 
 ### Deploy the app
 
-Run terraform apply to deploy the application, passing the id of the GitHub apps you created and the notification sender email.
-Note that you may wish to customize other variables from their defaults in [variables.tf](environments/dev/variables.tf).
+Run terraform apply to deploy the application.
+Note that you may wish to customize variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
-terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>"  --var "notifications_email=<NOTIFICATIONS_EMAIL>"
+terraform apply
 ```
 
 ### Setup webhook
@@ -147,9 +147,9 @@ yarn build
 
 ### Deploy the app
 
-Run terraform apply to deploy the application, passing the ids of the two github apps and the notification sender email.
+Run terraform apply to deploy the application.
 Note that you may wish to customize other variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
-terraform apply --var "github_app_id=<GITHUB_APP_ID>" --var "github_bot_app_id=<GITHUB_BOT_APP_ID>" --var "notifications_email=<NOTIFICATIONS_EMAIL>"
+terraform apply
 ```

@@ -11,7 +11,7 @@ Prepare your ruleset for bzlmod by following the [Bzlmod User Guide](https://baz
 ## How it works
 
 1. [Configure](https://github.com/apps/publish-to-bcr) the app for:
-   - Your ruleset repository
+   - Your ruleset repository.
    - A fork of [bazelbuild/bazel-central-registry](https://github.com/bazelbuild/bazel-central-registry). The fork can be in the same GitHub account as your ruleset _or_ in your personal account.
 1. Include these [template files](templates/README.md) in your ruleset repository.
 1. Cut a release. You will be tagged in a pull request against the BCR.
