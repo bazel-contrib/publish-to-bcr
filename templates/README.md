@@ -67,7 +67,7 @@ The `integrity` hash will automatically be filled out by the app.
 
 ```jsonc
 {
-  "integrity": "**leave this alone**", // <-- Don't touch this
+  "integrity": "", // <-- Leave this alone
   "strip_prefix": "{REPO}-{VERSION}",
   "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
 }
