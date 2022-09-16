@@ -20,7 +20,7 @@ resource "google_cloudfunctions_function" "publish_to_bcr_function" {
   description = "Handle incoming github events"
   runtime     = "nodejs16"
 
-  available_memory_mb   = 128
+  available_memory_mb   = 256
   source_archive_bucket = google_storage_bucket.source_archive_bucket.name
   source_archive_object = google_storage_bucket_object.publish_to_bcr_function_bucket_object.name
   trigger_http          = true
