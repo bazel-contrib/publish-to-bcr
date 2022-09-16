@@ -1,7 +1,5 @@
 # Publish to BCR
 
-_:warning: This app is under development and is not ready to be used._
-
 A GitHub app that mirrors releases of your Bazel ruleset to the [Bazel Central Registry](https://github.com/bazelbuild/bazel-central-registry).
 
 ## Prerequisites
