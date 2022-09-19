@@ -40,7 +40,7 @@ export class NotificationsService {
   ): Promise<void> {
     await this.setAuth();
 
-    const subject = `Publish to BCR [${repoCanonicalName}]`;
+    const subject = `Publish to BCR`;
 
     let content = `\
 Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Registry.

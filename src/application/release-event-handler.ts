@@ -23,6 +23,10 @@ export class ReleaseEventHandler {
 
   public readonly handle: HandlerFunction<"release.published", unknown> =
     async (event) => {
+      const bcr = Repository.fromCanonicalName(
+        process.env.BAZEL_CENTRAL_REGISTRY
+      );
+
       let releaser: User;
       const repoCanonicalName = `${event.payload.repository.owner.login}/${event.payload.repository.name}`;
       const tag = event.payload.release.tag_name;
@@ -65,9 +69,6 @@ export class ReleaseEventHandler {
           try {
             console.log(`Selecting fork ${bcrFork.canonicalName}.`);
 
-            const bcr = Repository.fromCanonicalName(
-              process.env.BAZEL_CENTRAL_REGISTRY
-            );
             await this.createEntryService.createEntryFiles(
               rulesetRepo,
               bcr,

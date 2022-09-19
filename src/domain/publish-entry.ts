@@ -12,14 +12,19 @@ export class PublishEntryService {
     bcr: Repository,
     branch: string,
     releaser: User
-  ): Promise<void> {
-    const pullNumber = await this.githubClient.createPullRequest(
+  ): Promise<number> {
+    const pr = await this.githubClient.createPullRequest(
       bcrForkRepo,
       branch,
       bcr,
       "main",
-      `Publish ${rulesetRepo.canonicalName}@${tag}`
+      `${rulesetRepo.canonicalName}@${tag}`,
+      `\
+Release author: @${releaser.username}.
+
+Automated by [Publish to BCR](https://github.com/apps/publish-to-bcr).`
     );
-    await this.githubClient.requestReview(bcr, pullNumber, [releaser.username]);
+
+    return pr;
   }
 }

@@ -69,34 +69,21 @@ export class GitHubClient {
     fromBranch: string,
     toRepo: Repository,
     toBranch: string,
-    title: string
+    title: string,
+    body: string
   ): Promise<number> {
     const app = await this.getRepoAuthorizedOctokit(toRepo);
     const { data: pull } = await app.rest.pulls.create({
       owner: toRepo.owner,
       repo: toRepo.name,
       title: title,
-      body: "Automated by [Publish to BCR](https://github.com/apps/publish-to-bcr).",
+      body,
       head: `${fromRepo.owner}:${fromBranch}`,
       base: toBranch,
       maintainer_can_modify: false,
     });
 
     return pull.number;
-  }
-
-  public async requestReview(
-    repository: Repository,
-    pullNumber: number,
-    reviewers: string[]
-  ): Promise<void> {
-    const octokit = await this.getRepoAuthorizedOctokit(repository);
-    await octokit.rest.pulls.requestReviewers({
-      owner: repository.owner,
-      repo: repository.name,
-      pull_number: pullNumber,
-      reviewers: reviewers,
-    });
   }
 
   public async getRepoUser(
