@@ -86,4 +86,3 @@ fixedReleaser: <GITHUB_USERNAME>
 | Field         | Description                                                                                                                                                           |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | fixedReleaser | GitHub username (e.g., `kormide`) to author BCR entries. Set this if you want a single user to always be the author of BCR entries regardless of who cut the release. |
-|               |                                                                                                                                                                       |
