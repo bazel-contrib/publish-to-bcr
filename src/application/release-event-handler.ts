@@ -38,15 +38,25 @@ export class ReleaseEventHandler {
         ]);
         this.githubClient.setAppAuth(webhookAppAuth);
 
+        const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
+
+        const releaseAuthor = event.payload.sender.login;
+        console.log(`Release author: ${releaseAuthor}`);
+
+        // Use the release author unless a fixed releaser is configured in config.yml.
+        let releaserUsername = releaseAuthor;
+        if (rulesetRepo.config.fixedReleaser) {
+          releaserUsername = rulesetRepo.config.fixedReleaser;
+          console.log(`Overriding releaser to ${releaserUsername}`);
+        }
+
         releaser = await this.githubClient.getRepoUser(
-          event.payload.sender.login,
+          releaserUsername,
           new Repository(
             event.payload.repository.name,
             event.payload.repository.owner.login
           )
         );
-
-        const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
 
         console.log(
           `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`

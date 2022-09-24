@@ -3,6 +3,7 @@ import fs from "node:fs";
 import yaml from "yaml";
 import { Repository } from "./repository.js";
 import { UserFacingError } from "./error.js";
+import { Configuration } from "./config.js";
 
 export class MissingFilesError extends UserFacingError {
   constructor(
@@ -50,10 +51,17 @@ export class InvalidPresubmitFileError extends UserFacingError {
   }
 }
 
+export class InvalidConfigFileError extends UserFacingError {
+  constructor(repository: RulesetRepository, reason: string) {
+    super(`Invalid config.yml file in ${repository.canonicalName}: ${reason}`);
+  }
+}
+
 export class RulesetRepository extends Repository {
   public static readonly BCR_TEMPLATE_DIR = ".bcr";
 
   private _moduleName: string;
+  private _config: Configuration;
 
   public static async create(
     name: string,
@@ -85,6 +93,8 @@ export class RulesetRepository extends Repository {
     validateMetadataTemplate(rulesetRepo);
     validateSourceTemplate(rulesetRepo);
     validatePrecommitFile(rulesetRepo);
+
+    rulesetRepo._config = loadConfiguration(rulesetRepo);
 
     return rulesetRepo;
   }
@@ -136,6 +146,18 @@ export class RulesetRepository extends Repository {
       RulesetRepository.BCR_TEMPLATE_DIR,
       "source.template.json"
     );
+  }
+
+  public get configFilePath(): string {
+    return path.resolve(
+      this.diskPath,
+      RulesetRepository.BCR_TEMPLATE_DIR,
+      "config.yml"
+    );
+  }
+
+  public get config(): Configuration {
+    return this._config;
   }
 }
 
@@ -212,4 +234,26 @@ function validatePrecommitFile(rulesetRepo: RulesetRepository) {
       "cannot parse file as yaml"
     );
   }
+}
+
+function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
+  if (!fs.existsSync(rulesetRepo.configFilePath)) {
+    return {};
+  }
+
+  let config: Record<string, unknown>;
+  try {
+    config = yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, "utf-8"));
+  } catch (error) {
+    throw new InvalidConfigFileError(rulesetRepo, "cannot parse file as yaml");
+  }
+
+  if (config.fixedReleaser && typeof config.fixedReleaser !== "string") {
+    throw new InvalidConfigFileError(
+      rulesetRepo,
+      "could not parse 'fixedReleaser'"
+    );
+  }
+
+  return { fixedReleaser: config.fixedReleaser } as Configuration;
 }
