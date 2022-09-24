@@ -9,7 +9,7 @@ For more information about the files that make up a BCR entry, see the [Bzlmod U
 
 ---
 
-[metadata.template.json](.bcr/metadata.template.json)
+### [metadata.template.json](.bcr/metadata.template.json)
 
 Insert your ruleset's homepage and fill out the list of maintainers. Leave `versions` alone as this
 will be filled automatically.
@@ -32,7 +32,7 @@ will be filled automatically.
 
 ---
 
-[presubmit.yml](.bcr/presubmit.yml)
+### [presubmit.yml](.bcr/presubmit.yml)
 
 Use the provided presubmit.yml file or replace it with your own. It should contain
 essential build and test targets that are used to sanity check a module version.
@@ -56,7 +56,7 @@ bcr_test_module:
 
 ---
 
-[source.template.json](.bcr/source.template.json)
+### [source.template.json](.bcr/source.template.json)
 
 The app will automatically substitute in values for `{REPO}`, `{VERSION}`, `{OWNER}`, and `{TAG}`
 corresponding to your ruleset repository and the release.
@@ -72,3 +72,18 @@ The `integrity` hash will automatically be filled out by the app.
   "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
 }
 ```
+
+---
+
+### (Optional) [config.yml](.bcr/config.yml)
+
+A configuration file to override default behaviour of the app.
+
+```yaml
+fixedReleaser: <GITHUB_USERNAME>
+```
+
+| Field         | Description                                                                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| fixedReleaser | GitHub username (e.g., `kormide`) to author BCR entries. Set this if you want a single user to always be the author of BCR entries regardless of who cut the release. |
+|               |                                                                                                                                                                       |

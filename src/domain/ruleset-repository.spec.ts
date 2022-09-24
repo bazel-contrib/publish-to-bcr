@@ -5,6 +5,7 @@ import { Repository } from "./repository";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  InvalidConfigFileError,
   InvalidMetadataTemplateError,
   InvalidModuleFileError,
   InvalidPresubmitFileError,
@@ -13,6 +14,7 @@ import {
   RulesetRepository,
 } from "./ruleset-repository";
 import {
+  fakeConfigFile,
   fakeMetadataFile,
   fakeModuleFile,
   fakePresubmitFile,
@@ -117,6 +119,28 @@ describe("create", () => {
       InvalidPresubmitFileError
     );
   });
+
+  describe("config", () => {
+    test("defaults configuration when the file doesn't exist", async () => {
+      mockRulesetFiles({ configExists: false });
+      const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+      expect(rulesetRepo.config.fixedReleaser).toBeUndefined();
+    });
+
+    test("loads a fixedReleaser", async () => {
+      mockRulesetFiles({ configExists: true, fixedReleaser: "jbedard" });
+      const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+      expect(rulesetRepo.config.fixedReleaser).toEqual("jbedard");
+    });
+
+    test("throws on invalid fixedReleaser", async () => {
+      mockRulesetFiles({ configExists: true, invalidFixedReleaser: true });
+      await expectThrownError(
+        () => RulesetRepository.create("foo", "bar", "main"),
+        InvalidConfigFileError
+      );
+    });
+  });
 });
 
 describe("moduleFilePath", () => {
@@ -155,6 +179,21 @@ describe("presubmitPath", () => {
         rulesetRepo.diskPath,
         RulesetRepository.BCR_TEMPLATE_DIR,
         "presubmit.yml"
+      )
+    );
+  });
+});
+
+describe("configFilePath", () => {
+  test("gets path to the config.yml file", async () => {
+    mockRulesetFiles();
+    const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+
+    expect(rulesetRepo.configFilePath).toEqual(
+      path.join(
+        rulesetRepo.diskPath,
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "config.yml"
       )
     );
   });
@@ -218,6 +257,9 @@ function mockRulesetFiles(
     sourceMissingStripPrefix?: boolean;
     sourceMissingUrl?: boolean;
     invalidPresubmit?: boolean;
+    configExists?: boolean;
+    fixedReleaser?: string;
+    invalidFixedReleaser?: boolean;
   } = {}
 ) {
   gitClient.clone.mockImplementationOnce(async (url, repoPath) => {
@@ -247,6 +289,11 @@ function mockRulesetFiles(
         )
       ) {
         return !options.skipSourceFile;
+      } else if (
+        p ===
+        path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "config.yml")
+      ) {
+        return options.configExists;
       }
       return (jest.requireActual("node:fs") as any).existsSync(path);
     }) as any);
@@ -292,6 +339,14 @@ function mockRulesetFiles(
         path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "presubmit.yml")
       ) {
         return fakePresubmitFile({ malformed: options.invalidPresubmit });
+      } else if (
+        p ===
+        path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "config.yml")
+      ) {
+        return fakeConfigFile({
+          fixedReleaser: options.fixedReleaser,
+          invalidFixedReleaser: options.invalidFixedReleaser,
+        });
       }
       return (jest.requireActual("node:fs") as any).readFileSync.apply([
         path,

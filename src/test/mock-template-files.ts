@@ -127,3 +127,16 @@ export function fakeMetadataFile(
     }
   `;
 }
+
+export function fakeConfigFile(
+  options: { fixedReleaser?: string; invalidFixedReleaser?: boolean } = {}
+) {
+  if (options.invalidFixedReleaser) {
+    return `\
+fixedReleaser: {}
+`;
+  }
+  return `\
+${options.fixedReleaser ? `fixedReleaser: ${options.fixedReleaser}` : ""}
+`;
+}
