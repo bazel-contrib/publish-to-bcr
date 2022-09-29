@@ -137,9 +137,13 @@ export class CreateEntryService {
     const digest = await this.releaseHashService.calculate(sourceJson.url);
     sourceJson.integrity = `sha256-${digest}`;
 
-    fs.writeFileSync(destPath, JSON.stringify(sourceJson, undefined, 4), {
-      encoding: "utf-8",
-    });
+    fs.writeFileSync(
+      destPath,
+      `${JSON.stringify(sourceJson, undefined, 4)}\n`,
+      {
+        encoding: "utf-8",
+      }
+    );
   }
 }
 

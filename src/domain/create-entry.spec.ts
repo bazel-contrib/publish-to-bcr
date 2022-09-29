@@ -352,6 +352,25 @@ describe("createEntryFiles", () => {
         `${rulesetRepo.name}-1.2.3`
       );
     });
+
+    test("saves with a trailing newline", async () => {
+      mockRulesetTemplateFiles();
+
+      const tag = "v1.2.3";
+      const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      const hash = randomUUID();
+      mockReleaseHashService.calculate.mockReturnValue(Promise.resolve(hash));
+
+      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag);
+
+      const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
+        (call[0] as string).includes("source.json")
+      );
+      const writtenSourceContent = writeSourceCall[1] as string;
+      expect(writtenSourceContent.endsWith("\n")).toEqual(true);
+    });
   });
 });
 
