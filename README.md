@@ -11,7 +11,7 @@ Prepare your ruleset for bzlmod by following the [Bzlmod User Guide](https://baz
 1. [Configure](https://github.com/apps/publish-to-bcr) the app for:
 
    - Your ruleset repository.
-   - A fork of [bazelbuild/bazel-central-registry](https://github.com/bazelbuild/bazel-central-registry). The fork can be in the same GitHub account as your ruleset _or_ in your personal account.
+   - A fork of [bazelbuild/bazel-central-registry](https://github.com/bazelbuild/bazel-central-registry). The fork can be in the same GitHub account as your ruleset _or_ in the release author's personal account.
 
    _Note: Authors of rulesets under the `bazelbuild` org should add the app to their personal fork of `bazelbuild/bazel-central-registry`._
 
