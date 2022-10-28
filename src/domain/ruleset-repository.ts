@@ -241,14 +241,19 @@ function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
     return {};
   }
 
-  let config: Record<string, unknown>;
+  let config: Record<string, any>;
   try {
     config = yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, "utf-8"));
   } catch (error) {
     throw new InvalidConfigFileError(rulesetRepo, "cannot parse file as yaml");
   }
 
-  if (config.fixedReleaser && typeof config.fixedReleaser !== "string") {
+  if (
+    config.fixedReleaser &&
+    (typeof config.fixedReleaser !== "object" ||
+      typeof config.fixedReleaser.login !== "string" ||
+      typeof config.fixedReleaser.email !== "string")
+  ) {
     throw new InvalidConfigFileError(
       rulesetRepo,
       "could not parse 'fixedReleaser'"

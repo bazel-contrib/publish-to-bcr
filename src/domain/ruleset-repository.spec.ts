@@ -21,6 +21,7 @@ import {
   fakeSourceFile,
 } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
+import { FixedReleaser } from "./config";
 
 jest.mock("node:fs");
 jest.mock("../infrastructure/git");
@@ -128,9 +129,15 @@ describe("create", () => {
     });
 
     test("loads a fixedReleaser", async () => {
-      mockRulesetFiles({ configExists: true, fixedReleaser: "jbedard" });
+      mockRulesetFiles({
+        configExists: true,
+        fixedReleaser: { login: "jbedard", email: "json@bearded.ca" },
+      });
       const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
-      expect(rulesetRepo.config.fixedReleaser).toEqual("jbedard");
+      expect(rulesetRepo.config.fixedReleaser).toEqual({
+        login: "jbedard",
+        email: "json@bearded.ca",
+      });
     });
 
     test("throws on invalid fixedReleaser", async () => {
@@ -258,7 +265,7 @@ function mockRulesetFiles(
     sourceMissingUrl?: boolean;
     invalidPresubmit?: boolean;
     configExists?: boolean;
-    fixedReleaser?: string;
+    fixedReleaser?: FixedReleaser;
     invalidFixedReleaser?: boolean;
   } = {}
 ) {

@@ -43,19 +43,9 @@ export class ReleaseEventHandler {
         const releaseAuthor = event.payload.sender.login;
         console.log(`Release author: ${releaseAuthor}`);
 
-        // Use the release author unless a fixed releaser is configured in config.yml.
-        let releaserUsername = releaseAuthor;
-        if (rulesetRepo.config.fixedReleaser) {
-          releaserUsername = rulesetRepo.config.fixedReleaser;
-          console.log(`Overriding releaser to ${releaserUsername}`);
-        }
-
-        releaser = await this.githubClient.getRepoUser(
-          releaserUsername,
-          new Repository(
-            event.payload.repository.name,
-            event.payload.repository.owner.login
-          )
+        const releaser = await this.determineReleaser(
+          releaseAuthor,
+          rulesetRepo
         );
 
         console.log(
@@ -141,6 +131,35 @@ export class ReleaseEventHandler {
         return;
       }
     };
+
+  private async determineReleaser(
+    releaseAuthor: string,
+    rulesetRepo: RulesetRepository
+  ): Promise<User> {
+    // Use the GH release author unless a fixedReleaser is configured
+    let releaserUsername = releaseAuthor;
+    if (rulesetRepo.config.fixedReleaser) {
+      releaserUsername = rulesetRepo.config.fixedReleaser.login;
+      console.log(`Overriding releaser to ${releaserUsername}`);
+    }
+
+    // Fetch the user from GitHub. Note that their email won't be availble
+    // unless it's publicly listed on their profile.
+    const fetchedUser = await this.githubClient.getRepoUser(
+      releaserUsername,
+      rulesetRepo
+    );
+
+    const releaser: User = {
+      username: releaserUsername,
+      name: fetchedUser.name,
+      email: rulesetRepo.config.fixedReleaser
+        ? rulesetRepo.config.fixedReleaser.email
+        : fetchedUser.email,
+    };
+
+    return releaser;
+  }
 
   private async getGitHubWebhookAppAuth(): Promise<GitHubAuth> {
     const [githubAppPrivateKey, githubAppClientId, githubAppClientSecret] =

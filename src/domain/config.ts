@@ -1,3 +1,8 @@
 export interface Configuration {
-  readonly fixedReleaser?: string;
+  readonly fixedReleaser?: FixedReleaser;
+}
+
+export interface FixedReleaser {
+  readonly login: string;
+  readonly email: string;
 }
