@@ -80,9 +80,11 @@ The `integrity` hash will automatically be filled out by the app.
 A configuration file to override default behaviour of the app.
 
 ```yaml
-fixedReleaser: <GITHUB_USERNAME>
+fixedReleaser:
+  login: <GITHUB_USERNAME>
+  email: <EMAIL>
 ```
 
-| Field         | Description                                                                                                                                                           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| fixedReleaser | GitHub username (e.g., `kormide`) to author BCR entries. Set this if you want a single user to always be the author of BCR entries regardless of who cut the release. |
+| Field         | Description                                                                                                                                                                  |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| fixedReleaser | GitHub username and email to use as the author for BCR commits. Set this if you want a single user to always be the author of BCR entries regardless of who cut the release. |
