@@ -11,8 +11,8 @@ For more information about the files that make up a BCR entry, see the [Bzlmod U
 
 ### [metadata.template.json](.bcr/metadata.template.json)
 
-Insert your ruleset's homepage and fill out the list of maintainers. Leave `versions` alone as this
-will be filled automatically.
+Insert your ruleset's homepage and fill out the list of maintainers. Replace `OWNER/REPO` with your repository's
+canonical name. Leave `versions` alone as this will be filled automatically.
 
 ```jsonc
 {
@@ -24,6 +24,9 @@ will be filled automatically.
       "github": "INSERT_YOUR_GITHUB_ORG_OR_USERNAME",
       "name": "INSERT_YOUR_NAME"
     }
+  ],
+  "repository": [
+    "github:OWNER/REPO"
   ],
   "versions": [],
   "yanked_versions": {}

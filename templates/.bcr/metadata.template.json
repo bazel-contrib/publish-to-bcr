@@ -7,6 +7,9 @@
       "name": "INSERT_YOUR_NAME"
     }
   ],
+  "repository": [
+    "github:OWNER/REPO"
+  ],
   "versions": [],
   "yanked_versions": {}
 }
