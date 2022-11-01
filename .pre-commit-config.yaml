@@ -14,3 +14,6 @@ repos:
     rev: "v2.7.1"
     hooks:
       - id: prettier
+        additional_dependencies:
+          - prettier@2.7.1
+          - prettier-plugin-organize-imports@3.1.1
