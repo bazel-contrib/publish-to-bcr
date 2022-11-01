@@ -1,4 +1,4 @@
-import { simpleGit, CleanOptions } from "simple-git";
+import { CleanOptions, simpleGit } from "simple-git";
 
 export class GitClient {
   public async clone(url: string, repoPath: string): Promise<void> {

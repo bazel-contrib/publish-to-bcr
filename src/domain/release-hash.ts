@@ -1,8 +1,8 @@
-import path from "node:path";
-import os from "node:os";
-import https from "node:https";
-import fs from "node:fs";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import https from "node:https";
+import os from "node:os";
+import path from "node:path";
 
 export class ReleaseHashService {
   public async calculate(archiveUrl: string): Promise<string> {

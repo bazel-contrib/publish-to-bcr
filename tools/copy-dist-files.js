@@ -1,7 +1,7 @@
-import path from "node:path";
-import fs from "node:fs";
 import { globbySync } from "globby";
-import { PROJECT_DIR, DIST_DIR } from "./config.js";
+import fs from "node:fs";
+import path from "node:path";
+import { DIST_DIR, PROJECT_DIR } from "./config.js";
 
 async function main() {
   const filesToInclude = getDistributableFiles();

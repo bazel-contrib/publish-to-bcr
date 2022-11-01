@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import { GitClient } from "../infrastructure/git.js";
+import { GitHubClient } from "../infrastructure/github.js";
+import { UserFacingError } from "./error.js";
+import { ReleaseHashService } from "./release-hash.js";
 import { Repository } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
-import { GitHubClient } from "../infrastructure/github.js";
-import { GitClient } from "../infrastructure/git.js";
-import { ReleaseHashService } from "./release-hash.js";
 import { User } from "./user.js";
-import { UserFacingError } from "./error.js";
 
 export class VersionAlreadyPublishedError extends UserFacingError {
   public constructor(version: string) {
