@@ -1,5 +1,5 @@
-import { Octokit } from "@octokit/rest";
 import { createAppAuth, StrategyOptions } from "@octokit/auth-app";
+import { Octokit } from "@octokit/rest";
 import { Repository } from "../domain/repository.js";
 import { User } from "../domain/user.js";
 

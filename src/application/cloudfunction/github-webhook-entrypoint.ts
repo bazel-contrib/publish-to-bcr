@@ -1,16 +1,16 @@
 import { HttpFunction } from "@google-cloud/functions-framework";
 import { Webhooks } from "@octokit/webhooks";
 import { CreateEntryService } from "../../domain/create-entry.js";
-import { PublishEntryService } from "../../domain/publish-entry.js";
 import { FindRegistryForkService } from "../../domain/find-registry-fork.js";
-import { GitHubClient } from "../../infrastructure/github.js";
-import { SecretsClient } from "../../infrastructure/secrets.js";
-import { ReleaseEventHandler } from "../release-event-handler.js";
-import { GitClient } from "../../infrastructure/git.js";
+import { PublishEntryService } from "../../domain/publish-entry.js";
+import { ReleaseHashService } from "../../domain/release-hash.js";
 import { Repository } from "../../domain/repository.js";
 import { EmailClient } from "../../infrastructure/email.js";
+import { GitClient } from "../../infrastructure/git.js";
+import { GitHubClient } from "../../infrastructure/github.js";
+import { SecretsClient } from "../../infrastructure/secrets.js";
 import { NotificationsService } from "../notifications.js";
-import { ReleaseHashService } from "../../domain/release-hash.js";
+import { ReleaseEventHandler } from "../release-event-handler.js";
 
 // Setup application dependencies using constructor dependency injection.
 const secretsClient = new SecretsClient();

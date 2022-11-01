@@ -1,8 +1,8 @@
-import { describe, expect, test, beforeEach, jest } from "@jest/globals";
+import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { mocked, Mocked } from "jest-mock";
 import { GitHubClient } from "../infrastructure/github";
-import { Repository } from "./repository";
 import { PublishEntryService } from "./publish-entry";
+import { Repository } from "./repository";
 
 jest.mock("../infrastructure/github");
 

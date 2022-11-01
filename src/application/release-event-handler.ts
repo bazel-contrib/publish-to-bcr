@@ -1,15 +1,15 @@
-import { FindRegistryForkService } from "../domain/find-registry-fork.js";
-import { Repository } from "../domain/repository.js";
-import { CreateEntryService } from "../domain/create-entry.js";
-import { PublishEntryService } from "../domain/publish-entry.js";
-import { SecretsClient } from "../infrastructure/secrets.js";
-import { HandlerFunction } from "@octokit/webhooks/dist-types/types";
-import { ReleasePublishedEvent } from "@octokit/webhooks-types";
-import { RulesetRepository } from "../domain/ruleset-repository.js";
 import { StrategyOptions as GitHubAuth } from "@octokit/auth-app";
-import { GitHubClient } from "../infrastructure/github.js";
-import { NotificationsService } from "./notifications.js";
+import { ReleasePublishedEvent } from "@octokit/webhooks-types";
+import { HandlerFunction } from "@octokit/webhooks/dist-types/types";
+import { CreateEntryService } from "../domain/create-entry.js";
+import { FindRegistryForkService } from "../domain/find-registry-fork.js";
+import { PublishEntryService } from "../domain/publish-entry.js";
+import { Repository } from "../domain/repository.js";
+import { RulesetRepository } from "../domain/ruleset-repository.js";
 import { User } from "../domain/user.js";
+import { GitHubClient } from "../infrastructure/github.js";
+import { SecretsClient } from "../infrastructure/secrets.js";
+import { NotificationsService } from "./notifications.js";
 
 export class ReleaseEventHandler {
   constructor(

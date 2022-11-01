@@ -1,18 +1,8 @@
-import { describe, expect, test, beforeEach, jest } from "@jest/globals";
+import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { mocked, Mocked } from "jest-mock";
-import { GitClient } from "../infrastructure/git";
-import { Repository } from "./repository";
 import fs from "node:fs";
 import path from "node:path";
-import {
-  InvalidConfigFileError,
-  InvalidMetadataTemplateError,
-  InvalidModuleFileError,
-  InvalidPresubmitFileError,
-  InvalidSourceTemplateError,
-  MissingFilesError,
-  RulesetRepository,
-} from "./ruleset-repository";
+import { GitClient } from "../infrastructure/git";
 import {
   fakeConfigFile,
   fakeMetadataFile,
@@ -22,6 +12,16 @@ import {
 } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
 import { FixedReleaser } from "./config";
+import { Repository } from "./repository";
+import {
+  InvalidConfigFileError,
+  InvalidMetadataTemplateError,
+  InvalidModuleFileError,
+  InvalidPresubmitFileError,
+  InvalidSourceTemplateError,
+  MissingFilesError,
+  RulesetRepository,
+} from "./ruleset-repository";
 
 jest.mock("node:fs");
 jest.mock("../infrastructure/git");
