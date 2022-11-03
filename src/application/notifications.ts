@@ -60,6 +60,11 @@ Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Reg
         "An unknown error occurred. Please report an issue here: https://github.com/bazel-contrib/publish-to-bcr/issues.";
     }
 
+    console.log(`Sending error email to ${recipient.email}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Content:`);
+    console.log(content);
+
     await this.emailClient.sendEmail(
       recipient.email,
       this.sender,
