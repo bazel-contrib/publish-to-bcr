@@ -23,7 +23,7 @@ function download(url: string, dest: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = https.get(url, (response) => {
       if (response.statusCode === 200) {
-        const file = fs.createWriteStream(dest, { flags: "wx" });
+        const file = fs.createWriteStream(dest, { flags: "w" });
         file.on("finish", () => resolve());
         file.on("error", (err) => {
           file.close();
