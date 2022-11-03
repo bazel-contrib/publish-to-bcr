@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git.js";
-import { GitHubClient } from "../infrastructure/github.js";
+import {
+  GitHubClient,
+  MissingRepositoryInstallationError,
+} from "../infrastructure/github.js";
 import { UserFacingError } from "./error.js";
 import { ReleaseHashService } from "./release-hash.js";
 import { Repository } from "./repository.js";
@@ -18,6 +21,14 @@ export class MetadataParseError extends UserFacingError {
   public constructor(repository: Repository, path: string) {
     super(
       `Could not parse metadata file ${path} from repository ${repository.canonicalName}.`
+    );
+  }
+}
+
+export class AppNotInstalledToForkError extends UserFacingError {
+  public constructor(repository: Repository) {
+    super(
+      `App is not installed to bcr fork ${repository.canonicalName}. You need to configure the app for both your ruleset repository and bazel-central-registry fork.`
     );
   }
 }
@@ -105,8 +116,17 @@ export class CreateEntryService {
     bcr: Repository,
     branch: string
   ): Promise<void> {
-    const authenticatedRemoteUrl =
-      await this.githubClient.getAuthenticatedRemoteUrl(bcrForkRepo);
+    let authenticatedRemoteUrl: string;
+
+    try {
+      authenticatedRemoteUrl =
+        await this.githubClient.getAuthenticatedRemoteUrl(bcrForkRepo);
+    } catch (error) {
+      if (error instanceof MissingRepositoryInstallationError) {
+        throw new AppNotInstalledToForkError(bcrForkRepo);
+      }
+      throw error;
+    }
 
     await this.gitClient.addRemote(
       bcr.diskPath,

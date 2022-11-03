@@ -3,6 +3,12 @@ import { Octokit } from "@octokit/rest";
 import { Repository } from "../domain/repository.js";
 import { User } from "../domain/user.js";
 
+export class MissingRepositoryInstallationError extends Error {
+  constructor(repository: Repository) {
+    super(`Missing installation for repository ${repository.canonicalName}`);
+  }
+}
+
 export class GitHubClient {
   // Cache installation tokens as they expire after an hour, which is more than
   // enough time for a cloud function to run.
@@ -99,14 +105,18 @@ export class GitHubClient {
     repository: Repository
   ): Promise<any> {
     const octokit = this.getAppAuthorizedOctokit();
-    const { data: installation } = await octokit.rest.apps.getRepoInstallation({
-      owner: repository.owner,
-      repo: repository.name,
-    });
+    const { status, data: installation } =
+      await octokit.rest.apps.getRepoInstallation({
+        owner: repository.owner,
+        repo: repository.name,
+      });
 
-    if (!installation) {
+    if (status !== 200) {
+      if (status === 404) {
+        throw new MissingRepositoryInstallationError(repository);
+      }
       throw new Error(
-        `Could not access app installation for repo ${repository.canonicalName}`
+        `Could not access app installation for repo ${repository.canonicalName}; returned status ${status}`
       );
     }
 
