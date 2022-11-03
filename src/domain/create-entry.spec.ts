@@ -248,6 +248,26 @@ describe("createEntryFiles", () => {
       );
     });
 
+    test("creates a new metadata file when the tag doens't start with a 'v'", async () => {
+      mockRulesetTemplateFiles();
+
+      const tag = "1.2.3";
+      const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      mockBcrMetadataExists(rulesetRepo, bcrRepo, false);
+
+      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag);
+
+      const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
+        (call) => (call[0] as string).includes("metadata.json")
+      );
+      const writtenMetadataContent = writeMetadataCall[1] as string;
+      expect(JSON.parse(fakeMetadataFile({ versions: ["1.2.3"] }))).toEqual(
+        JSON.parse(writtenMetadataContent)
+      );
+    });
+
     test("complains when the bcr metadata file cannot be parsed", async () => {
       mockRulesetTemplateFiles();
 

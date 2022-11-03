@@ -198,8 +198,9 @@ function stampModuleFile(
   });
 }
 
-function getVersionFromTag(version: string): string {
-  if (version.startsWith("v")) {
-    return version.substring(1);
+function getVersionFromTag(tag: string): string {
+  if (tag.startsWith("v")) {
+    return tag.substring(1);
   }
+  return tag;
 }
