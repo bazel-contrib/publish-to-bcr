@@ -149,11 +149,21 @@ export class RulesetRepository extends Repository {
   }
 
   public get configFilePath(): string {
-    return path.resolve(
+    let configPath = path.resolve(
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
-      "config.yml"
+      "config.yaml"
     );
+
+    if (!fs.existsSync(configPath)) {
+      configPath = path.resolve(
+        this.diskPath,
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "config.yml"
+      );
+    }
+
+    return configPath;
   }
 
   public get config(): Configuration {
