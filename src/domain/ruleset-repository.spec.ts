@@ -152,6 +152,19 @@ describe("create", () => {
         InvalidConfigFileError
       );
     });
+
+    test("loads config file with alternate extension 'yaml'", async () => {
+      mockRulesetFiles({
+        configExists: true,
+        configExt: "yaml",
+        fixedReleaser: { login: "jbedard", email: "json@bearded.ca" },
+      });
+      const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+      expect(rulesetRepo.config.fixedReleaser).toEqual({
+        login: "jbedard",
+        email: "json@bearded.ca",
+      });
+    });
   });
 });
 
@@ -271,6 +284,7 @@ function mockRulesetFiles(
     sourceMissingUrl?: boolean;
     invalidPresubmit?: boolean;
     configExists?: boolean;
+    configExt?: "yml" | "yaml";
     fixedReleaser?: FixedReleaser;
     invalidFixedReleaser?: boolean;
   } = {}
@@ -304,7 +318,11 @@ function mockRulesetFiles(
         return !options.skipSourceFile;
       } else if (
         p ===
-        path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "config.yml")
+        path.join(
+          repoPath,
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          `config.${options.configExt || "yml"}`
+        )
       ) {
         return options.configExists;
       }
@@ -355,7 +373,11 @@ function mockRulesetFiles(
         return fakePresubmitFile({ malformed: options.invalidPresubmit });
       } else if (
         p ===
-        path.join(repoPath, RulesetRepository.BCR_TEMPLATE_DIR, "config.yml")
+        path.join(
+          repoPath,
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          `config.${options.configExt || "yml"}`
+        )
       ) {
         return fakeConfigFile({
           fixedReleaser: options.fixedReleaser,
