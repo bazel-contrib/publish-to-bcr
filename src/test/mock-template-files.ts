@@ -52,7 +52,11 @@ export function fakeSourceFile(
     ${
       overrides.missingStripPrefix
         ? ""
-        : `"strip_prefix": "${overrides.stripPrefix || "{REPO}-{VERSION}"}",`
+        : `"strip_prefix": "${
+            overrides.stripPrefix !== undefined
+              ? overrides.stripPrefix
+              : "{REPO}-{VERSION}"
+          }",`
     }
     ${
       overrides.missingUrl

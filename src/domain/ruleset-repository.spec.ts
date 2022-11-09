@@ -103,6 +103,11 @@ describe("create", () => {
     );
   });
 
+  test("does not complain if the 'strip_prefix' is empty", async () => {
+    mockRulesetFiles({ sourceStripPrefix: "" });
+    await RulesetRepository.create("foo", "bar", "main");
+  });
+
   test("complains if the source template is missing 'url'", async () => {
     mockRulesetFiles({ sourceMissingUrl: true });
 
@@ -262,6 +267,7 @@ function mockRulesetFiles(
     metadataMissingVersions?: boolean;
     invalidSourceFile?: boolean;
     sourceMissingStripPrefix?: boolean;
+    sourceStripPrefix?: string;
     sourceMissingUrl?: boolean;
     invalidPresubmit?: boolean;
     configExists?: boolean;
@@ -338,6 +344,7 @@ function mockRulesetFiles(
       ) {
         return fakeSourceFile({
           malformed: options.invalidSourceFile,
+          stripPrefix: options.sourceStripPrefix,
           missingStripPrefix: options.sourceMissingStripPrefix,
           missingUrl: options.sourceMissingUrl,
         });
