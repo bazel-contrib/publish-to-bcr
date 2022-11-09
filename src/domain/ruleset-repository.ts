@@ -202,7 +202,7 @@ function validateSourceTemplate(rulesetRepo: RulesetRepository) {
     );
   }
 
-  if (!source.strip_prefix) {
+  if (!("strip_prefix" in source)) {
     throw new InvalidSourceTemplateError(
       rulesetRepo,
       "missing strip_prefix field"
