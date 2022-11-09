@@ -34,15 +34,15 @@ bazel_dep(name = "platforms", version = "0.0.4")
   return content;
 }
 
-export function fakeSourceFile(
-  overrides: {
-    url?: string;
-    stripPrefix?: string;
-    malformed?: boolean;
-    missingStripPrefix?: boolean;
-    missingUrl?: boolean;
-  } = {}
-): string {
+export interface FakeSourceFileOptions {
+  readonly url?: string;
+  readonly stripPrefix?: string;
+  readonly malformed?: boolean;
+  readonly missingStripPrefix?: boolean;
+  readonly missingUrl?: boolean;
+}
+
+export function fakeSourceFile(overrides: FakeSourceFileOptions = {}): string {
   if (overrides.malformed) {
     return `{"foo:`;
   }

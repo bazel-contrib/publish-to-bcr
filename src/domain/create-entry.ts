@@ -1,3 +1,4 @@
+import { createPatch } from "diff";
 import fs from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git.js";
@@ -6,9 +7,12 @@ import {
   MissingRepositoryInstallationError,
 } from "../infrastructure/github.js";
 import { UserFacingError } from "./error.js";
-import { ReleaseHashService } from "./release-hash.js";
+import { computeIntegrityHash } from "./integrity-hash.js";
+import { ModuleFile } from "./module-file.js";
+import { ReleaseArchive } from "./release-archive.js";
 import { Repository } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
+import { SourceTemplate } from "./source-template.js";
 import { User } from "./user.js";
 
 export class VersionAlreadyPublishedError extends UserFacingError {
@@ -36,8 +40,7 @@ export class AppNotInstalledToForkError extends UserFacingError {
 export class CreateEntryService {
   constructor(
     private readonly gitClient: GitClient,
-    private readonly githubClient: GitHubClient,
-    private readonly releaseHashService: ReleaseHashService
+    private readonly githubClient: GitHubClient
   ) {}
 
   public async createEntryFiles(
@@ -48,8 +51,29 @@ export class CreateEntryService {
     await Promise.all([rulesetRepo.checkout(tag), bcrRepo.checkout("main")]);
 
     const version = getVersionFromTag(tag);
-    const moduleName = rulesetRepo.moduleName;
-    const bcrEntryPath = path.resolve(bcrRepo.diskPath, "modules", moduleName);
+
+    const sourceTemplate = rulesetRepo.sourceTemplate;
+    sourceTemplate.substitute(
+      rulesetRepo.owner,
+      rulesetRepo.name,
+      tag,
+      version
+    );
+
+    const releaseArchive = await ReleaseArchive.fetch(
+      sourceTemplate.url,
+      sourceTemplate.stripPrefix
+    );
+    const integrityHash = computeIntegrityHash(releaseArchive.diskPath);
+    sourceTemplate.setIntegrityHash(integrityHash);
+
+    const moduleFile = await releaseArchive.extractModuleFile();
+
+    const bcrEntryPath = path.resolve(
+      bcrRepo.diskPath,
+      "modules",
+      moduleFile.moduleName
+    );
     const bcrVersionEntryPath = path.join(bcrEntryPath, version);
 
     if (!fs.existsSync(bcrEntryPath)) {
@@ -65,19 +89,15 @@ export class CreateEntryService {
 
     fs.mkdirSync(bcrVersionEntryPath);
 
-    stampModuleFile(
-      rulesetRepo.moduleFilePath,
-      path.join(bcrVersionEntryPath, "MODULE.bazel"),
-      version
+    this.patchModuleVersionIfMismatch(
+      moduleFile,
+      version,
+      sourceTemplate,
+      bcrVersionEntryPath
     );
 
-    await this.stampSourceFile(
-      rulesetRepo.sourceTemplatePath,
-      path.join(bcrVersionEntryPath, "source.json"),
-      rulesetRepo,
-      version,
-      tag
-    );
+    sourceTemplate.save(path.join(bcrVersionEntryPath, "source.json"));
+    moduleFile.save(path.join(bcrVersionEntryPath, "MODULE.bazel"));
 
     fs.copyFileSync(
       rulesetRepo.presubmitPath,
@@ -136,34 +156,42 @@ export class CreateEntryService {
     await this.gitClient.push(bcr.diskPath, "authed-fork", branch);
   }
 
-  private async stampSourceFile(
-    sourcePath: string,
-    destPath: string,
-    rulesetRepo: Repository,
+  // The version in the archived MODULE.bazel version should match the release version.
+  // If it doesn't, add a patch to set the correct version. This is useful when a release
+  // archive is just an archive of the source, and the source MODULE.bazel is kept unstamped
+  // (e.g., has '0.0.0' as the version).
+  private patchModuleVersionIfMismatch(
+    moduleFile: ModuleFile,
     version: string,
-    tag: string
-  ): Promise<void> {
-    // Substitute variables into source.json
-    const sourceContent = fs.readFileSync(sourcePath, { encoding: "utf-8" });
-    const substituted = sourceContent
-      .replace(/{REPO}/g, rulesetRepo.name)
-      .replace(/{OWNER}/g, rulesetRepo.owner)
-      .replace(/{VERSION}/g, version)
-      .replace(/{TAG}/g, tag);
+    sourceTemplate: SourceTemplate,
+    bcrVersionEntryPath: string
+  ): void {
+    if (moduleFile.version !== version) {
+      console.log(
+        "Archived MODULE.bazel version does not match release version. Creating a version patch."
+      );
+      const patchFileName = "module_dot_bazel_version.patch";
+      const existingContent = moduleFile.content;
+      moduleFile.stampVersion(version);
+      const stampedContent = moduleFile.content;
 
-    // Compute the integrity hash
-    const sourceJson = JSON.parse(substituted);
+      const patch = createPatch(
+        "MODULE.bazel",
+        existingContent,
+        stampedContent
+      );
 
-    const digest = await this.releaseHashService.calculate(sourceJson.url);
-    sourceJson.integrity = `sha256-${digest}`;
+      const patchesDir = path.join(bcrVersionEntryPath, "patches");
+      fs.mkdirSync(path.join(bcrVersionEntryPath, "patches"));
+      const patchFilePath = path.join(patchesDir, patchFileName);
+      fs.writeFileSync(patchFilePath, patch);
 
-    fs.writeFileSync(
-      destPath,
-      `${JSON.stringify(sourceJson, undefined, 4)}\n`,
-      {
-        encoding: "utf-8",
-      }
-    );
+      sourceTemplate.addPatch(
+        patchFileName,
+        computeIntegrityHash(patchFilePath),
+        0
+      );
+    }
   }
 }
 
@@ -176,9 +204,7 @@ function updateMetadataFile(
   let publishedVersions = [];
   if (fs.existsSync(destPath)) {
     try {
-      const existingMetadata = JSON.parse(
-        fs.readFileSync(destPath, { encoding: "utf-8" })
-      );
+      const existingMetadata = JSON.parse(fs.readFileSync(destPath, "utf8"));
       publishedVersions = existingMetadata.versions;
     } catch (error) {
       throw new MetadataParseError(bcrRepo, destPath);
@@ -196,26 +222,7 @@ function updateMetadataFile(
   );
   metadata.versions = [...publishedVersions, version];
 
-  fs.writeFileSync(destPath, JSON.stringify(metadata, null, 4) + "\n", {
-    encoding: "utf-8",
-  });
-}
-
-function stampModuleFile(
-  sourcePath: string,
-  destPath: string,
-  version: string
-) {
-  const module = fs.readFileSync(sourcePath, { encoding: "utf-8" });
-
-  const stampedModule = module.replace(
-    /(^.*?module\(.*?version\s*=\s*")[\w.]+(".*$)/s,
-    `$1${version}$2`
-  );
-
-  fs.writeFileSync(destPath, stampedModule, {
-    encoding: "utf-8",
-  });
+  fs.writeFileSync(destPath, JSON.stringify(metadata, null, 4) + "\n");
 }
 
 function getVersionFromTag(tag: string): string {
