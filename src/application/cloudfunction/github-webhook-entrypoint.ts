@@ -3,7 +3,6 @@ import { Webhooks } from "@octokit/webhooks";
 import { CreateEntryService } from "../../domain/create-entry.js";
 import { FindRegistryForkService } from "../../domain/find-registry-fork.js";
 import { PublishEntryService } from "../../domain/publish-entry.js";
-import { ReleaseHashService } from "../../domain/release-hash.js";
 import { Repository } from "../../domain/repository.js";
 import { EmailClient } from "../../infrastructure/email.js";
 import { GitClient } from "../../infrastructure/git.js";
@@ -18,12 +17,7 @@ const gitClient = new GitClient();
 const githubClient = new GitHubClient();
 const emailClient = new EmailClient();
 const findRegistryForkService = new FindRegistryForkService(githubClient);
-const releaseHashService = new ReleaseHashService();
-const createEntryService = new CreateEntryService(
-  gitClient,
-  githubClient,
-  releaseHashService
-);
+const createEntryService = new CreateEntryService(gitClient, githubClient);
 const publishEntryService = new PublishEntryService(githubClient);
 const notificationsService = new NotificationsService(
   emailClient,
