@@ -1,4 +1,4 @@
-import { CleanOptions, simpleGit } from "simple-git";
+import { simpleGit } from "simple-git";
 
 export class GitClient {
   public async clone(url: string, repoPath: string): Promise<void> {
@@ -6,7 +6,7 @@ export class GitClient {
   }
 
   public async checkout(repoPath: string, ref?: string): Promise<void> {
-    await simpleGit(repoPath).clean(CleanOptions.FORCE).checkout(ref);
+    await simpleGit(repoPath).clean(["f", "f", "x", "d"]).checkout(ref);
   }
 
   public async setUserNameAndEmail(
