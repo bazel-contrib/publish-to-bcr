@@ -109,6 +109,23 @@ describe("extractModuleFile", () => {
     );
   });
 
+  test("extracts MODULE.bazel from a tarball when the strip_prefix is empty", async () => {
+    const releaseArchive = await ReleaseArchive.fetch(
+      "https://foo.bar/rules-foo-v1.2.3.tar.gz",
+      ""
+    );
+    await releaseArchive.extractModuleFile();
+
+    expect(tar.x).toHaveBeenCalledWith(
+      {
+        cwd: path.dirname(releaseArchive.diskPath),
+        file: releaseArchive.diskPath,
+        strip: 0,
+      },
+      ["MODULE.bazel"]
+    );
+  });
+
   test("extracts the full zip archive next to the zip archive", async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       "https://foo.bar/rules-foo-v1.2.3.zip",
