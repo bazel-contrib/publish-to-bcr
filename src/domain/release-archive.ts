@@ -50,11 +50,14 @@ export class ReleaseArchive {
   private async extractModuleFileFromTarball(
     extractDir: string
   ): Promise<void> {
+    const stripComponents = this.stripPrefix
+      ? this.stripPrefix.split("/").length
+      : 0;
     await tar.x(
       {
         cwd: extractDir,
         file: this._diskPath,
-        strip: this.stripPrefix.split("/").length,
+        strip: stripComponents,
       },
       [path.posix.join(this.stripPrefix, "MODULE.bazel")]
     );
