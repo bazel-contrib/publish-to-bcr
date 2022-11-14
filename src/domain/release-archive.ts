@@ -53,14 +53,11 @@ export class ReleaseArchive {
     const stripComponents = this.stripPrefix
       ? this.stripPrefix.split("/").length
       : 0;
-    await tar.x(
-      {
-        cwd: extractDir,
-        file: this._diskPath,
-        strip: stripComponents,
-      },
-      [path.posix.join(this.stripPrefix, "MODULE.bazel")]
-    );
+    await tar.x({
+      cwd: extractDir,
+      file: this._diskPath,
+      strip: stripComponents,
+    });
   }
 
   private async extractModuleFileFromZip(extractDir: string): Promise<void> {
