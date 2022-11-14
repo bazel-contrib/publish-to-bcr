@@ -92,38 +92,32 @@ describe("extractModuleFile", () => {
     expect(thrownError.message.includes("deb")).toEqual(true);
   });
 
-  test("extracts MODULE.bazel file next to the tarball archive", async () => {
+  test("extracts contents next to the tarball archive", async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       "https://foo.bar/rules-foo-v1.2.3.tar.gz",
       STRIP_PREFIX
     );
     await releaseArchive.extractModuleFile();
 
-    expect(tar.x).toHaveBeenCalledWith(
-      {
-        cwd: path.dirname(releaseArchive.diskPath),
-        file: releaseArchive.diskPath,
-        strip: 1,
-      },
-      [path.posix.join(STRIP_PREFIX, "MODULE.bazel")]
-    );
+    expect(tar.x).toHaveBeenCalledWith({
+      cwd: path.dirname(releaseArchive.diskPath),
+      file: releaseArchive.diskPath,
+      strip: 1,
+    });
   });
 
-  test("extracts MODULE.bazel from a tarball when the strip_prefix is empty", async () => {
+  test("extracts a tarball when the strip_prefix is empty", async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       "https://foo.bar/rules-foo-v1.2.3.tar.gz",
       ""
     );
     await releaseArchive.extractModuleFile();
 
-    expect(tar.x).toHaveBeenCalledWith(
-      {
-        cwd: path.dirname(releaseArchive.diskPath),
-        file: releaseArchive.diskPath,
-        strip: 0,
-      },
-      ["MODULE.bazel"]
-    );
+    expect(tar.x).toHaveBeenCalledWith({
+      cwd: path.dirname(releaseArchive.diskPath),
+      file: releaseArchive.diskPath,
+      strip: 0,
+    });
   });
 
   test("extracts the full zip archive next to the zip archive", async () => {
