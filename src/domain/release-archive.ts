@@ -53,13 +53,25 @@ export class ReleaseArchive {
     const stripComponents = this.stripPrefix
       ? this.stripPrefix.split("/").length
       : 0;
+
+    let modulePath: string;
+
+    if (this.stripPrefix === ".") {
+      // https://github.com/bazelbuild/rules_pkg/issues/50 means some some release archives
+      // produced with pkg_tar will have a "." prefix baked in. Using path.join will collapse
+      // "." and just produce "MODULE.bazel" which is not the correct extraction path.
+      modulePath = "./MODULE.bazel";
+    } else {
+      modulePath = path.join(this.stripPrefix, "MODULE.bazel");
+    }
+
     await tar.x(
       {
         cwd: extractDir,
         file: this._diskPath,
         strip: stripComponents,
       },
-      [path.posix.join(this.stripPrefix, "MODULE.bazel")]
+      [modulePath]
     );
   }
 
