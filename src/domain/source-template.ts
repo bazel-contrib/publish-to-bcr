@@ -21,11 +21,10 @@ export class SourceTemplate {
       throw new InvalidSourceTemplateError("cannot parse file as json");
     }
 
-    if (!("strip_prefix" in this.sourceJson)) {
-      throw new InvalidSourceTemplateError("missing strip_prefix field");
-    }
-
-    if (typeof this.sourceJson.strip_prefix !== "string") {
+    if (
+      "strip_prefix" in this.sourceJson &&
+      typeof this.sourceJson.strip_prefix !== "string"
+    ) {
       throw new InvalidSourceTemplateError("invalid strip_prefix field");
     }
 
@@ -45,7 +44,9 @@ export class SourceTemplate {
     tag: string,
     version: string
   ) {
-    for (let prop of ["url", "strip_prefix"]) {
+    for (let prop of ["url", "strip_prefix"].filter(
+      (prop) => prop in this.sourceJson
+    )) {
       this.sourceJson[prop] = this.replaceVariables(
         this.sourceJson[prop] as string,
         repoOwner,
@@ -96,6 +97,6 @@ export class SourceTemplate {
   }
 
   public get stripPrefix(): string {
-    return this.sourceJson.strip_prefix as string;
+    return (this.sourceJson.strip_prefix as string) || "";
   }
 }
