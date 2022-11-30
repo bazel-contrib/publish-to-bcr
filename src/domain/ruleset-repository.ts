@@ -4,14 +4,24 @@ import yaml from "yaml";
 import { Configuration } from "./config.js";
 import { UserFacingError } from "./error.js";
 import { Repository } from "./repository.js";
-import { SourceTemplate } from "./source-template.js";
+import {
+  InvalidSourceTemplateError as _InvalidSourceTemplateError,
+  SourceTemplate,
+} from "./source-template.js";
 
-export class MissingFilesError extends UserFacingError {
+export class RulesetRepoError extends UserFacingError {
+  constructor(public repository: RulesetRepository, reason: string) {
+    super(reason);
+  }
+}
+
+export class MissingFilesError extends RulesetRepoError {
   constructor(
     repository: RulesetRepository,
     public readonly missingFiles: string[]
   ) {
     super(
+      repository,
       `\
 Could not locate the following required files in ${repository.canonicalName}:
 ${missingFiles.map((missingFile) => `  ${missingFile}`).join("\n")}
@@ -20,25 +30,39 @@ Did you forget to add them to your ruleset repository? See instructions here: ht
   }
 }
 
-export class InvalidMetadataTemplateError extends UserFacingError {
+export class InvalidMetadataTemplateError extends RulesetRepoError {
   constructor(repository: RulesetRepository, reason: string) {
     super(
+      repository,
       `Invalid metadata.template.json file in ${repository.canonicalName}: ${reason}`
     );
   }
 }
 
-export class InvalidPresubmitFileError extends UserFacingError {
+export class InvalidPresubmitFileError extends RulesetRepoError {
   constructor(repository: RulesetRepository, reason: string) {
     super(
+      repository,
       `Invalid presubmit.yml file in ${repository.canonicalName}: ${reason}`
     );
   }
 }
 
-export class InvalidConfigFileError extends UserFacingError {
+export class InvalidConfigFileError extends RulesetRepoError {
   constructor(repository: RulesetRepository, reason: string) {
-    super(`Invalid config.yml file in ${repository.canonicalName}: ${reason}`);
+    super(
+      repository,
+      `Invalid config.yml file in ${repository.canonicalName}: ${reason}`
+    );
+  }
+}
+
+export class InvalidSourceTemplateError extends RulesetRepoError {
+  constructor(repository: RulesetRepository, reason: string) {
+    super(
+      repository,
+      `Invalid source.template.json file in ${repository.canonicalName}: ${reason}`
+    );
   }
 }
 
@@ -55,6 +79,8 @@ export class RulesetRepository extends Repository {
   ): Promise<RulesetRepository> {
     const rulesetRepo = new RulesetRepository(name, owner);
     await rulesetRepo.checkout(verifyAtRef);
+
+    rulesetRepo._config = loadConfiguration(rulesetRepo);
 
     const requiredFiles = [
       path.join(RulesetRepository.BCR_TEMPLATE_DIR, "metadata.template.json"),
@@ -74,12 +100,19 @@ export class RulesetRepository extends Repository {
     }
 
     validateMetadataTemplate(rulesetRepo);
-    rulesetRepo._sourceTemplate = new SourceTemplate(
-      rulesetRepo.sourceTemplatePath
-    );
-    validatePrecommitFile(rulesetRepo);
 
-    rulesetRepo._config = loadConfiguration(rulesetRepo);
+    try {
+      rulesetRepo._sourceTemplate = new SourceTemplate(
+        rulesetRepo.sourceTemplatePath
+      );
+    } catch (e) {
+      if (e instanceof _InvalidSourceTemplateError) {
+        throw new InvalidSourceTemplateError(rulesetRepo, e.message);
+      }
+      throw e;
+    }
+
+    validatePrecommitFile(rulesetRepo);
 
     return rulesetRepo;
   }
