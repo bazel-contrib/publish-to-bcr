@@ -49,17 +49,14 @@ describe("constructor", () => {
     );
   });
 
-  test("complains if the source template is missing 'strip_prefix'", async () => {
-    mockSourceFile({ missingStripPrefix: true });
-
-    await expectThrownError(
-      () => new SourceTemplate("source.template.json"),
-      InvalidSourceTemplateError
-    );
-  });
-
   test("does not complain if the 'strip_prefix' is empty", () => {
     mockSourceFile({ stripPrefix: "" });
+
+    new SourceTemplate("source.template.json");
+  });
+
+  test("does not complain if there is no 'strip_prefix'", () => {
+    mockSourceFile({ missingStripPrefix: true });
 
     new SourceTemplate("source.template.json");
   });
@@ -143,12 +140,41 @@ describe("save", () => {
 
     sourceTemplate.save("source.json");
 
-    const expectedOutput =
-      JSON.stringify(JSON.parse(fakeSourceFile()), undefined, 4) + "\n";
+    const expectedOutput = JSON.parse(fakeSourceFile());
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       "source.json",
-      expectedOutput
+      expect.any(String)
     );
+    expect(
+      JSON.parse(mocked(fs.writeFileSync).mock.calls[0][1] as string)
+    ).toEqual(expectedOutput);
+    expect(
+      (mocked(fs.writeFileSync).mock.calls[0][1] as string).endsWith("\n")
+    ).toEqual(true);
+  });
+
+  test("saves a file that ends with a newline", () => {
+    const sourceTemplate = new SourceTemplate("source.template.json");
+
+    sourceTemplate.save("source.json");
+
+    expect(fs.writeFileSync).toHaveBeenCalled();
+    expect(
+      (mocked(fs.writeFileSync).mock.calls[0][1] as string).endsWith("\n")
+    ).toEqual(true);
+  });
+
+  test("saves a file when there's no 'strip_prefix'", () => {
+    mockSourceFile({ missingStripPrefix: true });
+
+    const sourceTemplate = new SourceTemplate("source.template.json");
+
+    sourceTemplate.save("source.json");
+
+    expect(
+      "strip_prefix" in
+        JSON.parse(mocked(fs.writeFileSync).mock.calls[0][1] as string)
+    ).toEqual(false);
   });
 });
 
@@ -177,5 +203,16 @@ describe("stripPrefix", () => {
     sourceTemplate.substitute("foo", "bar", "v1.2.3", "1.2.3");
 
     expect(sourceTemplate.stripPrefix).toEqual("bar-1.2.3");
+  });
+
+  test("returns an empty string if there is no strip_prefix", () => {
+    mockSourceFile({ missingStripPrefix: true });
+    const sourceTemplate = new SourceTemplate("source.template.json");
+
+    expect(sourceTemplate.stripPrefix).toEqual("");
+
+    sourceTemplate.substitute("foo", "bar", "v1.2.3", "1.2.3");
+
+    expect(sourceTemplate.stripPrefix).toEqual("");
   });
 });
