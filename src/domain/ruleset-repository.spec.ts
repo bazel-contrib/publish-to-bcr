@@ -16,7 +16,9 @@ import {
   InvalidConfigFileError,
   InvalidMetadataTemplateError,
   InvalidPresubmitFileError,
+  InvalidSourceTemplateError,
   MissingFilesError,
+  RulesetRepoError,
   RulesetRepository,
 } from "./ruleset-repository";
 
@@ -82,6 +84,15 @@ describe("create", () => {
     );
   });
 
+  test("complains if the source template has errors", async () => {
+    mockRulesetFiles({ invalidSourceTemplate: true });
+
+    await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      InvalidSourceTemplateError
+    );
+  });
+
   describe("config", () => {
     test("defaults configuration when the file doesn't exist", async () => {
       mockRulesetFiles({ configExists: false });
@@ -117,6 +128,25 @@ describe("create", () => {
       });
       const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
       expect(rulesetRepo.config.fixedReleaser).toEqual({
+        login: "jbedard",
+        email: "json@bearded.ca",
+      });
+    });
+
+    test("should be accessible after a non-config related error", async () => {
+      mockRulesetFiles({
+        configExists: true,
+        fixedReleaser: { login: "jbedard", email: "json@bearded.ca" },
+        invalidSourceTemplate: true,
+      });
+
+      const thrownError = await expectThrownError(
+        () => RulesetRepository.create("foo", "bar", "main"),
+        RulesetRepoError
+      );
+
+      expect(thrownError.repository.config).toBeTruthy();
+      expect(thrownError.repository.config.fixedReleaser).toEqual({
         login: "jbedard",
         email: "json@bearded.ca",
       });
@@ -196,6 +226,7 @@ function mockRulesetFiles(
     configExt?: "yml" | "yaml";
     fixedReleaser?: FixedReleaser;
     invalidFixedReleaser?: boolean;
+    invalidSourceTemplate?: boolean;
   } = {}
 ) {
   gitClient.clone.mockImplementationOnce(async (url, repoPath) => {
@@ -225,7 +256,7 @@ function mockRulesetFiles(
           missingVersions: options.metadataMissingVersions,
         });
       } else if (p === path.join(templatesDir, "source.template.json")) {
-        return fakeSourceFile();
+        return fakeSourceFile({ malformed: options.invalidSourceTemplate });
       } else if (p === path.join(templatesDir, "presubmit.yml")) {
         return fakePresubmitFile({ malformed: options.invalidPresubmit });
       } else if (

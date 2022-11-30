@@ -1,7 +1,6 @@
 import fs from "node:fs";
-import { UserFacingError } from "./error.js";
 
-export class InvalidSourceTemplateError extends UserFacingError {
+export class InvalidSourceTemplateError extends Error {
   constructor(reason: string) {
     super(`Invalid source.template.json file: ${reason}`);
   }

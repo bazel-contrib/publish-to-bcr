@@ -5,7 +5,10 @@ import { CreateEntryService } from "../domain/create-entry.js";
 import { FindRegistryForkService } from "../domain/find-registry-fork.js";
 import { PublishEntryService } from "../domain/publish-entry.js";
 import { Repository } from "../domain/repository.js";
-import { RulesetRepository } from "../domain/ruleset-repository.js";
+import {
+  RulesetRepoError,
+  RulesetRepository,
+} from "../domain/ruleset-repository.js";
 import { User } from "../domain/user.js";
 import { GitHubClient } from "../infrastructure/github.js";
 import { SecretsClient } from "../infrastructure/secrets.js";
@@ -27,26 +30,31 @@ export class ReleaseEventHandler {
         process.env.BAZEL_CENTRAL_REGISTRY
       );
 
-      let releaser: User;
+      const [webhookAppAuth, botAppAuth] = await Promise.all([
+        this.getGitHubWebhookAppAuth(),
+        this.getGitHubBotAppAuth(),
+      ]);
+      this.githubClient.setAppAuth(webhookAppAuth);
+
       const repoCanonicalName = `${event.payload.repository.owner.login}/${event.payload.repository.name}`;
+      const repository = repositoryFromPayload(event.payload);
+      let releaser = await this.githubClient.getRepoUser(
+        event.payload.sender.login,
+        repository
+      );
+
       const tag = event.payload.release.tag_name;
 
       try {
-        const [webhookAppAuth, botAppAuth] = await Promise.all([
-          this.getGitHubWebhookAppAuth(),
-          this.getGitHubBotAppAuth(),
-        ]);
-        this.githubClient.setAppAuth(webhookAppAuth);
-
-        const rulesetRepo = await rulesetRepositoryFromPayload(event.payload);
-
-        const releaseAuthor = event.payload.sender.login;
-        console.log(`Release author: ${releaseAuthor}`);
-
-        const releaser = await this.determineReleaser(
-          releaseAuthor,
-          rulesetRepo
+        const rulesetRepo = await RulesetRepository.create(
+          repository.name,
+          repository.owner,
+          tag
         );
+
+        console.log(`Release author: ${releaser.username}`);
+
+        releaser = await this.overrideReleaser(releaser, rulesetRepo);
 
         console.log(
           `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
@@ -120,43 +128,52 @@ export class ReleaseEventHandler {
         }
       } catch (error) {
         console.log(error);
-        if (releaser) {
-          await this.notificationsService.notifyError(
-            releaser,
-            repoCanonicalName,
-            tag,
-            [error]
-          );
+
+        // If the ruleset repo was invalid, then we didn't get the chance to set the fixed releaser.
+        // See see if we can scrounge a fixedReleaser from the configuration to send that user an email.
+        if (
+          error instanceof RulesetRepoError &&
+          !!error.repository.config.fixedReleaser
+        ) {
+          releaser = {
+            username: error.repository.config.fixedReleaser.login,
+            email: error.repository.config.fixedReleaser.email,
+          };
         }
+
+        await this.notificationsService.notifyError(
+          releaser,
+          repoCanonicalName,
+          tag,
+          [error]
+        );
+
         return;
       }
     };
 
-  private async determineReleaser(
-    releaseAuthor: string,
+  private async overrideReleaser(
+    releaser: User,
     rulesetRepo: RulesetRepository
   ): Promise<User> {
-    // Use the GH release author unless a fixedReleaser is configured
-    let releaserUsername = releaseAuthor;
+    // Use the release author unless a fixedReleaser is configured
     if (rulesetRepo.config.fixedReleaser) {
-      releaserUsername = rulesetRepo.config.fixedReleaser.login;
-      console.log(`Overriding releaser to ${releaserUsername}`);
+      console.log(
+        `Overriding releaser to ${rulesetRepo.config.fixedReleaser.login}`
+      );
+
+      // Fetch the releaser to get their name
+      const fixedReleaser = await this.githubClient.getRepoUser(
+        rulesetRepo.config.fixedReleaser.login,
+        rulesetRepo
+      );
+
+      return {
+        username: rulesetRepo.config.fixedReleaser.login,
+        name: fixedReleaser.name,
+        email: rulesetRepo.config.fixedReleaser.email,
+      };
     }
-
-    // Fetch the user from GitHub. Note that their email won't be availble
-    // unless it's publicly listed on their profile.
-    const fetchedUser = await this.githubClient.getRepoUser(
-      releaserUsername,
-      rulesetRepo
-    );
-
-    const releaser: User = {
-      username: releaserUsername,
-      name: fetchedUser.name,
-      email: rulesetRepo.config.fixedReleaser
-        ? rulesetRepo.config.fixedReleaser.email
-        : fetchedUser.email,
-    };
 
     return releaser;
   }
@@ -192,12 +209,9 @@ export class ReleaseEventHandler {
   }
 }
 
-async function rulesetRepositoryFromPayload(
-  payload: ReleasePublishedEvent
-): Promise<RulesetRepository> {
-  return await RulesetRepository.create(
+function repositoryFromPayload(payload: ReleasePublishedEvent): Repository {
+  return new Repository(
     payload.repository.name,
-    payload.repository.owner.login,
-    payload.release.tag_name
+    payload.repository.owner.login
   );
 }
