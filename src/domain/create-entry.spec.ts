@@ -292,6 +292,34 @@ describe("createEntryFiles", () => {
         MetadataParseError
       );
     });
+
+    test("does not un-yank yanked versions in the bcr", async () => {
+      mockRulesetFiles({
+        metadataVersions: ["1.0.0"],
+        metadataYankedVersions: {},
+      });
+
+      const tag = "v2.0.0";
+      const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      mockBcrMetadataExists(rulesetRepo, bcrRepo, "fake_ruleset", true);
+      mockBcrMetadataFile(rulesetRepo, bcrRepo, "fake_ruleset", {
+        versions: ["1.0.0"],
+        yankedVersions: { "1.0.0": "has a bug" },
+      });
+
+      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag);
+
+      const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
+        (call) => (call[0] as string).includes("metadata.json")
+      );
+      const writtenMetadataContent = writeMetadataCall[1] as string;
+
+      expect(JSON.parse(writtenMetadataContent).yanked_versions).toEqual({
+        "1.0.0": "has a bug",
+      });
+    });
   });
 
   describe("MODULE.bazel", () => {
@@ -743,6 +771,7 @@ function mockRulesetFiles(
     extractedModuleVersion?: string;
     metadataHomepage?: string;
     metadataVersions?: string[];
+    metadataYankedVersions?: { [version: string]: string };
     sourceUrl?: string;
     sourceStripPrefix?: string;
   } = {}
@@ -767,6 +796,7 @@ function mockRulesetFiles(
       mockedFileReads[path.join(templatesDir, "metadata.template.json")] =
         fakeMetadataFile({
           versions: options.metadataVersions,
+          yankedVersions: options.metadataYankedVersions,
           homepage: options.metadataHomepage,
         });
     }
@@ -793,7 +823,12 @@ function mockBcrMetadataFile(
   rulesetRepo: RulesetRepository,
   bcrRepo: Repository,
   moduleName: string,
-  options?: { versions?: string[]; homepage?: string; malformed?: boolean }
+  options?: {
+    versions?: string[];
+    yankedVersions?: { [version: string]: string };
+    homepage?: string;
+    malformed?: boolean;
+  }
 ) {
   mockedFileReads[
     path.join(bcrRepo.diskPath, "modules", moduleName, "metadata.json")

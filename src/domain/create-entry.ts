@@ -202,10 +202,12 @@ function updateMetadataFile(
   version: string
 ) {
   let publishedVersions = [];
+  let yankedVersions = {};
   if (fs.existsSync(destPath)) {
     try {
       const existingMetadata = JSON.parse(fs.readFileSync(destPath, "utf8"));
       publishedVersions = existingMetadata.versions;
+      yankedVersions = existingMetadata.yanked_versions;
     } catch (error) {
       throw new MetadataParseError(bcrRepo, destPath);
     }
@@ -221,6 +223,7 @@ function updateMetadataFile(
     })
   );
   metadata.versions = [...publishedVersions, version];
+  metadata.yanked_versions = { ...metadata.yanked_versions, ...yankedVersions };
 
   fs.writeFileSync(destPath, JSON.stringify(metadata, null, 4) + "\n");
 }
