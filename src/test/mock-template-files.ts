@@ -137,8 +137,12 @@ export function fakeConfigFile(
   options: {
     fixedReleaser?: FixedReleaser;
     invalidFixedReleaser?: boolean;
+    content?: string;
   } = {}
 ) {
+  if (options.content) {
+    return options.content;
+  }
   if (options.invalidFixedReleaser) {
     return `\
 fixedReleaser: foobar
