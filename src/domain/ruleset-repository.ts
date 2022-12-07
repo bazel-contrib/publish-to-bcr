@@ -218,7 +218,8 @@ function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
 
   let config: Record<string, any>;
   try {
-    config = yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, "utf-8"));
+    config =
+      yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, "utf-8")) || {};
   } catch (error) {
     throw new InvalidConfigFileError(rulesetRepo, "cannot parse file as yaml");
   }

@@ -151,6 +151,15 @@ describe("create", () => {
         email: "json@bearded.ca",
       });
     });
+
+    test("does not complain when the config file is empty", async () => {
+      mockRulesetFiles({
+        configExists: true,
+        configContent: "",
+      });
+
+      await RulesetRepository.create("foo", "bar", "main");
+    });
   });
 });
 
@@ -224,6 +233,7 @@ function mockRulesetFiles(
     invalidPresubmit?: boolean;
     configExists?: boolean;
     configExt?: "yml" | "yaml";
+    configContent?: string;
     fixedReleaser?: FixedReleaser;
     invalidFixedReleaser?: boolean;
     invalidSourceTemplate?: boolean;
@@ -263,6 +273,7 @@ function mockRulesetFiles(
         p === path.join(templatesDir, `config.${options.configExt || "yml"}`)
       ) {
         return fakeConfigFile({
+          content: options.configContent,
           fixedReleaser: options.fixedReleaser,
           invalidFixedReleaser: options.invalidFixedReleaser,
         });
