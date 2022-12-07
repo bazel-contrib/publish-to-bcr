@@ -105,6 +105,7 @@ tasks:
 export function fakeMetadataFile(
   options: {
     versions?: string[];
+    yankedVersions?: { [version: string]: string };
     homepage?: string;
     malformed?: boolean;
     missingVersions?: boolean;
@@ -128,7 +129,7 @@ export function fakeMetadataFile(
           ? ""
           : `"versions": ${JSON.stringify(options.versions || [])},`
       }
-      "yanked_versions": {}
+      "yanked_versions": ${JSON.stringify(options.yankedVersions || {})}
     }
   `;
 }
