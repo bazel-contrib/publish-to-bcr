@@ -105,22 +105,21 @@ export class GitHubClient {
     repository: Repository
   ): Promise<any> {
     const octokit = this.getAppAuthorizedOctokit();
-    const { status, data: installation } =
-      await octokit.rest.apps.getRepoInstallation({
-        owner: repository.owner,
-        repo: repository.name,
-      });
-
-    if (status !== 200) {
-      if (status === 404) {
+    try {
+      const { data: installation } =
+        await octokit.rest.apps.getRepoInstallation({
+          owner: repository.owner,
+          repo: repository.name,
+        });
+      return installation;
+    } catch (error) {
+      if (error.status === 404) {
         throw new MissingRepositoryInstallationError(repository);
       }
       throw new Error(
         `Could not access app installation for repo ${repository.canonicalName}; returned status ${status}`
       );
     }
-
-    return installation;
   }
 
   public async getInstallationToken(repository: Repository): Promise<string> {

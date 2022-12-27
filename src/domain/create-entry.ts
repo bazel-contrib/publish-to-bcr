@@ -1,4 +1,5 @@
 import { createPatch } from "diff";
+import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git.js";
@@ -32,7 +33,7 @@ export class MetadataParseError extends UserFacingError {
 export class AppNotInstalledToForkError extends UserFacingError {
   public constructor(repository: Repository) {
     super(
-      `App is not installed to bcr fork ${repository.canonicalName}. You need to configure the app for both your ruleset repository and bazel-central-registry fork.`
+      `App is not installed to candidate bcr fork ${repository.canonicalName}. You need to configure the app for at least one bazel-central-registry fork. The fork can be in the ruleset's account in the release author's account.`
     );
   }
 }
@@ -112,7 +113,7 @@ export class CreateEntryService {
     releaser: User
   ): Promise<string> {
     const repoAndVersion = `${rulesetRepo.canonicalName}@${tag}`;
-    const branchName = repoAndVersion;
+    const branchName = `${repoAndVersion}-${randomBytes(4).toString("hex")}`;
 
     await this.gitClient.setUserNameAndEmail(
       bcrRepo.diskPath,
