@@ -11,9 +11,12 @@ export const CANONICAL_BCR = new Repository(
 
 export class NoCandidateForksError extends UserFacingError {
   constructor(public readonly rulesetRepo: RulesetRepository) {
-    super(
-      `Could not find candidate bazel-central-registry forks to push to. Did you configure the GitHub app for a BCR with the same owner as your ruleset, or for you personal fork? https://github.com/apps/publish-to-bcr.`
-    );
+    super(`\
+Could not find a candidate bazel-central-registry fork to push to.
+Publish to BCR must be installed to a BCR fork in either:
+  a) the same account as the ruleset
+  b) the release author's account
+Install the app here: https://github.com/apps/publish-to-bcr.`);
   }
 }
 
@@ -39,21 +42,29 @@ export class FindRegistryForkService {
       )
     ).reduce((acc, curr) => acc.concat(curr), []);
 
-    const candidateForks = allForks.filter(
+    let candidateForks = allForks.filter(
       (repo) => repo.name === "bazel-central-registry"
     );
 
-    const candidateForkSourceRepos = await Promise.all(
+    // Only consider forks named `bazel-central-registry`
+    const sourceRepos = await Promise.all(
       candidateForks.map((fork) => this.githubClient.getSourceRepository(fork))
     );
-
-    const verifiedCandidateForks = candidateForks.filter((bcrFork, index) =>
-      candidateForkSourceRepos[index].equals(CANONICAL_BCR)
+    candidateForks = candidateForks.filter((_, index) =>
+      sourceRepos[index].equals(CANONICAL_BCR)
     );
 
-    if (!verifiedCandidateForks.length) {
+    // Filter out BCR forks that don't have the app installed
+    const appInstalledToFork = await Promise.all(
+      candidateForks.map((fork) => this.githubClient.hasAppInstallation(fork))
+    );
+    candidateForks = candidateForks.filter(
+      (_, index) => appInstalledToFork[index]
+    );
+
+    if (!candidateForks.length) {
       throw new NoCandidateForksError(rulesetRepo);
     }
-    return verifiedCandidateForks;
+    return candidateForks;
   }
 }
