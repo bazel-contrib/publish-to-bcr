@@ -1,4 +1,5 @@
 import { createPatch } from "diff";
+import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git.js";
@@ -112,7 +113,7 @@ export class CreateEntryService {
     releaser: User
   ): Promise<string> {
     const repoAndVersion = `${rulesetRepo.canonicalName}@${tag}`;
-    const branchName = repoAndVersion;
+    const branchName = `${repoAndVersion}-${randomBytes(4).toString("hex")}`;
 
     await this.gitClient.setUserNameAndEmail(
       bcrRepo.diskPath,
