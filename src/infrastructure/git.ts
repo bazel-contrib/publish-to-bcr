@@ -1,8 +1,16 @@
 import { simpleGit } from "simple-git";
 
 export class GitClient {
-  public async clone(url: string, repoPath: string): Promise<void> {
-    await simpleGit().clone(url, repoPath);
+  public async clone(
+    url: string,
+    repoPath: string,
+    branch?: string
+  ): Promise<void> {
+    const options = ["--depth", "1"];
+    if (branch) {
+      options.push("--branch", branch);
+    }
+    await simpleGit().clone(url, repoPath, options);
   }
 
   public async checkout(repoPath: string, ref?: string): Promise<void> {
