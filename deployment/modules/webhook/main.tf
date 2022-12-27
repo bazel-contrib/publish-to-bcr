@@ -34,6 +34,7 @@ resource "google_cloudfunctions_function" "publish_to_bcr_function" {
     GITHUB_BOT_APP_ID = var.github_bot_app_id,
     BAZEL_CENTRAL_REGISTRY = var.bazel_central_registry,
     NOTIFICATIONS_EMAIL = var.notifications_email,
+    DEBUG_EMAIL = var.debug_email,
     SMTP_HOST = var.smtp_host,
     SMTP_PORT = var.smtp_port,
   }

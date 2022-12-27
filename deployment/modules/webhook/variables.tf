@@ -29,6 +29,11 @@ variable "notifications_email" {
     description = "Email address that will send notifications"
 }
 
+variable "debug_email" {
+    type = string
+    description = "Email address to notify development team of issues"
+}
+
 variable "smtp_host" {
     type = string
     description = "SMTP host to use for sending emails"

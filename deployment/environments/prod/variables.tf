@@ -34,6 +34,12 @@ variable "notifications_email" {
     default = "no-reply@aspect.dev"
 }
 
+variable "debug_email" {
+    type = string
+    description = "Email address to notify development team of issues"
+    default = "derek@aspect.dev"
+}
+
 variable "smtp_host" {
     type = string
     description = "SMTP host to use for sending emails"
