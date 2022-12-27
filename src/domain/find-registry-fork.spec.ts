@@ -63,6 +63,10 @@ describe("findCandidateForks", () => {
       }
     );
 
+    mockGithubClient.hasAppInstallation.mockImplementation(async (repository) =>
+      repository.equals(ownerBcrFork)
+    );
+
     const forks = await findRegistryForkService.findCandidateForks(
       rulesetRepo,
       releaser
@@ -104,6 +108,10 @@ describe("findCandidateForks", () => {
         }
         return repository;
       }
+    );
+
+    mockGithubClient.hasAppInstallation.mockImplementation(async (repository) =>
+      repository.equals(releaserBcrFork)
     );
 
     const forks = await findRegistryForkService.findCandidateForks(
@@ -155,6 +163,11 @@ describe("findCandidateForks", () => {
       }
     );
 
+    mockGithubClient.hasAppInstallation.mockImplementation(
+      async (repository) =>
+        repository.equals(ownerBcrFork) || repository.equals(releaserBcrFork)
+    );
+
     const forks = await findRegistryForkService.findCandidateForks(
       rulesetRepo,
       releaser
@@ -196,6 +209,49 @@ describe("findCandidateForks", () => {
         return repository;
       }
     );
+
+    await expectThrownError(
+      () => findRegistryForkService.findCandidateForks(rulesetRepo, releaser),
+      NoCandidateForksError
+    );
+  });
+
+  test("complains when no bcr forks are found with the app installed", async () => {
+    const owner = "foo-company";
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "json@bearded.org",
+    };
+    const rulesetRepo = await RulesetRepository.create(
+      "ruleset",
+      owner,
+      "main"
+    );
+    const releaserBcrFork = new Repository(
+      "bazel-central-registry",
+      releaser.username
+    );
+
+    mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
+      async (repoOwner) => {
+        if (repoOwner === releaser.username) {
+          return [new Repository("a", releaser.username), releaserBcrFork];
+        }
+        return [];
+      }
+    );
+
+    mockGithubClient.getSourceRepository.mockImplementation(
+      async (repository) => {
+        if (repository.equals(releaserBcrFork)) {
+          return CANONICAL_BCR;
+        }
+        return repository;
+      }
+    );
+
+    mockGithubClient.hasAppInstallation.mockReturnValue(Promise.resolve(false));
 
     await expectThrownError(
       () => findRegistryForkService.findCandidateForks(rulesetRepo, releaser),

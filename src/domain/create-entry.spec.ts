@@ -4,10 +4,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git";
-import {
-  GitHubClient,
-  MissingRepositoryInstallationError,
-} from "../infrastructure/github";
+import { GitHubClient } from "../infrastructure/github";
 import {
   fakeMetadataFile,
   fakeModuleFile,
@@ -16,7 +13,6 @@ import {
 } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
 import {
-  AppNotInstalledToForkError,
   CreateEntryService,
   MetadataParseError,
   VersionAlreadyPublishedError,
@@ -741,26 +737,6 @@ describe("pushEntryToFork", () => {
       bcrRepo.diskPath,
       "authed-fork",
       branchName
-    );
-  });
-
-  test("throws when the repository installation is missing", async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
-    const branchName = `repo/owner@v1.2.3`;
-
-    mockGithubClient.getAuthenticatedRemoteUrl.mockRejectedValueOnce(
-      new MissingRepositoryInstallationError(bcrForkRepo)
-    );
-
-    const thrownError = await expectThrownError(
-      () =>
-        createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName),
-      AppNotInstalledToForkError
-    );
-
-    expect(thrownError.message.includes(bcrForkRepo.canonicalName)).toEqual(
-      true
     );
   });
 });

@@ -101,6 +101,18 @@ export class GitHubClient {
     return { name: data.name, username, email: data.email };
   }
 
+  public async hasAppInstallation(repository: Repository): Promise<boolean> {
+    try {
+      await this.getRepositoryInstallation(repository);
+      return true;
+    } catch (error) {
+      if (error instanceof MissingRepositoryInstallationError) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
   private async getRepositoryInstallation(
     repository: Repository
   ): Promise<any> {
