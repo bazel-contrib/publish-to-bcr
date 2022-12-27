@@ -32,7 +32,7 @@ export class MetadataParseError extends UserFacingError {
 export class AppNotInstalledToForkError extends UserFacingError {
   public constructor(repository: Repository) {
     super(
-      `App is not installed to bcr fork ${repository.canonicalName}. You need to configure the app for both your ruleset repository and bazel-central-registry fork.`
+      `App is not installed to candidate bcr fork ${repository.canonicalName}. You need to configure the app for at least one bazel-central-registry fork. The fork can be in the ruleset's account in the release author's account.`
     );
   }
 }
