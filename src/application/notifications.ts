@@ -5,6 +5,7 @@ import { SecretsClient } from "../infrastructure/secrets.js";
 
 export class NotificationsService {
   private readonly sender: string;
+  private readonly debugEmail?: string;
   private emailAuth: Authentication;
   constructor(
     private readonly emailClient: EmailClient,
@@ -14,6 +15,10 @@ export class NotificationsService {
       throw new Error("Missing NOTIFICATIONS_EMAIL environment variable.");
     }
     this.sender = process.env.NOTIFICATIONS_EMAIL;
+
+    if (!!process.env.DEBUG_EMAIL) {
+      this.debugEmail = process.env.DEBUG_EMAIL;
+    }
   }
 
   private async setAuth() {
@@ -40,6 +45,24 @@ export class NotificationsService {
   ): Promise<void> {
     await this.setAuth();
 
+    await this.sendErrorEmailToUser(recipient, repoCanonicalName, tag, errors);
+
+    if (this.debugEmail) {
+      await this.sendErrorEmailToDevs(
+        recipient,
+        repoCanonicalName,
+        tag,
+        errors
+      );
+    }
+  }
+
+  private async sendErrorEmailToUser(
+    recipient: User,
+    repoCanonicalName: string,
+    tag: string,
+    errors: Error[]
+  ): Promise<void> {
     const subject = `Publish to BCR`;
 
     let content = `\
@@ -67,6 +90,38 @@ Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Reg
 
     await this.emailClient.sendEmail(
       recipient.email,
+      this.sender,
+      subject,
+      content
+    );
+  }
+
+  private async sendErrorEmailToDevs(
+    user: User,
+    repoCanonicalName: string,
+    tag: string,
+    errors: Error[]
+  ): Promise<void> {
+    const subject = `Publish to BCR Error: ${repoCanonicalName}`;
+
+    const unknownErrors = errors.filter(
+      (error) => !(error instanceof UserFacingError)
+    );
+
+    if (!unknownErrors.length) {
+      return;
+    }
+
+    let content = `\
+User ${user.username} <${user.email}> encountered ${unknownErrors.length} unknown error(s) trying publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Registry.
+
+`;
+    for (let error of unknownErrors) {
+      content += `${error.message}\n${error.stack}\n\n`;
+    }
+
+    await this.emailClient.sendEmail(
+      this.debugEmail!,
       this.sender,
       subject,
       content
