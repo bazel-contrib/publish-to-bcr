@@ -51,7 +51,8 @@ describe("checkout", () => {
     await repository.checkout("main");
     expect(Repository.gitClient.clone).toHaveBeenCalledWith(
       repository.url,
-      repository.diskPath
+      repository.diskPath,
+      "main"
     );
     expect(Repository.gitClient.checkout).toHaveBeenCalledWith(
       repository.diskPath,
@@ -64,7 +65,8 @@ describe("checkout", () => {
     await repository.checkout();
     expect(Repository.gitClient.clone).toHaveBeenCalledWith(
       repository.url,
-      repository.diskPath
+      repository.diskPath,
+      undefined
     );
     expect(Repository.gitClient.checkout).toHaveBeenCalledWith(
       repository.diskPath,
