@@ -32,13 +32,13 @@ export class Repository {
     return this._diskPath;
   }
 
-  public async checkout(branch?: string): Promise<void> {
+  public async checkout(ref?: string): Promise<void> {
     if (!this.isCheckedOut()) {
       this._diskPath = path.join(os.tmpdir(), randomUUID(), this.name);
-      await Repository.gitClient.clone(this.url, this._diskPath, branch);
+      await Repository.gitClient.clone(this.url, this._diskPath);
     }
 
-    await Repository.gitClient.checkout(this._diskPath, branch);
+    await Repository.gitClient.checkout(this._diskPath, ref);
   }
 
   public equals(other: Repository): boolean {
