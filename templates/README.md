@@ -26,7 +26,7 @@ canonical name. Leave `versions` alone as this will be filled automatically.
     }
   ],
   "repository": [
-    "github:OWNER/REPO"
+    "github:OWNER/REPO"  // <-- Replace OWNER and REPO with the correct values
   ],
   "versions": [],
   "yanked_versions": {}
@@ -64,7 +64,10 @@ bcr_test_module:
 The app will automatically substitute in values for `{REPO}`, `{VERSION}`, `{OWNER}`, and `{TAG}`
 corresponding to your ruleset repository and the release.
 
-Check that the `strip_prefix` and `url` follow the correct format for your ruleset's release archive.
+Check that the `strip_prefix` and `url` follow the correct format for your ruleset's release
+archive.  If your repository relies on GitHub-generated source archives, then use
+`{REPO}-{VERSION}`. If your repository builds its own release archive, you probably do not have a
+prefix to be stripped. So, set `strip_prefix` to an empty string.
 
 The `integrity` hash will automatically be filled out by the app.
 
