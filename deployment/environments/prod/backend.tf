@@ -1,6 +1,6 @@
 terraform {
  backend "gcs" {
-   bucket  = "" # Set this with terraform init -backend-config="bucket=<BUCKET_ID>"
+   bucket  = "bucket-tfstate-02793625b05b4e9a"
    prefix  = "terraform/state"
  }
 }

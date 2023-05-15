@@ -1,12 +1,14 @@
 
-variable "project_id" {
+variable "project" {
     type = string
-    description = "ID of the Google Cloud project to deploy resources under"
+    description = "Project ID of the GCP project to setup services in. Defaults to the default project ID in the google provider."
+    default = null
 }
 
 variable "region" {
     type = string
-    description = "Google Cloud region to deploy resources to"
+    description = "The default region to setup services in. Defaults to the default region in the google provider."
+    default = null
 }
 
 variable "github_app_id" {
