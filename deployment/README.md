@@ -45,11 +45,11 @@ resources due to limitations with terraform and not being able to pass the bucke
 
 ### Initialize terraform backend
 
-Change to the environment directory and initialize the backend, passing the id of the state bucket created above.
+Change to the environment directory and initialize the backend.
 
 ```shell
 cd deployment/environments/dev
-terraform init -backend-config="bucket=<BUCKET_ID>"
+terraform init"
 ```
 
 ### Build the app
@@ -62,7 +62,6 @@ yarn build
 ### Deploy the app
 
 Run terraform apply to deploy the application.
-Note that you may wish to customize variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
 terraform apply
@@ -131,11 +130,11 @@ Follow these steps if an environment has already been setup and deployed to a Go
 If the environment is already deployed then the terraform state bucket should exist.
 Find and take note of the bucket id.
 
-Change to the directory of the environment you want to deploy to and initialize the backend, passing the bucket id.
+Change to the directory of the environment you want to deploy to and initialize the backend.
 
 ```shell
 cd deployment/environments/dev
-terraform init -backend-config="bucket=<BUCKET_ID>"
+terraform init
 ```
 
 ### Build the app
@@ -148,7 +147,6 @@ yarn build
 ### Deploy the app
 
 Run terraform apply to deploy the application.
-Note that you may wish to customize other variables from their defaults in [variables.tf](environments/dev/variables.tf).
 
 ```shell
 terraform apply

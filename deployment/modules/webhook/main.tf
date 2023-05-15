@@ -1,6 +1,23 @@
+
+terraform {
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+      version = "4.28.0"
+    }
+  }
+}
+
+data "google_client_config" "this" {}
+
+locals {
+  project = var.project != null ? var.project : data.google_client_config.this.project
+  region =  var.region != null ? var.region : data.google_client_config.this.region
+}
+
 resource "google_storage_bucket" "source_archive_bucket" {
-  name     = "${var.project_id}-source-archive-bucket"
-  location = var.region
+  name     = "${local.project}-source-archive-bucket"
+  location = local.region
 }
 
 data "archive_file" "publish_to_bcr_function_archive" {
@@ -43,8 +60,8 @@ resource "google_cloudfunctions_function" "publish_to_bcr_function" {
 # Publicly invokable webhook. Requests from GitHub are authenticated
 # inside the function.
 resource "google_cloudfunctions_function_iam_member" "invoker" {
-  project        = var.project_id
-  region         = var.region
+  project        = local.project
+  region         = local.region
   cloud_function = google_cloudfunctions_function.publish_to_bcr_function.name
 
   role   = "roles/cloudfunctions.invoker"
@@ -57,18 +74,18 @@ resource "google_secret_manager_secret" "github_app_webhook_secret" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "github_app_webhook_secret_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.github_app_webhook_secret.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -78,18 +95,18 @@ resource "google_secret_manager_secret" "github_app_private_key" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "github_app_private_key_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.github_app_private_key.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -99,18 +116,18 @@ resource "google_secret_manager_secret" "github_app_client_id" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "github_app_client_id_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.github_app_client_id.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -120,18 +137,18 @@ resource "google_secret_manager_secret" "github_app_client_secret" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "github_app_client_secret_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.github_app_client_secret.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -141,18 +158,18 @@ resource "google_secret_manager_secret" "github_bot_app_private_key" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "github_bot_app_private_key_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.github_bot_app_private_key.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -162,18 +179,18 @@ resource "google_secret_manager_secret" "github_bot_app_client_id" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "github_bot_app_client_id_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.github_bot_app_client_id.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -183,18 +200,18 @@ resource "google_secret_manager_secret" "github_bot_app_client_secret" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "github_bot_app_client_secret_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.github_bot_app_client_secret.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -205,18 +222,18 @@ resource "google_secret_manager_secret" "notifications_email_user" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "notifications_email_user_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.notifications_email_user.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
 
@@ -226,17 +243,17 @@ resource "google_secret_manager_secret" "notifications_email_password" {
   replication {
     user_managed {
       replicas {
-        location = var.region
+        location = local.region
       }
     }
   }
 }
 
 resource "google_secret_manager_secret_iam_binding" "notifications_email_password_binding" {
-  project = var.project_id
+  project = local.project
   secret_id = google_secret_manager_secret.notifications_email_password.secret_id
   role = "roles/secretmanager.secretAccessor"
   members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    "serviceAccount:${local.project}@appspot.gserviceaccount.com"
   ]
 }
