@@ -1,17 +1,23 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
+import axios from "axios";
+import axiosRetry from "axios-retry";
 import extractZip from "extract-zip";
 import { mocked } from "jest-mock";
-import fs from "node:fs";
-import https from "node:https";
+import fs, { WriteStream } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import tar from "tar";
 import { fakeModuleFile } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
-import { ReleaseArchive, UnsupportedArchiveFormat } from "./release-archive";
+import {
+  ArchiveDownloadError,
+  ReleaseArchive,
+  UnsupportedArchiveFormat,
+} from "./release-archive";
 
 jest.mock("node:fs");
-jest.mock("node:https");
+jest.mock("axios");
+jest.mock("axios-retry");
 jest.mock("node:os");
 jest.mock("tar");
 jest.mock("extract-zip");
@@ -23,15 +29,14 @@ const TEMP_DIR = "/tmp";
 beforeEach(() => {
   jest.clearAllMocks();
 
-  mocked(https.get).mockImplementation(((
-    url: string,
-    fn: (...args: any[]) => {}
-  ) => {
-    fn({ statusCode: 200, pipe: jest.fn() });
-    return {
-      on: jest.fn(),
-    };
-  }) as any);
+  mocked(axios.get).mockReturnValue(
+    Promise.resolve({
+      data: {
+        pipe: jest.fn(),
+      },
+      status: 200,
+    })
+  );
 
   mocked(fs.createWriteStream).mockReturnValue({
     on: jest.fn((event: string, func: (...args: any[]) => {}) => {
@@ -52,10 +57,18 @@ describe("fetch", () => {
   test("downloads the archive", async () => {
     await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
 
-    expect(https.get).toHaveBeenCalledWith(
-      RELEASE_ARCHIVE_URL,
-      expect.any(Function)
-    );
+    expect(axios.get).toHaveBeenCalledWith(RELEASE_ARCHIVE_URL, {
+      responseType: "stream",
+    });
+  });
+
+  test("retries the request if it fails", async () => {
+    await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
+
+    expect(axiosRetry).toHaveBeenCalledWith(axios, {
+      retries: 3,
+      retryDelay: axiosRetry.exponentialDelay,
+    });
   });
 
   test("saves the archive to disk", async () => {
@@ -65,6 +78,15 @@ describe("fetch", () => {
     expect(fs.createWriteStream).toHaveBeenCalledWith(expectedPath, {
       flags: "w",
     });
+
+    const mockedAxiosResponse = await (mocked(axios.get).mock.results[0]
+      .value as Promise<{ data: { pipe: Function } }>);
+    const mockedWriteStream = mocked(fs.createWriteStream).mock.results[0]
+      .value as WriteStream;
+
+    expect(mockedAxiosResponse.data.pipe).toHaveBeenCalledWith(
+      mockedWriteStream
+    );
   });
 
   test("returns a ReleaseArchive with the correct diskPath", async () => {
@@ -75,6 +97,25 @@ describe("fetch", () => {
 
     const expectedPath = path.join(TEMP_DIR, "rules-foo-v1.2.3.tar.gz");
     expect(releaseArchive.diskPath).toEqual(expectedPath);
+  });
+
+  test("throws on a non 200 status", async () => {
+    mocked(axios.get).mockReturnValue(
+      Promise.resolve({
+        data: {
+          pipe: jest.fn(),
+        },
+        status: 404,
+      })
+    );
+
+    const thrownError = await expectThrownError(
+      () => ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX),
+      ArchiveDownloadError
+    );
+
+    expect(thrownError.message.includes(RELEASE_ARCHIVE_URL)).toEqual(true);
+    expect(thrownError.message.includes("404")).toEqual(true);
   });
 });
 

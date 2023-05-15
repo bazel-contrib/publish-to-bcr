@@ -1,6 +1,7 @@
+import axios from "axios";
+import axiosRetry from "axios-retry";
 import extractZip from "extract-zip";
 import fs from "node:fs";
-import https from "node:https";
 import os from "node:os";
 import path from "node:path";
 import tar from "tar";
@@ -11,6 +12,14 @@ import { ModuleFile } from "./module-file.js";
 export class UnsupportedArchiveFormat extends UserFacingError {
   constructor(extension: string) {
     super(`Unsupported release archive format ${extension}`);
+  }
+}
+
+export class ArchiveDownloadError extends UserFacingError {
+  constructor(url: string, statusCode: number) {
+    super(
+      `Failed to download release archive from ${url}. Received status ${statusCode}`
+    );
   }
 }
 
@@ -73,30 +82,27 @@ export class ReleaseArchive {
   }
 }
 
-function download(url: string, dest: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const request = https.get(url, (response) => {
-      if (response.statusCode === 200) {
-        const file = fs.createWriteStream(dest, { flags: "w" });
-        file.on("finish", () => resolve());
-        file.on("error", (err) => {
-          file.close();
-          fs.unlink(dest, () => reject(err.message));
-          reject(err);
-        });
-        response.pipe(file);
-      } else if (response.statusCode === 302 || response.statusCode === 301) {
-        // Redirect
-        download(response.headers.location, dest).then(() => resolve());
-      } else {
-        reject(
-          `Server responded with ${response.statusCode}: ${response.statusMessage}`
-        );
-      }
-    });
+async function download(url: string, dest: string): Promise<void> {
+  const writer = fs.createWriteStream(dest, { flags: "w" });
 
-    request.on("error", (err) => {
-      reject(err.message);
-    });
+  // Retry the request in case the artifact is still being uploaded
+  axiosRetry(axios, {
+    retries: 3,
+    retryDelay: axiosRetry.exponentialDelay,
+  });
+
+  const response = await axios.get(url, {
+    responseType: "stream",
+  });
+
+  if (response.status !== 200) {
+    throw new ArchiveDownloadError(url, response.status);
+  }
+
+  response.data.pipe(writer);
+
+  await new Promise((resolve, reject) => {
+    writer.on("finish", resolve);
+    writer.on("error", reject);
   });
 }
