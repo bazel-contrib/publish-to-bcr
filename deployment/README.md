@@ -49,7 +49,7 @@ Change to the environment directory and initialize the backend.
 
 ```shell
 cd deployment/environments/dev
-terraform init"
+terraform init
 ```
 
 ### Build the app
