@@ -73,47 +73,56 @@ export class ReleaseEventHandler {
         );
 
         const errors: Error[] = [];
-        for (let bcrFork of candidateBcrForks) {
-          try {
-            console.log(`Selecting fork ${bcrFork.canonicalName}.`);
+        for (let moduleRoot of rulesetRepo.config.moduleRoots) {
+          console.log(`Creating BCR entry for module root '${moduleRoot}'`);
+          for (let bcrFork of candidateBcrForks) {
+            try {
+              console.log(`Selecting fork ${bcrFork.canonicalName}.`);
 
-            await this.createEntryService.createEntryFiles(
-              rulesetRepo,
-              bcr,
-              tag
-            );
-            const branch = await this.createEntryService.commitEntryToNewBranch(
-              rulesetRepo,
-              bcr,
-              tag,
-              releaser
-            );
-            await this.createEntryService.pushEntryToFork(bcrFork, bcr, branch);
+              await this.createEntryService.createEntryFiles(
+                rulesetRepo,
+                bcr,
+                tag,
+                moduleRoot
+              );
+              const branch =
+                await this.createEntryService.commitEntryToNewBranch(
+                  rulesetRepo,
+                  bcr,
+                  tag,
+                  releaser
+                );
+              await this.createEntryService.pushEntryToFork(
+                bcrFork,
+                bcr,
+                branch
+              );
 
-            console.log(
-              `Pushed bcr entry to fork ${bcrFork.canonicalName} on branch ${branch}`
-            );
+              console.log(
+                `Pushed bcr entry for module '${moduleRoot}' to fork ${bcrFork.canonicalName} on branch ${branch}`
+              );
 
-            this.githubClient.setAppAuth(botAppAuth);
+              this.githubClient.setAppAuth(botAppAuth);
 
-            await this.publishEntryService.sendRequest(
-              rulesetRepo,
-              tag,
-              bcrFork,
-              bcr,
-              branch,
-              releaser
-            );
+              await this.publishEntryService.sendRequest(
+                tag,
+                bcrFork,
+                bcr,
+                branch,
+                releaser,
+                rulesetRepo.getModuleName(moduleRoot)
+              );
 
-            console.log(`Created pull request against ${bcr.canonicalName}`);
-            break;
-          } catch (error) {
-            console.log(
-              `Failed to create pull request using fork ${bcrFork.canonicalName}`
-            );
+              console.log(`Created pull request against ${bcr.canonicalName}`);
+              break;
+            } catch (error) {
+              console.log(
+                `Failed to create pull request using fork ${bcrFork.canonicalName}`
+              );
 
-            console.log(error);
-            errors.push(error);
+              console.log(error);
+              errors.push(error);
+            }
           }
         }
 

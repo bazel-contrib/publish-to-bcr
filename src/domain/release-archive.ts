@@ -40,7 +40,7 @@ export class ReleaseArchive {
     private readonly stripPrefix: string
   ) {}
 
-  public async extractModuleFile(): Promise<ModuleFile> {
+  public async extractModuleFile(moduleRoot: string): Promise<ModuleFile> {
     const extractDir = path.dirname(this._diskPath);
 
     if (this._diskPath.endsWith(".tar.gz")) {
@@ -52,7 +52,11 @@ export class ReleaseArchive {
       throw new UnsupportedArchiveFormat(extension);
     }
 
-    const extractedModulePath = path.join(extractDir, "MODULE.bazel");
+    const extractedModulePath = path.join(
+      extractDir,
+      moduleRoot,
+      "MODULE.bazel"
+    );
     return new ModuleFile(extractedModulePath);
   }
 

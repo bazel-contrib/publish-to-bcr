@@ -33,6 +33,12 @@ export class GitClient {
     await simpleGit(repoPath).add("./*").commit(commitMsg);
   }
 
+  public async hasRemote(repoPath: string, remote: string): Promise<boolean> {
+    return (await simpleGit(repoPath).getRemotes()).some(
+      (r) => r.name === remote
+    );
+  }
+
   public async addRemote(
     repoPath: string,
     remote: string,

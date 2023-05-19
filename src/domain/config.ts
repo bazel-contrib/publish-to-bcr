@@ -1,5 +1,6 @@
 export interface Configuration {
   readonly fixedReleaser?: FixedReleaser;
+  readonly moduleRoots: string[];
 }
 
 export interface FixedReleaser {

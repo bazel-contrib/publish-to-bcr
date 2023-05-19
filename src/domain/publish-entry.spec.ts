@@ -16,7 +16,6 @@ beforeEach(() => {
 
 describe("sendRequest", () => {
   test("creates a pull request from the bcr fork's provided branch to 'main' on the bcr", async () => {
-    const rulesetRepo = new Repository("foo", "bar");
     const bcrFork = new Repository("bazel-central-registry", "bar");
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
@@ -28,12 +27,12 @@ describe("sendRequest", () => {
     };
 
     await publishEntryService.sendRequest(
-      rulesetRepo,
       tag,
       bcrFork,
       bcr,
       branch,
-      releaser
+      releaser,
+      "rules_foo"
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
@@ -46,8 +45,7 @@ describe("sendRequest", () => {
     );
   });
 
-  test("includes the ruleset repository name and tag in the PR title", async () => {
-    const rulesetRepo = new Repository("foo", "bar");
+  test("includes the module name and release version in the PR title", async () => {
     const bcrFork = new Repository("bazel-central-registry", "bar");
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
@@ -59,12 +57,12 @@ describe("sendRequest", () => {
     };
 
     await publishEntryService.sendRequest(
-      rulesetRepo,
       tag,
       bcrFork,
       bcr,
       branch,
-      releaser
+      releaser,
+      "rules_foo"
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
@@ -72,7 +70,7 @@ describe("sendRequest", () => {
       expect.any(String),
       expect.any(Repository),
       expect.any(String),
-      expect.stringContaining(`${rulesetRepo.canonicalName}`),
+      expect.stringContaining("rules_foo"),
       expect.any(String)
     );
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
@@ -80,13 +78,12 @@ describe("sendRequest", () => {
       expect.any(String),
       expect.any(Repository),
       expect.any(String),
-      expect.stringContaining(`${tag}`),
+      expect.stringContaining("1.0.0"),
       expect.any(String)
     );
   });
 
   test("tags the releaser in the body", async () => {
-    const rulesetRepo = new Repository("foo", "bar");
     const bcrFork = new Repository("bazel-central-registry", "bar");
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
@@ -98,12 +95,12 @@ describe("sendRequest", () => {
     };
 
     await publishEntryService.sendRequest(
-      rulesetRepo,
       tag,
       bcrFork,
       bcr,
       branch,
-      releaser
+      releaser,
+      "rules_foo"
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
@@ -117,7 +114,6 @@ describe("sendRequest", () => {
   });
 
   test("creates the created pull request number", async () => {
-    const rulesetRepo = new Repository("foo", "bar");
     const bcrFork = new Repository("bazel-central-registry", "bar");
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
@@ -131,12 +127,12 @@ describe("sendRequest", () => {
     mockGithubClient.createPullRequest.mockResolvedValueOnce(4);
 
     const pr = await publishEntryService.sendRequest(
-      rulesetRepo,
       tag,
       bcrFork,
       bcr,
       branch,
-      releaser
+      releaser,
+      "rules_foo"
     );
 
     expect(pr).toEqual(4);

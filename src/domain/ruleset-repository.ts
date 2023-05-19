@@ -3,6 +3,7 @@ import path from "node:path";
 import yaml from "yaml";
 import { Configuration } from "./config.js";
 import { UserFacingError } from "./error.js";
+import { ModuleFile } from "./module-file.js";
 import { Repository } from "./repository.js";
 import {
   InvalidSourceTemplateError as _InvalidSourceTemplateError,
@@ -31,19 +32,35 @@ Did you forget to add them to your ruleset repository? See instructions here: ht
 }
 
 export class InvalidMetadataTemplateError extends RulesetRepoError {
-  constructor(repository: RulesetRepository, reason: string) {
+  constructor(
+    repository: RulesetRepository,
+    moduleRoot: string,
+    reason: string
+  ) {
     super(
       repository,
-      `Invalid metadata.template.json file in ${repository.canonicalName}: ${reason}`
+      `Invalid metadata template file ${path.join(
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        moduleRoot,
+        "metadata.template.json"
+      )}:: ${reason}`
     );
   }
 }
 
 export class InvalidPresubmitFileError extends RulesetRepoError {
-  constructor(repository: RulesetRepository, reason: string) {
+  constructor(
+    repository: RulesetRepository,
+    moduleRoot: string,
+    reason: string
+  ) {
     super(
       repository,
-      `Invalid presubmit.yml file in ${repository.canonicalName}: ${reason}`
+      `Invalid presubmit file ${path.join(
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        moduleRoot,
+        "presubmit.yml"
+      )}: ${reason}`
     );
   }
 }
@@ -69,7 +86,7 @@ export class InvalidSourceTemplateError extends RulesetRepoError {
 export class RulesetRepository extends Repository {
   public static readonly BCR_TEMPLATE_DIR = ".bcr";
 
-  private _sourceTemplate: SourceTemplate;
+  private _sourceTemplate: Record<string, SourceTemplate> = {};
   private _config: Configuration;
 
   public static async create(
@@ -82,11 +99,24 @@ export class RulesetRepository extends Repository {
 
     rulesetRepo._config = loadConfiguration(rulesetRepo);
 
-    const requiredFiles = [
-      path.join(RulesetRepository.BCR_TEMPLATE_DIR, "metadata.template.json"),
-      path.join(RulesetRepository.BCR_TEMPLATE_DIR, "presubmit.yml"),
-      path.join(RulesetRepository.BCR_TEMPLATE_DIR, "source.template.json"),
-    ];
+    const requiredFiles = [];
+    for (let root of rulesetRepo._config.moduleRoots) {
+      requiredFiles.push(
+        ...[
+          path.join(
+            RulesetRepository.BCR_TEMPLATE_DIR,
+            root,
+            "metadata.template.json"
+          ),
+          path.join(RulesetRepository.BCR_TEMPLATE_DIR, root, "presubmit.yml"),
+          path.join(
+            RulesetRepository.BCR_TEMPLATE_DIR,
+            root,
+            "source.template.json"
+          ),
+        ]
+      );
+    }
 
     const missingFiles = [];
     for (let file of requiredFiles) {
@@ -99,54 +129,66 @@ export class RulesetRepository extends Repository {
       throw new MissingFilesError(rulesetRepo, missingFiles);
     }
 
-    validateMetadataTemplate(rulesetRepo);
+    for (let moduleRoot of rulesetRepo._config.moduleRoots) {
+      validateMetadataTemplate(rulesetRepo, moduleRoot);
 
-    try {
-      rulesetRepo._sourceTemplate = new SourceTemplate(
-        rulesetRepo.sourceTemplatePath
-      );
-    } catch (e) {
-      if (e instanceof _InvalidSourceTemplateError) {
-        throw new InvalidSourceTemplateError(rulesetRepo, e.message);
+      try {
+        rulesetRepo._sourceTemplate[moduleRoot] = new SourceTemplate(
+          rulesetRepo.sourceTemplatePath(moduleRoot)
+        );
+      } catch (e) {
+        if (e instanceof _InvalidSourceTemplateError) {
+          throw new InvalidSourceTemplateError(rulesetRepo, e.message);
+        }
+        throw e;
       }
-      throw e;
+
+      validatePresubmitFile(rulesetRepo, moduleRoot);
     }
 
-    validatePrecommitFile(rulesetRepo);
-
     return rulesetRepo;
+  }
+
+  public static getVersionFromTag(tag: string): string {
+    if (tag.startsWith("v")) {
+      return tag.substring(1);
+    }
+    return tag;
   }
 
   private constructor(readonly name: string, readonly owner: string) {
     super(name, owner);
   }
 
-  public get metadataTemplatePath(): string {
+  public metadataTemplatePath(moduleRoot: string): string {
     return path.resolve(
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
+      moduleRoot,
       "metadata.template.json"
     );
   }
 
-  public get presubmitPath(): string {
+  public presubmitPath(moduleRoot: string): string {
     return path.resolve(
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
+      moduleRoot,
       "presubmit.yml"
     );
   }
 
-  public get sourceTemplatePath(): string {
+  public sourceTemplatePath(moduleRoot: string): string {
     return path.resolve(
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
+      moduleRoot,
       "source.template.json"
     );
   }
 
-  public get sourceTemplate(): SourceTemplate {
-    return this._sourceTemplate;
+  public sourceTemplate(moduleRoot: string): SourceTemplate {
+    return this._sourceTemplate[moduleRoot];
   }
 
   public get configFilePath(): string {
@@ -170,17 +212,27 @@ export class RulesetRepository extends Repository {
   public get config(): Configuration {
     return this._config;
   }
+
+  public getModuleName(moduleRoot: string): string {
+    return new ModuleFile(path.join(this.diskPath, moduleRoot, "MODULE.bazel"))
+      .moduleName;
+  }
 }
 
-function validateMetadataTemplate(rulesetRepo: RulesetRepository) {
+function validateMetadataTemplate(
+  rulesetRepo: RulesetRepository,
+  moduleRoot: string
+) {
   let metadata: Record<string, unknown>;
+
   try {
     metadata = JSON.parse(
-      fs.readFileSync(rulesetRepo.metadataTemplatePath, "utf-8")
+      fs.readFileSync(rulesetRepo.metadataTemplatePath(moduleRoot), "utf-8")
     );
   } catch (error) {
     throw new InvalidMetadataTemplateError(
       rulesetRepo,
+      moduleRoot,
       "cannot parse file as json"
     );
   }
@@ -188,6 +240,7 @@ function validateMetadataTemplate(rulesetRepo: RulesetRepository) {
   if (!metadata.versions) {
     throw new InvalidMetadataTemplateError(
       rulesetRepo,
+      moduleRoot,
       "missing versions field"
     );
   }
@@ -195,25 +248,32 @@ function validateMetadataTemplate(rulesetRepo: RulesetRepository) {
   if (!Array.isArray(metadata.versions)) {
     throw new InvalidMetadataTemplateError(
       rulesetRepo,
+      moduleRoot,
       "invalid versions field"
     );
   }
 }
 
-function validatePrecommitFile(rulesetRepo: RulesetRepository) {
+function validatePresubmitFile(
+  rulesetRepo: RulesetRepository,
+  moduleRoot: string
+) {
   try {
-    yaml.parse(fs.readFileSync(rulesetRepo.presubmitPath, "utf-8"));
+    yaml.parse(fs.readFileSync(rulesetRepo.presubmitPath(moduleRoot), "utf-8"));
   } catch (error) {
     throw new InvalidPresubmitFileError(
       rulesetRepo,
+      moduleRoot,
       "cannot parse file as yaml"
     );
   }
 }
 
 function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
+  const DEFAULT_MODULE_ROOTS = ["."];
+
   if (!fs.existsSync(rulesetRepo.configFilePath)) {
-    return {};
+    return { moduleRoots: DEFAULT_MODULE_ROOTS };
   }
 
   let config: Record<string, any>;
@@ -236,5 +296,19 @@ function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
     );
   }
 
-  return { fixedReleaser: config.fixedReleaser } as Configuration;
+  if (
+    config.moduleRoots !== undefined &&
+    (!Array.isArray(config.moduleRoots) ||
+      !config.moduleRoots.every((value) => typeof value === "string"))
+  ) {
+    throw new InvalidConfigFileError(
+      rulesetRepo,
+      "could not parse 'moduleRoots'"
+    );
+  }
+
+  return {
+    fixedReleaser: config.fixedReleaser,
+    moduleRoots: config.moduleRoots || DEFAULT_MODULE_ROOTS,
+  } as Configuration;
 }
