@@ -1,24 +1,26 @@
 import { GitHubClient } from "../infrastructure/github.js";
 import { Repository } from "./repository.js";
+import { RulesetRepository } from "./ruleset-repository.js";
 import { User } from "./user.js";
 
 export class PublishEntryService {
   constructor(private readonly githubClient: GitHubClient) {}
 
   public async sendRequest(
-    rulesetRepo: Repository,
     tag: string,
     bcrForkRepo: Repository,
     bcr: Repository,
     branch: string,
-    releaser: User
+    releaser: User,
+    moduleName: string
   ): Promise<number> {
+    const version = RulesetRepository.getVersionFromTag(tag);
     const pr = await this.githubClient.createPullRequest(
       bcrForkRepo,
       branch,
       bcr,
       "main",
-      `${rulesetRepo.canonicalName}@${tag}`,
+      `${moduleName}@${version}`,
       `\
 Release author: @${releaser.username}.
 

@@ -127,7 +127,7 @@ describe("extractModuleFile", () => {
     );
 
     const thrownError = await expectThrownError(
-      () => releaseArchive.extractModuleFile(),
+      () => releaseArchive.extractModuleFile("."),
       UnsupportedArchiveFormat
     );
     expect(thrownError.message.includes("deb")).toEqual(true);
@@ -138,7 +138,7 @@ describe("extractModuleFile", () => {
       "https://foo.bar/rules-foo-v1.2.3.tar.gz",
       STRIP_PREFIX
     );
-    await releaseArchive.extractModuleFile();
+    await releaseArchive.extractModuleFile(".");
 
     expect(tar.x).toHaveBeenCalledWith({
       cwd: path.dirname(releaseArchive.diskPath),
@@ -152,7 +152,7 @@ describe("extractModuleFile", () => {
       "https://foo.bar/rules-foo-v1.2.3.tar.gz",
       ""
     );
-    await releaseArchive.extractModuleFile();
+    await releaseArchive.extractModuleFile(".");
 
     expect(tar.x).toHaveBeenCalledWith({
       cwd: path.dirname(releaseArchive.diskPath),
@@ -166,7 +166,7 @@ describe("extractModuleFile", () => {
       "https://foo.bar/rules-foo-v1.2.3.zip",
       STRIP_PREFIX
     );
-    await releaseArchive.extractModuleFile();
+    await releaseArchive.extractModuleFile(".");
 
     expect(extractZip).toHaveBeenCalledWith(releaseArchive.diskPath, {
       dir: path.dirname(releaseArchive.diskPath),
@@ -186,10 +186,26 @@ describe("extractModuleFile", () => {
       RELEASE_ARCHIVE_URL,
       STRIP_PREFIX
     );
-    await releaseArchive.extractModuleFile();
+    await releaseArchive.extractModuleFile(".");
 
     const expectedPath = path.join(
       path.dirname(releaseArchive.diskPath),
+      "MODULE.bazel"
+    );
+    expect(fs.readFileSync).toHaveBeenCalledWith(expectedPath, "utf8");
+  });
+
+  test("loads an extracted MODULE.bazel file in a different module root", async () => {
+    const releaseArchive = await ReleaseArchive.fetch(
+      RELEASE_ARCHIVE_URL,
+      STRIP_PREFIX
+    );
+    await releaseArchive.extractModuleFile("sub/dir");
+
+    const expectedPath = path.join(
+      path.dirname(releaseArchive.diskPath),
+      "sub",
+      "dir",
       "MODULE.bazel"
     );
     expect(fs.readFileSync).toHaveBeenCalledWith(expectedPath, "utf8");
@@ -200,7 +216,7 @@ describe("extractModuleFile", () => {
       RELEASE_ARCHIVE_URL,
       STRIP_PREFIX
     );
-    const moduleFile = await releaseArchive.extractModuleFile();
+    const moduleFile = await releaseArchive.extractModuleFile(".");
 
     expect(moduleFile.moduleName).toEqual("rules_foo");
     expect(moduleFile.version).toEqual("1.2.3");

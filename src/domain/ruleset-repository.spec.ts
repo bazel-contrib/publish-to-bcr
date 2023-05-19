@@ -57,6 +57,63 @@ describe("create", () => {
     );
   });
 
+  test("complains about missing required files in a different module root", async () => {
+    mockRulesetFiles({
+      configContent: 'moduleRoots: [".", "sub/dir"]',
+      fileExistsMocks: {
+        [path.join(
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "sub",
+          "dir",
+          "presumbit.yml"
+        )]: false,
+        [path.join(
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "sub",
+          "dir",
+          "source.template.json"
+        )]: false,
+        [path.join(
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "sub",
+          "dir",
+          "metadata.template.json"
+        )]: true,
+      },
+      fileContentMocks: {
+        [path.join(
+          RulesetRepository.BCR_TEMPLATE_DIR,
+          "sub",
+          "dir",
+          "metadata.template.json"
+        )]: fakeMetadataFile(),
+      },
+    });
+
+    const thrownError = await expectThrownError(
+      () => RulesetRepository.create("foo", "bar", "main"),
+      MissingFilesError
+    );
+
+    expect((thrownError as MissingFilesError).missingFiles.length).toEqual(2);
+    expect((thrownError as MissingFilesError).missingFiles).toContain(
+      path.join(
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "sub",
+        "dir",
+        "presubmit.yml"
+      )
+    );
+    expect((thrownError as MissingFilesError).missingFiles).toContain(
+      path.join(
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "sub",
+        "dir",
+        "source.template.json"
+      )
+    );
+  });
+
   test("complains if the metadata template cannot be parsed", async () => {
     mockRulesetFiles({ invalidMetadataFile: true });
 
@@ -120,6 +177,34 @@ describe("create", () => {
       );
     });
 
+    test("loads moduleRoots", async () => {
+      mockRulesetFiles({
+        configExists: true,
+        configContent: 'moduleRoots: [".", "subdir"]',
+      });
+    });
+
+    test("defaults moduleRoots to the root dir", async () => {
+      mockRulesetFiles({
+        configExists: true,
+        configContent: "",
+      });
+    });
+
+    test("throws on invalid moduleRoots value", async () => {
+      mockRulesetFiles({
+        configExists: true,
+        configContent: "moduleRoots: false",
+      });
+    });
+
+    test("throws module root that doesn't exist in repo", async () => {
+      mockRulesetFiles({
+        configExists: true,
+        configContent: 'moduleRoots: ["does/not/exist"]',
+      });
+    });
+
     test("loads config file with alternate extension 'yaml'", async () => {
       mockRulesetFiles({
         configExists: true,
@@ -168,10 +253,25 @@ describe("metadataTemplatePath", () => {
     mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
-    expect(rulesetRepo.metadataTemplatePath).toEqual(
+    expect(rulesetRepo.metadataTemplatePath(".")).toEqual(
       path.join(
         rulesetRepo.diskPath,
         RulesetRepository.BCR_TEMPLATE_DIR,
+        "metadata.template.json"
+      )
+    );
+  });
+
+  test("gets path to the metadata.template.json for a different module root", async () => {
+    mockRulesetFiles();
+    const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+
+    expect(rulesetRepo.metadataTemplatePath("sub/dir")).toEqual(
+      path.join(
+        rulesetRepo.diskPath,
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "sub",
+        "dir",
         "metadata.template.json"
       )
     );
@@ -183,10 +283,24 @@ describe("presubmitPath", () => {
     mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
-    expect(rulesetRepo.presubmitPath).toEqual(
+    expect(rulesetRepo.presubmitPath(".")).toEqual(
       path.join(
         rulesetRepo.diskPath,
         RulesetRepository.BCR_TEMPLATE_DIR,
+        "presubmit.yml"
+      )
+    );
+  });
+  test("gets path to the presubmit.yml file for a different module root", async () => {
+    mockRulesetFiles();
+    const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+
+    expect(rulesetRepo.presubmitPath("sub/dir")).toEqual(
+      path.join(
+        rulesetRepo.diskPath,
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "sub",
+        "dir",
         "presubmit.yml"
       )
     );
@@ -213,10 +327,25 @@ describe("sourceTemplatePath", () => {
     mockRulesetFiles();
     const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
 
-    expect(rulesetRepo.sourceTemplatePath).toEqual(
+    expect(rulesetRepo.sourceTemplatePath(".")).toEqual(
       path.join(
         rulesetRepo.diskPath,
         RulesetRepository.BCR_TEMPLATE_DIR,
+        "source.template.json"
+      )
+    );
+  });
+
+  test("gets path to the source.template.json file in a different module root", async () => {
+    mockRulesetFiles();
+    const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+
+    expect(rulesetRepo.sourceTemplatePath("sub/dir")).toEqual(
+      path.join(
+        rulesetRepo.diskPath,
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "sub",
+        "dir",
         "source.template.json"
       )
     );
@@ -237,6 +366,8 @@ function mockRulesetFiles(
     fixedReleaser?: FixedReleaser;
     invalidFixedReleaser?: boolean;
     invalidSourceTemplate?: boolean;
+    fileExistsMocks?: Record<string, boolean>;
+    fileContentMocks?: Record<string, string>;
   } = {}
 ) {
   gitClient.clone.mockImplementationOnce(async (url, repoPath) => {
@@ -244,8 +375,14 @@ function mockRulesetFiles(
       repoPath,
       RulesetRepository.BCR_TEMPLATE_DIR
     );
+
     mocked(fs.existsSync).mockImplementation(((p: string) => {
-      if (p === path.join(templatesDir, "metadata.template.json")) {
+      if (
+        options.fileExistsMocks &&
+        path.relative(repoPath, p) in options.fileExistsMocks!
+      ) {
+        return options.fileExistsMocks[path.relative(repoPath, p)];
+      } else if (p === path.join(templatesDir, "metadata.template.json")) {
         return !options.skipMetadataFile;
       } else if (p === path.join(templatesDir, "presubmit.yml")) {
         return !options.skipPresubmitFile;
@@ -254,13 +391,20 @@ function mockRulesetFiles(
       } else if (
         p === path.join(templatesDir, `config.${options.configExt || "yml"}`)
       ) {
-        return options.configExists;
+        return options.configExists || options.configContent !== undefined;
+      } else if (p === repoPath) {
+        return true;
       }
       return (jest.requireActual("node:fs") as any).existsSync(path);
     }) as any);
 
     mocked(fs.readFileSync).mockImplementation(((p: string, ...args: any[]) => {
-      if (p === path.join(templatesDir, "metadata.template.json")) {
+      if (
+        options.fileContentMocks &&
+        path.relative(repoPath, p) in options.fileContentMocks!
+      ) {
+        return options.fileContentMocks[path.relative(repoPath, p)];
+      } else if (p === path.join(templatesDir, "metadata.template.json")) {
         return fakeMetadataFile({
           malformed: options.invalidMetadataFile,
           missingVersions: options.metadataMissingVersions,

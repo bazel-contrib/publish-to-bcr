@@ -36,13 +36,14 @@ export class CreateEntryService {
   public async createEntryFiles(
     rulesetRepo: RulesetRepository,
     bcrRepo: Repository,
-    tag: string
+    tag: string,
+    moduleRoot: string
   ): Promise<void> {
     await Promise.all([rulesetRepo.checkout(tag), bcrRepo.checkout("main")]);
 
-    const version = getVersionFromTag(tag);
+    const version = RulesetRepository.getVersionFromTag(tag);
 
-    const sourceTemplate = rulesetRepo.sourceTemplate;
+    const sourceTemplate = rulesetRepo.sourceTemplate(moduleRoot);
     sourceTemplate.substitute(
       rulesetRepo.owner,
       rulesetRepo.name,
@@ -57,7 +58,7 @@ export class CreateEntryService {
     const integrityHash = computeIntegrityHash(releaseArchive.diskPath);
     sourceTemplate.setIntegrityHash(integrityHash);
 
-    const moduleFile = await releaseArchive.extractModuleFile();
+    const moduleFile = await releaseArchive.extractModuleFile(moduleRoot);
 
     const bcrEntryPath = path.resolve(
       bcrRepo.diskPath,
@@ -71,7 +72,7 @@ export class CreateEntryService {
     }
 
     updateMetadataFile(
-      rulesetRepo.metadataTemplatePath,
+      rulesetRepo.metadataTemplatePath(moduleRoot),
       bcrRepo,
       path.join(bcrEntryPath, "metadata.json"),
       version
@@ -90,7 +91,7 @@ export class CreateEntryService {
     moduleFile.save(path.join(bcrVersionEntryPath, "MODULE.bazel"));
 
     fs.copyFileSync(
-      rulesetRepo.presubmitPath,
+      rulesetRepo.presubmitPath(moduleRoot),
       path.join(bcrVersionEntryPath, "presubmit.yml")
     );
   }
@@ -129,11 +130,13 @@ export class CreateEntryService {
     const authenticatedRemoteUrl =
       await this.githubClient.getAuthenticatedRemoteUrl(bcrForkRepo);
 
-    await this.gitClient.addRemote(
-      bcr.diskPath,
-      "authed-fork",
-      authenticatedRemoteUrl
-    );
+    if (!(await this.gitClient.hasRemote(bcr.diskPath, "authed-fork"))) {
+      await this.gitClient.addRemote(
+        bcr.diskPath,
+        "authed-fork",
+        authenticatedRemoteUrl
+      );
+    }
     await this.gitClient.push(bcr.diskPath, "authed-fork", branch);
   }
 
@@ -207,11 +210,4 @@ function updateMetadataFile(
   metadata.yanked_versions = { ...metadata.yanked_versions, ...yankedVersions };
 
   fs.writeFileSync(destPath, JSON.stringify(metadata, null, 4) + "\n");
-}
-
-function getVersionFromTag(tag: string): string {
-  if (tag.startsWith("v")) {
-    return tag.substring(1);
-  }
-  return tag;
 }
