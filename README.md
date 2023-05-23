@@ -24,7 +24,7 @@ Publish to BCR uses information about the GitHub author of a release in order to
 
 You can work around this by setting a [fixed releaser](./templates/README.md#optional-configyml).
 
-## Publishing modules in the same repo
+## Publishing multiple modules in the same repo
 
 You can publish BCR entries for multiple modules that exist in your git repository by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
 
