@@ -1,4 +1,4 @@
-import { createPatch } from "diff";
+import { createTwoFilesPatch } from "diff";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -80,6 +80,13 @@ export class CreateEntryService {
 
     fs.mkdirSync(bcrVersionEntryPath);
 
+    this.addPatches(
+      rulesetRepo,
+      sourceTemplate,
+      bcrVersionEntryPath,
+      moduleRoot
+    );
+
     this.patchModuleVersionIfMismatch(
       moduleFile,
       version,
@@ -140,6 +147,32 @@ export class CreateEntryService {
     await this.gitClient.push(bcr.diskPath, "authed-fork", branch);
   }
 
+  private addPatches(
+    rulesetRepo: RulesetRepository,
+    sourceTemplate: SourceTemplate,
+    bcrVersionEntryPath: string,
+    moduleRoot: string
+  ): void {
+    const patchesPath = rulesetRepo.patchesPath(moduleRoot);
+    const patches = fs
+      .readdirSync(patchesPath)
+      .filter((f) => f.endsWith(".patch"));
+
+    if (
+      patches.length &&
+      !fs.existsSync(path.join(bcrVersionEntryPath, "patches"))
+    ) {
+      fs.mkdirSync(path.join(bcrVersionEntryPath, "patches"));
+    }
+
+    for (const patch of patches) {
+      const patchDest = path.join(bcrVersionEntryPath, "patches", patch);
+      fs.mkdirSync;
+      fs.copyFileSync(path.join(patchesPath, patch), patchDest);
+      sourceTemplate.addPatch(patch, computeIntegrityHash(patchDest), 1);
+    }
+  }
+
   // The version in the archived MODULE.bazel version should match the release version.
   // If it doesn't, add a patch to set the correct version. This is useful when a release
   // archive is just an archive of the source, and the source MODULE.bazel is kept unstamped
@@ -159,21 +192,24 @@ export class CreateEntryService {
       moduleFile.stampVersion(version);
       const stampedContent = moduleFile.content;
 
-      const patch = createPatch(
-        "MODULE.bazel",
+      const patch = createTwoFilesPatch(
+        "a/MODULE.bazel",
+        "b/MODULE.bazel",
         existingContent,
         stampedContent
       );
 
       const patchesDir = path.join(bcrVersionEntryPath, "patches");
-      fs.mkdirSync(path.join(bcrVersionEntryPath, "patches"));
+      if (!fs.existsSync(path.join(bcrVersionEntryPath, "patches"))) {
+        fs.mkdirSync(path.join(bcrVersionEntryPath, "patches"));
+      }
       const patchFilePath = path.join(patchesDir, patchFileName);
       fs.writeFileSync(patchFilePath, patch);
 
       sourceTemplate.addPatch(
         patchFileName,
         computeIntegrityHash(patchFilePath),
-        0
+        1
       );
     }
   }
