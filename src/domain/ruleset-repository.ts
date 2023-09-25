@@ -187,6 +187,15 @@ export class RulesetRepository extends Repository {
     );
   }
 
+  public patchesPath(moduleRoot: string): string {
+    return path.resolve(
+      this.diskPath,
+      RulesetRepository.BCR_TEMPLATE_DIR,
+      moduleRoot,
+      "patches"
+    );
+  }
+
   public sourceTemplate(moduleRoot: string): SourceTemplate {
     return this._sourceTemplate[moduleRoot];
   }

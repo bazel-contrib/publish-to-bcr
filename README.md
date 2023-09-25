@@ -28,6 +28,25 @@ You can work around this by setting a [fixed releaser](./templates/README.md#opt
 
 You can publish BCR entries for multiple modules that exist in your git repository by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
 
+## Including patches
+
+Include patches in the BCR entry by adding them under `.bcr/patches` in your ruleset repository. All patches must have the `.patch` extension and be in the `-p1` format.
+
+For example, a patch in `.bcr/patches/remove_dev_deps.patch` will be included in the entry's pull request and will be referenced in the
+corresponding `source.json` file:
+
+```json
+{
+    ...
+    "patch_strip": 0,
+    "patches": {
+        "remove_dev_deps.patch": "sha256-DXvBJbXZWf3hITOIjeJbgER6UOXIB6ogpgullT+oP4k="
+    }
+}
+```
+
+To patch in a submodule, add the patch to a patches folder under the submodule path `.bcr/[sub/module]/patches` where sub/module is the path to the WORKSPACE folder relative to the repository root.
+
 ## Reporting issues
 
 Create an issue in this repository for support.

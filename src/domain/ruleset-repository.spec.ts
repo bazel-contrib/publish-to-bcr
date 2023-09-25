@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import { mocked, Mocked } from "jest-mock";
+import { Mocked, mocked } from "jest-mock";
 import fs from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git";
@@ -347,6 +347,36 @@ describe("sourceTemplatePath", () => {
         "sub",
         "dir",
         "source.template.json"
+      )
+    );
+  });
+});
+
+describe("patchesPath", () => {
+  test("gets path to the patches folder", async () => {
+    mockRulesetFiles();
+    const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+
+    expect(rulesetRepo.patchesPath(".")).toEqual(
+      path.join(
+        rulesetRepo.diskPath,
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "patches"
+      )
+    );
+  });
+
+  test("gets path to the patches in a different module root", async () => {
+    mockRulesetFiles();
+    const rulesetRepo = await RulesetRepository.create("foo", "bar", "main");
+
+    expect(rulesetRepo.patchesPath("sub/dir")).toEqual(
+      path.join(
+        rulesetRepo.diskPath,
+        RulesetRepository.BCR_TEMPLATE_DIR,
+        "sub",
+        "dir",
+        "patches"
       )
     );
   });

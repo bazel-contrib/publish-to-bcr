@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import { mocked, Mocked } from "jest-mock";
+import { Mocked, mocked } from "jest-mock";
 import { randomUUID } from "node:crypto";
-import fs from "node:fs";
+import fs, { PathLike } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git";
 import { GitHubClient } from "../infrastructure/github";
@@ -54,6 +55,12 @@ beforeEach(() => {
     ]);
   }) as any);
 
+  mocked(fs.readdirSync).mockImplementation(((p: PathLike, options: any) => {
+    return Object.keys(mockedFileReads)
+      .filter((f) => path.dirname(f) === p)
+      .map((f) => path.basename(f));
+  }) as any);
+
   mocked(fs.existsSync).mockImplementation(((path: string) => {
     if (path in mockedFileReads) {
       return true;
@@ -70,12 +77,13 @@ beforeEach(() => {
       extractModuleFile: jest.fn(async () => {
         return new ModuleFile(EXTRACTED_MODULE_PATH);
       }),
+      diskPath: path.join(os.tmpdir(), "archive.tar.gz"),
     } as unknown as ReleaseArchive;
   });
 
   mockGitClient = mocked(new GitClient());
   mockGithubClient = mocked(new GitHubClient());
-  mocked(computeIntegrityHash).mockReturnValue(randomUUID());
+  mocked(computeIntegrityHash).mockReturnValue(`sha256-${randomUUID()}`);
   Repository.gitClient = mockGitClient;
   createEntryService = new CreateEntryService(mockGitClient, mockGithubClient);
 });
@@ -536,7 +544,7 @@ describe("createEntryFiles", () => {
       ).toEqual(hash);
     });
 
-    test("sets the patch_strip to 0 when a release version patch is added", async () => {
+    test("sets the patch_strip to 1 when a release version patch is added", async () => {
       mockRulesetFiles({
         extractedModuleName: "rules_bar",
         extractedModuleVersion: "1.2.3",
@@ -555,8 +563,67 @@ describe("createEntryFiles", () => {
         (call[0] as string).includes("source.json")
       );
       const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
-      expect(writtenSourceContent.patch_strip).toEqual(0);
+      expect(writtenSourceContent.patch_strip).toEqual(1);
     });
+
+    test("adds a patch entry for each patch in the patches folder", async () => {
+      mockRulesetFiles({
+        extractedModuleName: "rules_bar",
+        extractedModuleVersion: "1.2.3",
+        patches: {
+          "patch1.patch": randomUUID(),
+          "patch2.patch": randomUUID(),
+        },
+      });
+
+      const tag = "v1.2.3";
+      const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      const hash1 = `sha256-${randomUUID()}`;
+      const hash2 = `sha256-${randomUUID()}`;
+
+      mocked(computeIntegrityHash).mockReturnValueOnce(
+        `sha256-${randomUUID()}`
+      ); // release archive
+      mocked(computeIntegrityHash).mockReturnValueOnce(hash1);
+      mocked(computeIntegrityHash).mockReturnValueOnce(hash2);
+
+      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+
+      const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
+        (call[0] as string).includes("source.json")
+      );
+      const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
+      expect(writtenSourceContent.patches["patch1.patch"]).toEqual(hash1);
+      expect(writtenSourceContent.patches["patch2.patch"]).toEqual(hash2);
+    });
+  });
+
+  test("sets the patch_strip to 1 when a patch is added", async () => {
+    mockRulesetFiles({
+      extractedModuleName: "rules_bar",
+      extractedModuleVersion: "1.2.3",
+      patches: {
+        "patch.patch": randomUUID(),
+      },
+    });
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+
+    const hash = `sha256-${randomUUID()}`;
+    mocked(computeIntegrityHash).mockReturnValueOnce(`sha256-${randomUUID()}`); // release archive
+    mocked(computeIntegrityHash).mockReturnValueOnce(hash);
+
+    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+
+    const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
+      (call[0] as string).includes("source.json")
+    );
+    const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
+    expect(writtenSourceContent.patch_strip).toEqual(1);
   });
 
   describe("patches", () => {
@@ -590,8 +657,8 @@ describe("createEntryFiles", () => {
       const writtenPatchContent = writePatchCall[1] as string;
       expect(
         writtenPatchContent.includes(`\
---- MODULE.bazel
-+++ MODULE.bazel
+--- a/MODULE.bazel
++++ b/MODULE.bazel
 @@ -1,6 +1,6 @@
    module(
      name = "rules_bar",
@@ -601,6 +668,70 @@ describe("createEntryFiles", () => {
    )`)
       ).toEqual(true);
     });
+  });
+
+  test("includes patches in the patches folder", async () => {
+    mockRulesetFiles({
+      extractedModuleName: "rules_bar",
+      extractedModuleVersion: "1.2.3",
+      patches: {
+        "my_patch.patch": randomUUID(),
+      },
+    });
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+
+    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+
+    const expectedPatchPath = path.join(
+      bcrRepo.diskPath,
+      "modules",
+      "rules_bar",
+      "1.2.3",
+      "patches",
+      "my_patch.patch"
+    );
+    expect(fs.copyFileSync).toHaveBeenCalledWith(
+      path.join(rulesetRepo.patchesPath("."), "my_patch.patch"),
+      expectedPatchPath
+    );
+  });
+
+  test("includes patches in a different module root", async () => {
+    mockRulesetFiles({
+      extractedModuleName: "rules_bar",
+      extractedModuleVersion: "1.2.3",
+      patches: {
+        "submodule.patch": randomUUID(),
+      },
+      moduleRoot: "submodule",
+    });
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+
+    await createEntryService.createEntryFiles(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      "submodule"
+    );
+
+    const expectedPatchPath = path.join(
+      bcrRepo.diskPath,
+      "modules",
+      "rules_bar",
+      "1.2.3",
+      "patches",
+      "submodule.patch"
+    );
+    expect(fs.copyFileSync).toHaveBeenCalledWith(
+      path.join(rulesetRepo.patchesPath("submodule"), "submodule.patch"),
+      expectedPatchPath
+    );
   });
 });
 
@@ -829,6 +960,7 @@ function mockRulesetFiles(
     sourceUrl?: string;
     sourceStripPrefix?: string;
     moduleRoot?: string;
+    patches?: { [path: string]: string };
   } = {}
 ) {
   mockGitClient.checkout.mockImplementation(
@@ -860,6 +992,13 @@ function mockRulesetFiles(
         yankedVersions: options.metadataYankedVersions,
         homepage: options.metadataHomepage,
       });
+      if (options.patches) {
+        for (const patch of Object.keys(options.patches)) {
+          mockedFileReads[
+            path.join(templatesDir, moduleRoot, "patches", patch)
+          ] = options.patches[patch];
+        }
+      }
     }
   );
 }
