@@ -154,6 +154,9 @@ export class CreateEntryService {
     moduleRoot: string
   ): void {
     const patchesPath = rulesetRepo.patchesPath(moduleRoot);
+    if (!fs.existsSync(patchesPath)) {
+      return;
+    }
     const patches = fs
       .readdirSync(patchesPath)
       .filter((f) => f.endsWith(".patch"));
