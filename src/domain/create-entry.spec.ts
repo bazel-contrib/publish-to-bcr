@@ -61,9 +61,14 @@ beforeEach(() => {
       .map((f) => path.basename(f));
   }) as any);
 
-  mocked(fs.existsSync).mockImplementation(((path: string) => {
-    if (path in mockedFileReads) {
+  mocked(fs.existsSync).mockImplementation(((p: string) => {
+    if (p in mockedFileReads) {
       return true;
+    }
+    for (const f of Object.keys(mockedFileReads)) {
+      if (path.dirname(f) == p) {
+        return true;
+      }
     }
     return (jest.requireActual("node:fs") as any).existsSync(path);
   }) as any);
