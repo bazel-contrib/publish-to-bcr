@@ -14,16 +14,16 @@ export function fakeModuleFile(
     return randomUUID();
   }
   let content = `\
-  module(
-    ${
-      overrides.missingName
-        ? ""
-        : `name = "${overrides.moduleName || "fake_ruleset"}",`
-    }
-    compatibility_level = 1,
-    version = "${overrides.version || "0.0.0"}",
-  )
-  `;
+module(
+  ${
+    overrides.missingName
+      ? ""
+      : `name = "${overrides.moduleName || "fake_ruleset"}",`
+  }
+  compatibility_level = 1,
+  version = "${overrides.version || "0.0.0"}",
+)
+`;
   if (overrides.deps) {
     content += `\
 bazel_dep(name = "bazel_skylib", version = "1.1.1")

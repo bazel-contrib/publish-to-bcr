@@ -1,3 +1,4 @@
+import { ParsedDiff, applyPatch } from "diff";
 import fs from "node:fs";
 
 export class ModuleFile {
@@ -33,5 +34,9 @@ export class ModuleFile {
 
   public save(destPath: string) {
     fs.writeFileSync(destPath, this.moduleContent);
+  }
+
+  public patchContent(patch: ParsedDiff): void {
+    this.moduleContent = applyPatch(this.moduleContent, patch);
   }
 }

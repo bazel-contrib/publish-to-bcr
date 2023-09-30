@@ -1,6 +1,6 @@
-import { createTwoFilesPatch } from "diff";
+import { createTwoFilesPatch, parsePatch } from "diff";
 import { randomBytes } from "node:crypto";
-import fs from "node:fs";
+import fs, { readFileSync } from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git.js";
 import { GitHubClient } from "../infrastructure/github.js";
@@ -83,6 +83,7 @@ export class CreateEntryService {
     this.addPatches(
       rulesetRepo,
       sourceTemplate,
+      moduleFile,
       bcrVersionEntryPath,
       moduleRoot
     );
@@ -150,6 +151,7 @@ export class CreateEntryService {
   private addPatches(
     rulesetRepo: RulesetRepository,
     sourceTemplate: SourceTemplate,
+    moduleFile: ModuleFile,
     bcrVersionEntryPath: string,
     moduleRoot: string
   ): void {
@@ -169,10 +171,24 @@ export class CreateEntryService {
     }
 
     for (const patch of patches) {
+      const patchSrc = path.join(patchesPath, patch);
       const patchDest = path.join(bcrVersionEntryPath, "patches", patch);
       fs.mkdirSync;
-      fs.copyFileSync(path.join(patchesPath, patch), patchDest);
+      fs.copyFileSync(patchSrc, patchDest);
       sourceTemplate.addPatch(patch, computeIntegrityHash(patchDest), 1);
+
+      // If the user-provided patch patches MODULE.bazel, also apply it to
+      // the copy in the entry since it needs to be identical to the archived
+      // MODULE.bazel with any patches.
+      const diffs = parsePatch(readFileSync(patchSrc, "utf8"));
+      for (const diff of diffs) {
+        if (
+          diff.oldFileName === "a/MODULE.bazel" &&
+          diff.newFileName === "b/MODULE.bazel"
+        ) {
+          moduleFile.patchContent(diff);
+        }
+      }
     }
   }
 
