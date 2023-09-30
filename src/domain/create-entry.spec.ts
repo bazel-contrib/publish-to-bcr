@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
+import { createTwoFilesPatch } from "diff";
 import { Mocked, mocked } from "jest-mock";
 import { randomUUID } from "node:crypto";
 import fs, { PathLike } from "node:fs";
@@ -664,13 +665,13 @@ describe("createEntryFiles", () => {
         writtenPatchContent.includes(`\
 --- a/MODULE.bazel
 +++ b/MODULE.bazel
-@@ -1,6 +1,6 @@
-   module(
-     name = "rules_bar",
-     compatibility_level = 1,
--    version = "1.2.3",
-+    version = "4.5.6",
-   )`)
+@@ -1,5 +1,5 @@
+ module(
+   name = "rules_bar",
+   compatibility_level = 1,
+-  version = "1.2.3",
++  version = "4.5.6",
+ )`)
       ).toEqual(true);
     });
   });
@@ -736,6 +737,53 @@ describe("createEntryFiles", () => {
     expect(fs.copyFileSync).toHaveBeenCalledWith(
       path.join(rulesetRepo.patchesPath("submodule"), "submodule.patch"),
       expectedPatchPath
+    );
+  });
+
+  test("applies a patch to the entry's MODULE.bazel file", async () => {
+    const extractedModule = fakeModuleFile({
+      version: "1.2.3",
+      moduleName: "rules_bar",
+      deps: false,
+    });
+
+    const exptectedPatchedModule = fakeModuleFile({
+      version: "1.2.3",
+      moduleName: "rules_bar",
+      deps: true,
+    });
+
+    const patch = createTwoFilesPatch(
+      "a/MODULE.bazel",
+      "b/MODULE.bazel",
+      extractedModule,
+      exptectedPatchedModule
+    );
+
+    mockRulesetFiles({
+      extractedModuleContent: extractedModule,
+      patches: {
+        "patch_deps.patch": patch,
+      },
+    });
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+
+    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+
+    const moduleFilePath = path.join(
+      bcrRepo.diskPath,
+      "modules",
+      "rules_bar",
+      "1.2.3",
+      "MODULE.bazel"
+    );
+
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      moduleFilePath,
+      exptectedPatchedModule
     );
   });
 });
@@ -957,6 +1005,7 @@ describe("pushEntryToFork", () => {
 
 function mockRulesetFiles(
   options: {
+    extractedModuleContent?: string;
     extractedModuleName?: string;
     extractedModuleVersion?: string;
     metadataHomepage?: string;
@@ -971,10 +1020,14 @@ function mockRulesetFiles(
   mockGitClient.checkout.mockImplementation(
     async (repoPath: string, ref?: string) => {
       const moduleRoot = options?.moduleRoot || ".";
-      mockedFileReads[EXTRACTED_MODULE_PATH] = fakeModuleFile({
-        version: options.extractedModuleVersion || "1.2.3",
-        moduleName: options.extractedModuleName,
-      });
+      if (options.extractedModuleContent) {
+        mockedFileReads[EXTRACTED_MODULE_PATH] = options.extractedModuleContent;
+      } else {
+        mockedFileReads[EXTRACTED_MODULE_PATH] = fakeModuleFile({
+          version: options.extractedModuleVersion || "1.2.3",
+          moduleName: options.extractedModuleName,
+        });
+      }
       const templatesDir = path.join(
         repoPath,
         RulesetRepository.BCR_TEMPLATE_DIR

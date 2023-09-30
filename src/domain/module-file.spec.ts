@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
+import { createTwoFilesPatch, parsePatch } from "diff";
 import { mocked } from "jest-mock";
 import fs from "node:fs";
 import { fakeModuleFile } from "../test/mock-template-files";
@@ -9,6 +10,7 @@ jest.mock("node:fs");
 const MODULE_FILE_CONTENT = fakeModuleFile({
   moduleName: "rules_foo",
   version: "1.2.3",
+  deps: false,
 });
 
 beforeEach(() => {
@@ -70,5 +72,33 @@ describe("save", () => {
       "MODULE_B.bazel",
       moduleFile.content
     );
+  });
+});
+
+describe("patchContent", () => {
+  test("applies a diff", () => {
+    const patchedModuleFile = fakeModuleFile({
+      moduleName: "rules_foo",
+      version: "1.2.3",
+      deps: true,
+    });
+
+    const moduleFile = new ModuleFile("MODULE.bazel");
+
+    expect(moduleFile.content).not.toEqual(patchedModuleFile);
+
+    const patch = parsePatch(
+      createTwoFilesPatch(
+        "a/MODULE.bazel",
+        "b/MODULE.bazel",
+        moduleFile.content,
+        patchedModuleFile
+      )
+    );
+
+    expect(patch.length).toEqual(1);
+
+    moduleFile.patchContent(patch[0]);
+    expect(moduleFile.content).toEqual(patchedModuleFile);
   });
 });
