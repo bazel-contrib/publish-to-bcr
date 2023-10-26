@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
 import extractZip from "extract-zip";
 import fs from "node:fs";
@@ -17,9 +17,13 @@ export class UnsupportedArchiveFormat extends UserFacingError {
 
 export class ArchiveDownloadError extends UserFacingError {
   constructor(url: string, statusCode: number) {
-    super(
-      `Failed to download release archive from ${url}. Received status ${statusCode}`
-    );
+    let msg = `Failed to download release archive from ${url}. Received status ${statusCode}`;
+
+    if (statusCode === 404) {
+      msg +=
+        "\n\nDouble check that the `url` in your ruleset's .bcr/source.template.json is correct. Also ensure that the release archive is uploaded as part of publishing the release rather than uploaded afterward.";
+    }
+    super(msg);
   }
 }
 
@@ -95,12 +99,21 @@ async function download(url: string, dest: string): Promise<void> {
     retryDelay: axiosRetry.exponentialDelay,
   });
 
-  const response = await axios.get(url, {
-    responseType: "stream",
-  });
+  let response: AxiosResponse;
 
-  if (response.status !== 200) {
-    throw new ArchiveDownloadError(url, response.status);
+  try {
+    response = await axios.get(url, {
+      responseType: "stream",
+    });
+  } catch (e: any) {
+    // https://axios-http.com/docs/handling_errors
+    if (e.response) {
+      throw new ArchiveDownloadError(url, e.response.status);
+    } else if (e.request) {
+      throw new Error(`GET ${url} failed; no response received`);
+    } else {
+      throw new Error(`Failed to GET ${url} failed: ${e.message}`);
+    }
   }
 
   response.data.pipe(writer);

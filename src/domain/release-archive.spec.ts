@@ -100,14 +100,27 @@ describe("fetch", () => {
   });
 
   test("throws on a non 200 status", async () => {
-    mocked(axios.get).mockReturnValue(
-      Promise.resolve({
-        data: {
-          pipe: jest.fn(),
-        },
-        status: 404,
-      })
+    mocked(axios.get).mockRejectedValue({
+      response: {
+        status: 401,
+      },
+    });
+
+    const thrownError = await expectThrownError(
+      () => ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX),
+      ArchiveDownloadError
     );
+
+    expect(thrownError.message.includes(RELEASE_ARCHIVE_URL)).toEqual(true);
+    expect(thrownError.message.includes("401")).toEqual(true);
+  });
+
+  test("provides suggestions on a 404 error", async () => {
+    mocked(axios.get).mockRejectedValue({
+      response: {
+        status: 404,
+      },
+    });
 
     const thrownError = await expectThrownError(
       () => ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX),
@@ -116,6 +129,12 @@ describe("fetch", () => {
 
     expect(thrownError.message.includes(RELEASE_ARCHIVE_URL)).toEqual(true);
     expect(thrownError.message.includes("404")).toEqual(true);
+    expect(thrownError.message.includes("source.template.json")).toEqual(true);
+    expect(
+      thrownError.message.includes(
+        "release archive is uploaded as part of publishing the release"
+      )
+    ).toEqual(true);
   });
 });
 
