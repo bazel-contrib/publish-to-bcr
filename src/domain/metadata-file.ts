@@ -106,4 +106,30 @@ export class MetadataFile {
       `${JSON.stringify(this.metadata, undefined, 4)}\n`
     );
   }
+
+  // In an already erroneous situation, just try to fetch as many `maintainers`
+  // as we can from a metadata.json file, ignoring most of the usual validation.
+  public static emergencyParseMaintainers(filepath: string): Maintainer[] {
+    try {
+      const content = fs.readFileSync(filepath, "utf8");
+      const json = JSON.parse(content);
+
+      const maintainers: Maintainer[] = [];
+      if ("maintainers" in json) {
+        if (!Array.isArray(json.maintainers)) {
+          return [];
+        }
+
+        for (const maintainer of json.maintainers) {
+          if (typeof maintainer.name === "string") {
+            maintainers.push(maintainer as Maintainer);
+          }
+        }
+
+        return maintainers;
+      }
+    } catch (e) {}
+
+    return [];
+  }
 }

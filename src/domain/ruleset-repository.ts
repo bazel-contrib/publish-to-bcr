@@ -7,12 +7,16 @@ import { MetadataFile, MetadataFileError } from "./metadata-file.js";
 import { ModuleFile } from "./module-file.js";
 import { Repository } from "./repository.js";
 import {
-  SourceTemplate,
   InvalidSourceTemplateError as _InvalidSourceTemplateError,
+  SourceTemplate,
 } from "./source-template.js";
 
 export class RulesetRepoError extends UserFacingError {
-  constructor(public repository: RulesetRepository, reason: string) {
+  constructor(
+    public readonly repository: RulesetRepository,
+    public readonly moduleRoot: string | null,
+    reason: string
+  ) {
     super(reason);
   }
 }
@@ -20,10 +24,12 @@ export class RulesetRepoError extends UserFacingError {
 export class MissingFilesError extends RulesetRepoError {
   constructor(
     repository: RulesetRepository,
+    moduleRoot: string,
     public readonly missingFiles: string[]
   ) {
     super(
       repository,
+      moduleRoot,
       `\
 Could not locate the following required files in ${repository.canonicalName}:
 ${missingFiles.map((missingFile) => `  ${missingFile}`).join("\n")}
@@ -40,6 +46,7 @@ export class InvalidMetadataTemplateError extends RulesetRepoError {
   ) {
     super(
       repository,
+      moduleRoot,
       `Invalid metadata template file ${repository.metadataTemplatePath(
         moduleRoot
       )}: ${reason}`
@@ -55,6 +62,7 @@ export class InvalidPresubmitFileError extends RulesetRepoError {
   ) {
     super(
       repository,
+      moduleRoot,
       `Invalid presubmit file ${path.join(
         RulesetRepository.BCR_TEMPLATE_DIR,
         moduleRoot,
@@ -68,6 +76,7 @@ export class InvalidConfigFileError extends RulesetRepoError {
   constructor(repository: RulesetRepository, reason: string) {
     super(
       repository,
+      null,
       `Invalid config.yml file in ${repository.canonicalName}: ${reason}`
     );
   }
@@ -81,6 +90,7 @@ export class InvalidSourceTemplateError extends RulesetRepoError {
   ) {
     super(
       repository,
+      moduleRoot,
       `Invalid source.template.json file in ${repository.sourceTemplatePath(
         moduleRoot
       )}: ${reason}`
@@ -122,17 +132,16 @@ export class RulesetRepository extends Repository {
           ),
         ]
       );
-    }
-
-    const missingFiles = [];
-    for (let file of requiredFiles) {
-      if (!fs.existsSync(path.join(rulesetRepo.diskPath, file))) {
-        missingFiles.push(file);
+      const missingFiles = [];
+      for (let file of requiredFiles) {
+        if (!fs.existsSync(path.join(rulesetRepo.diskPath, file))) {
+          missingFiles.push(file);
+        }
       }
-    }
 
-    if (missingFiles.length) {
-      throw new MissingFilesError(rulesetRepo, missingFiles);
+      if (missingFiles.length) {
+        throw new MissingFilesError(rulesetRepo, root, missingFiles);
+      }
     }
 
     for (let moduleRoot of rulesetRepo._config.moduleRoots) {

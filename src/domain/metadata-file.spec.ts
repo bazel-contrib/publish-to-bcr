@@ -333,3 +333,125 @@ describe("save", () => {
     expect(JSON.parse(written).maintainers[0].disposition).toEqual("bearded");
   });
 });
+
+describe("emergencyParseMaintainers", () => {
+  test("parses maintainers from a valid metadata file", () => {
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [
+        {
+            "name": "M1",
+            "email": "m1@foo-maintainer.ca"
+        },
+        {
+            "name": "M2"
+        },
+        {
+            "name": "M3",
+            "github": "m3"
+        },
+        {
+            "name": "M4",
+            "email": "m4@foo-maintainer.ca",
+            "github": "m4"
+        }
+    ],
+    "repository":   [
+        "github:bar/rules_foo"
+    ],
+    "versions": [],
+    "yanked_versions": {}
+}
+`);
+    const maintainers = MetadataFile.emergencyParseMaintainers("metadata.json");
+
+    expect(maintainers).toEqual([
+      {
+        name: "M1",
+        email: "m1@foo-maintainer.ca",
+      },
+      {
+        name: "M2",
+      },
+      {
+        name: "M3",
+        github: "m3",
+      },
+      {
+        name: "M4",
+        email: "m4@foo-maintainer.ca",
+        github: "m4",
+      },
+    ]);
+  });
+
+  test("parses valid maintainers from an invalid metadata file", () => {
+    mockMetadataFile(`\
+{
+    "versions": 42,
+    "maintainers": [
+        {
+            "name": "M1",
+            "email": "m1@foo-maintainer.ca"
+        },
+        {
+            "name": "M2"
+        }
+    ]
+}
+`);
+    const maintainers = MetadataFile.emergencyParseMaintainers("metadata.json");
+
+    expect(maintainers).toEqual([
+      {
+        name: "M1",
+        email: "m1@foo-maintainer.ca",
+      },
+      {
+        name: "M2",
+      },
+    ]);
+  });
+
+  test("ignores invalid maintainers", () => {
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [
+        {
+            "name": "M1",
+            "email": "m1@foo-maintainer.ca"
+        },
+        {
+            "email": "m2@foo-maintainer.ca"
+        },
+        {
+            "name": "M3",
+            "github": "m3"
+        },
+        {
+            "foo": "bar"
+        }
+    ],
+    "repository":   [
+        "github:bar/rules_foo"
+    ],
+    "versions": [],
+    "yanked_versions": {}
+}
+`);
+    const maintainers = MetadataFile.emergencyParseMaintainers("metadata.json");
+
+    expect(maintainers).toEqual([
+      {
+        name: "M1",
+        email: "m1@foo-maintainer.ca",
+      },
+      {
+        name: "M3",
+        github: "m3",
+      },
+    ]);
+  });
+});
