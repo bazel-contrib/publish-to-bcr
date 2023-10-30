@@ -21,7 +21,8 @@ const createEntryService = new CreateEntryService(gitClient, githubClient);
 const publishEntryService = new PublishEntryService(githubClient);
 const notificationsService = new NotificationsService(
   emailClient,
-  secretsClient
+  secretsClient,
+  githubClient
 );
 
 const releaseEventHandler = new ReleaseEventHandler(

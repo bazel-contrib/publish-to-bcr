@@ -26,7 +26,7 @@ export class EmailClient {
   }
 
   public async sendEmail(
-    to: string,
+    to: string[],
     from: string,
     subject: string,
     text: string,
@@ -43,7 +43,7 @@ export class EmailClient {
     });
 
     await transporter.sendMail({
-      to,
+      to: to.join(","),
       from,
       subject,
       text,

@@ -1,6 +1,9 @@
 import { UserFacingError } from "../domain/error.js";
+import { Maintainer } from "../domain/metadata-file.js";
+import { Repository } from "../domain/repository.js";
 import { User } from "../domain/user.js";
 import { Authentication, EmailClient } from "../infrastructure/email.js";
+import { GitHubClient } from "../infrastructure/github.js";
 import { SecretsClient } from "../infrastructure/secrets.js";
 
 export class NotificationsService {
@@ -9,7 +12,8 @@ export class NotificationsService {
   private emailAuth: Authentication;
   constructor(
     private readonly emailClient: EmailClient,
-    private readonly secretsClient: SecretsClient
+    private readonly secretsClient: SecretsClient,
+    private readonly githubClient: GitHubClient
   ) {
     if (process.env.NOTIFICATIONS_EMAIL === undefined) {
       throw new Error("Missing NOTIFICATIONS_EMAIL environment variable.");
@@ -38,27 +42,58 @@ export class NotificationsService {
   }
 
   public async notifyError(
-    recipient: User,
-    repoCanonicalName: string,
+    releaseAuthor: User,
+    maintainers: ReadonlyArray<Maintainer>,
+    rulesetRepo: Repository,
     tag: string,
     errors: Error[]
   ): Promise<void> {
     await this.setAuth();
 
-    await this.sendErrorEmailToUser(recipient, repoCanonicalName, tag, errors);
+    const recipientEmails = new Set<string>();
+
+    // Send email to the release author
+    recipientEmails.add(releaseAuthor.email);
+
+    // Send email to maintainers to who listed their email
+    const maintainersWithEmail = maintainers.filter((m) => !!m.email);
+    maintainersWithEmail.forEach((m) => recipientEmails.add(m.email));
+
+    // Send email to maintainers who listed their github handle and have
+    // a public email on their github profile
+    const maintainersWithOnlyGithubHandle = maintainers.filter(
+      (m) => !!m.github && !m.email
+    );
+    const fetchedEmails = (
+      await Promise.all(
+        maintainersWithOnlyGithubHandle.map((m) =>
+          this.githubClient.getRepoUser(m.github, rulesetRepo)
+        )
+      )
+    )
+      .filter((u) => !!u.email)
+      .map((u) => u.email);
+    fetchedEmails.forEach((e) => recipientEmails.add(e));
+
+    await this.sendErrorEmail(
+      Array.from(recipientEmails),
+      rulesetRepo.canonicalName,
+      tag,
+      errors
+    );
 
     if (this.debugEmail) {
       await this.sendErrorEmailToDevs(
-        recipient,
-        repoCanonicalName,
+        releaseAuthor,
+        rulesetRepo.canonicalName,
         tag,
         errors
       );
     }
   }
 
-  private async sendErrorEmailToUser(
-    recipient: User,
+  private async sendErrorEmail(
+    recipients: string[],
     repoCanonicalName: string,
     tag: string,
     errors: Error[]
@@ -83,21 +118,16 @@ Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Reg
         "An unknown error occurred. Please report an issue here: https://github.com/bazel-contrib/publish-to-bcr/issues.";
     }
 
-    console.log(`Sending error email to ${recipient.email}`);
+    console.log(`Sending error email to ${JSON.stringify(recipients)}`);
     console.log(`Subject: ${subject}`);
     console.log(`Content:`);
     console.log(content);
 
-    await this.emailClient.sendEmail(
-      recipient.email,
-      this.sender,
-      subject,
-      content
-    );
+    await this.emailClient.sendEmail(recipients, this.sender, subject, content);
   }
 
   private async sendErrorEmailToDevs(
-    user: User,
+    releaseAuthor: User,
     repoCanonicalName: string,
     tag: string,
     errors: Error[]
@@ -113,7 +143,7 @@ Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Reg
     }
 
     let content = `\
-User ${user.username} <${user.email}> encountered ${unknownErrors.length} unknown error(s) trying publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Registry.
+User ${releaseAuthor.username} <${releaseAuthor.email}> encountered ${unknownErrors.length} unknown error(s) trying publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Registry.
 
 `;
     for (let error of unknownErrors) {
@@ -121,7 +151,7 @@ User ${user.username} <${user.email}> encountered ${unknownErrors.length} unknow
     }
 
     await this.emailClient.sendEmail(
-      this.debugEmail!,
+      [this.debugEmail!],
       this.sender,
       subject,
       content
