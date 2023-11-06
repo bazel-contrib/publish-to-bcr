@@ -3,11 +3,12 @@ import path from "node:path";
 import yaml from "yaml";
 import { Configuration } from "./config.js";
 import { UserFacingError } from "./error.js";
+import { MetadataFile, MetadataFileError } from "./metadata-file.js";
 import { ModuleFile } from "./module-file.js";
 import { Repository } from "./repository.js";
 import {
-  InvalidSourceTemplateError as _InvalidSourceTemplateError,
   SourceTemplate,
+  InvalidSourceTemplateError as _InvalidSourceTemplateError,
 } from "./source-template.js";
 
 export class RulesetRepoError extends UserFacingError {
@@ -39,11 +40,9 @@ export class InvalidMetadataTemplateError extends RulesetRepoError {
   ) {
     super(
       repository,
-      `Invalid metadata template file ${path.join(
-        RulesetRepository.BCR_TEMPLATE_DIR,
-        moduleRoot,
-        "metadata.template.json"
-      )}:: ${reason}`
+      `Invalid metadata template file ${repository.metadataTemplatePath(
+        moduleRoot
+      )}: ${reason}`
     );
   }
 }
@@ -75,10 +74,16 @@ export class InvalidConfigFileError extends RulesetRepoError {
 }
 
 export class InvalidSourceTemplateError extends RulesetRepoError {
-  constructor(repository: RulesetRepository, reason: string) {
+  constructor(
+    repository: RulesetRepository,
+    moduleRoot: string,
+    reason: string
+  ) {
     super(
       repository,
-      `Invalid source.template.json file in ${repository.canonicalName}: ${reason}`
+      `Invalid source.template.json file in ${repository.sourceTemplatePath(
+        moduleRoot
+      )}: ${reason}`
     );
   }
 }
@@ -87,6 +92,7 @@ export class RulesetRepository extends Repository {
   public static readonly BCR_TEMPLATE_DIR = ".bcr";
 
   private _sourceTemplate: Record<string, SourceTemplate> = {};
+  private _metadataTemplate: Record<string, MetadataFile> = {};
   private _config: Configuration;
 
   public static async create(
@@ -130,15 +136,26 @@ export class RulesetRepository extends Repository {
     }
 
     for (let moduleRoot of rulesetRepo._config.moduleRoots) {
-      validateMetadataTemplate(rulesetRepo, moduleRoot);
-
       try {
         rulesetRepo._sourceTemplate[moduleRoot] = new SourceTemplate(
           rulesetRepo.sourceTemplatePath(moduleRoot)
         );
+        rulesetRepo._metadataTemplate[moduleRoot] = new MetadataFile(
+          rulesetRepo.metadataTemplatePath(moduleRoot)
+        );
       } catch (e) {
         if (e instanceof _InvalidSourceTemplateError) {
-          throw new InvalidSourceTemplateError(rulesetRepo, e.message);
+          throw new InvalidSourceTemplateError(
+            rulesetRepo,
+            moduleRoot,
+            e.message
+          );
+        } else if (e instanceof MetadataFileError) {
+          throw new InvalidMetadataTemplateError(
+            rulesetRepo,
+            moduleRoot,
+            e.message
+          );
         }
         throw e;
       }
@@ -200,6 +217,10 @@ export class RulesetRepository extends Repository {
     return this._sourceTemplate[moduleRoot];
   }
 
+  public metadataTemplate(moduleRoot: string): MetadataFile {
+    return this._metadataTemplate[moduleRoot];
+  }
+
   public get configFilePath(): string {
     let configPath = path.resolve(
       this.diskPath,
@@ -225,41 +246,6 @@ export class RulesetRepository extends Repository {
   public getModuleName(moduleRoot: string): string {
     return new ModuleFile(path.join(this.diskPath, moduleRoot, "MODULE.bazel"))
       .moduleName;
-  }
-}
-
-function validateMetadataTemplate(
-  rulesetRepo: RulesetRepository,
-  moduleRoot: string
-) {
-  let metadata: Record<string, unknown>;
-
-  try {
-    metadata = JSON.parse(
-      fs.readFileSync(rulesetRepo.metadataTemplatePath(moduleRoot), "utf-8")
-    );
-  } catch (error) {
-    throw new InvalidMetadataTemplateError(
-      rulesetRepo,
-      moduleRoot,
-      "cannot parse file as json"
-    );
-  }
-
-  if (!metadata.versions) {
-    throw new InvalidMetadataTemplateError(
-      rulesetRepo,
-      moduleRoot,
-      "missing versions field"
-    );
-  }
-
-  if (!Array.isArray(metadata.versions)) {
-    throw new InvalidMetadataTemplateError(
-      rulesetRepo,
-      moduleRoot,
-      "invalid versions field"
-    );
   }
 }
 

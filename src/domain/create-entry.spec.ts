@@ -15,11 +15,11 @@ import {
 import { expectThrownError } from "../test/util";
 import {
   CreateEntryService,
-  MetadataParseError,
   VersionAlreadyPublishedError,
 } from "./create-entry";
 import { CANONICAL_BCR } from "./find-registry-fork";
 import { computeIntegrityHash } from "./integrity-hash";
+import { MetadataFileError } from "./metadata-file";
 import { ModuleFile } from "./module-file";
 import { ReleaseArchive } from "./release-archive";
 import { Repository } from "./repository";
@@ -303,6 +303,30 @@ describe("createEntryFiles", () => {
       ).toEqual(JSON.parse(writtenMetadataContent));
     });
 
+    test("does not include versions in the template metadata file", async () => {
+      // ...because the canonical released versions comes from the BCR
+      mockRulesetFiles({ metadataVersions: ["0.0.1"] });
+
+      const tag = "v1.2.3";
+      const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      mockBcrMetadataExists(rulesetRepo, bcrRepo, "fake_ruleset", true);
+      mockBcrMetadataFile(rulesetRepo, bcrRepo, "fake_ruleset", {
+        versions: ["1.0.0"],
+      });
+
+      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+
+      const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
+        (call) => (call[0] as string).includes("metadata.json")
+      );
+      const writtenMetadataContent = writeMetadataCall[1] as string;
+      expect(
+        JSON.parse(fakeMetadataFile({ versions: ["1.0.0", "1.2.3"] })) // doesn't have 0.0.1
+      ).toEqual(JSON.parse(writtenMetadataContent));
+    });
+
     test("updates bcr metadata file if there were changes to the template", async () => {
       mockRulesetFiles({ metadataHomepage: "foo.bar.com" });
 
@@ -361,7 +385,7 @@ describe("createEntryFiles", () => {
       await expectThrownError(
         () =>
           createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, "."),
-        MetadataParseError
+        MetadataFileError
       );
     });
 
