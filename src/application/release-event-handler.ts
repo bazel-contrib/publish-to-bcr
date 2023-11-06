@@ -42,6 +42,7 @@ export class ReleaseEventHandler {
         event.payload.sender.login,
         repository
       );
+      const releaseUrl = event.payload.release.url;
 
       const tag = event.payload.release.tag_name;
 
@@ -110,7 +111,8 @@ export class ReleaseEventHandler {
                 bcr,
                 branch,
                 releaser,
-                rulesetRepo.getModuleName(moduleRoot)
+                rulesetRepo.getModuleName(moduleRoot),
+                releaseUrl
               );
 
               console.log(`Created pull request against ${bcr.canonicalName}`);

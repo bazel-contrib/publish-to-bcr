@@ -12,9 +12,11 @@ export class PublishEntryService {
     bcr: Repository,
     branch: string,
     releaser: User,
-    moduleName: string
+    moduleName: string,
+    releaseUrl: string
   ): Promise<number> {
     const version = RulesetRepository.getVersionFromTag(tag);
+
     const pr = await this.githubClient.createPullRequest(
       bcrForkRepo,
       branch,
@@ -22,7 +24,9 @@ export class PublishEntryService {
       "main",
       `${moduleName}@${version}`,
       `\
-Release author: @${releaser.username}.
+Release: [${tag}](${releaseUrl})
+
+Author: @${releaser.username}.
 
 Automated by [Publish to BCR](https://github.com/apps/publish-to-bcr).`
     );

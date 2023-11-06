@@ -31,7 +31,8 @@ describe("sendRequest", () => {
       bcr,
       branch,
       releaser,
-      "rules_foo"
+      "rules_foo",
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
@@ -61,7 +62,8 @@ describe("sendRequest", () => {
       bcr,
       branch,
       releaser,
-      "rules_foo"
+      "rules_foo",
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
@@ -99,7 +101,8 @@ describe("sendRequest", () => {
       bcr,
       branch,
       releaser,
-      "rules_foo"
+      "rules_foo",
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
@@ -109,6 +112,39 @@ describe("sendRequest", () => {
       expect.any(String),
       expect.any(String),
       expect.stringContaining(`@${releaser.username}`)
+    );
+  });
+
+  test("incliudes the release url in the body", async () => {
+    const bcrFork = new Repository("bazel-central-registry", "bar");
+    const bcr = new Repository("bazel-central-registry", "bazelbuild");
+    const branch = "branch_with_entry";
+    const tag = "v1.0.0";
+    const releaser = {
+      name: "Json Bearded",
+      username: "json",
+      email: "jason@foo.org",
+    };
+
+    await publishEntryService.sendRequest(
+      tag,
+      bcrFork,
+      bcr,
+      branch,
+      releaser,
+      "rules_foo",
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
+    );
+
+    expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
+      expect.any(Repository),
+      expect.any(String),
+      expect.any(Repository),
+      expect.any(String),
+      expect.any(String),
+      expect.stringContaining(
+        `github.com/aspect-build/rules_foo/releases/tag/${tag}`
+      )
     );
   });
 
@@ -131,7 +167,8 @@ describe("sendRequest", () => {
       bcr,
       branch,
       releaser,
-      "rules_foo"
+      "rules_foo",
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 
     expect(pr).toEqual(4);
