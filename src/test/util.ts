@@ -1,5 +1,3 @@
-import { expect } from "@jest/globals";
-
 export async function expectThrownError<T extends Error>(
   run: () => any | Promise<any>,
   errorType: new (...args: any[]) => T
