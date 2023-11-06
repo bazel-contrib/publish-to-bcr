@@ -6,6 +6,7 @@ import { GitClient } from "../infrastructure/git.js";
 import { GitHubClient } from "../infrastructure/github.js";
 import { UserFacingError } from "./error.js";
 import { computeIntegrityHash } from "./integrity-hash.js";
+import { MetadataFile } from "./metadata-file.js";
 import { ModuleFile } from "./module-file.js";
 import { ReleaseArchive } from "./release-archive.js";
 import { Repository } from "./repository.js";
@@ -16,14 +17,6 @@ import { User } from "./user.js";
 export class VersionAlreadyPublishedError extends UserFacingError {
   public constructor(version: string) {
     super(`Version ${version} has already been published.`);
-  }
-}
-
-export class MetadataParseError extends UserFacingError {
-  public constructor(repository: Repository, path: string) {
-    super(
-      `Could not parse metadata file ${path} from repository ${repository.canonicalName}.`
-    );
   }
 }
 
@@ -71,12 +64,9 @@ export class CreateEntryService {
       fs.mkdirSync(bcrEntryPath);
     }
 
-    updateMetadataFile(
-      rulesetRepo.metadataTemplatePath(moduleRoot),
-      bcrRepo,
-      path.join(bcrEntryPath, "metadata.json"),
-      version
-    );
+    const metadataTemplate = rulesetRepo.metadataTemplate(moduleRoot);
+
+    updateMetadataFile(metadataTemplate, bcrEntryPath, version);
 
     fs.mkdirSync(bcrVersionEntryPath);
 
@@ -235,34 +225,29 @@ export class CreateEntryService {
 }
 
 function updateMetadataFile(
-  sourcePath: string,
-  bcrRepo: Repository,
-  destPath: string,
+  metadataTemplate: MetadataFile,
+  bcrEntryPath: string,
   version: string
 ) {
-  let publishedVersions = [];
-  let yankedVersions = {};
+  // Ignore any versions in the template metadata file since the
+  // canonical source for released and yanked versions exists in
+  // the metadata file stored in the Bazel Central Registry.
+  metadataTemplate.clearVersions();
+  metadataTemplate.clearYankedVersions();
+
+  const destPath = path.join(bcrEntryPath, "metadata.json");
   if (fs.existsSync(destPath)) {
-    try {
-      const existingMetadata = JSON.parse(fs.readFileSync(destPath, "utf8"));
-      publishedVersions = existingMetadata.versions;
-      yankedVersions = existingMetadata.yanked_versions;
-    } catch (error) {
-      throw new MetadataParseError(bcrRepo, destPath);
+    const bcrMetadata = new MetadataFile(destPath);
+
+    if (bcrMetadata.hasVersion(version)) {
+      throw new VersionAlreadyPublishedError(version);
     }
+
+    // Add all versions from the BCR metadata
+    metadataTemplate.addVersions(...bcrMetadata.versions);
+    metadataTemplate.addYankedVersions(bcrMetadata.yankedVersions);
   }
 
-  if (publishedVersions.includes(version)) {
-    throw new VersionAlreadyPublishedError(version);
-  }
-
-  const metadata = JSON.parse(
-    fs.readFileSync(sourcePath, {
-      encoding: "utf-8",
-    })
-  );
-  metadata.versions = [...publishedVersions, version];
-  metadata.yanked_versions = { ...metadata.yanked_versions, ...yankedVersions };
-
-  fs.writeFileSync(destPath, JSON.stringify(metadata, null, 4) + "\n");
+  metadataTemplate.addVersions(version);
+  metadataTemplate.save(destPath);
 }
