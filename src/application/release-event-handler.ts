@@ -49,7 +49,7 @@ export class ReleaseEventHandler {
         event.payload.sender.login,
         repository
       );
-      const releaseUrl = event.payload.release.url;
+      const releaseUrl = event.payload.release.html_url;
 
       const tag = event.payload.release.tag_name;
 
