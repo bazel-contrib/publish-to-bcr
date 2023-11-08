@@ -32,7 +32,7 @@ export class PublishEntryService {
       "main",
       `${moduleName}@${version}`,
       `\
-Release: [${tag}](${releaseUrl})
+Release: ${releaseUrl}
 
 Author: @${releaser.username}
 
