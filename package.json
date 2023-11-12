@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "main": "./application/cloudfunction/index.js",
+  "engines": {
+    "node": "^18"
+  },
   "scripts": {
     "prebuild": "node tools/clean-dist-files.js",
     "build": "tsc && node tools/copy-dist-files.js",
