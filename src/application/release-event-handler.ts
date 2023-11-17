@@ -184,7 +184,10 @@ export class ReleaseEventHandler {
         [error]
       );
 
-      return;
+      return {
+        rulesetRepo: error.repository,
+        successful: false,
+      };
     }
   }
 
