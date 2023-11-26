@@ -86,7 +86,7 @@ export class GitHubClient {
       body,
       head: `${fromRepo.owner}:${fromBranch}`,
       base: toBranch,
-      maintainer_can_modify: false,
+      maintainer_can_modify: true,
     });
 
     return pull.number;
