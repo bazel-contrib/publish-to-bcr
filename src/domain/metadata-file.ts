@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { compare as semverCompare, valid as validSemver } from "semver";
 
 export class MetadataFileError extends Error {
   constructor(path: string, message: string) {
@@ -61,6 +62,7 @@ export class MetadataFile {
     }
 
     this.metadata = json;
+    this.sortVersions();
   }
 
   public get maintainers(): ReadonlyArray<Maintainer> {
@@ -85,6 +87,7 @@ export class MetadataFile {
 
   public addVersions(...versions: ReadonlyArray<string>): void {
     this.metadata.versions.push(...versions);
+    this.sortVersions();
   }
 
   public addYankedVersions(yankedVersions: {
@@ -131,5 +134,17 @@ export class MetadataFile {
     } catch (e) {}
 
     return [];
+  }
+
+  private sortVersions(): void {
+    const semver = this.metadata.versions.filter(validSemver);
+    const nonSemver = this.metadata.versions.filter(
+      (v: string) => !validSemver(v)
+    );
+
+    this.metadata.versions = [
+      ...nonSemver.sort(),
+      ...semver.sort(semverCompare),
+    ];
   }
 }

@@ -283,6 +283,99 @@ describe("constructor", () => {
     expect(metadata.maintainers[0].email).toEqual("json@bearded.ca");
     expect(metadata.maintainers[0].github).toBeUndefined();
   });
+
+  test("sorts versions by semver", () => {
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [],
+    "repository": [
+        "github:bar/rules_foo"
+    ],
+    "versions": [
+      "1.2.1",
+      "5.2.3",
+      "1.2.3",
+      "0.5.0"
+    ],
+    "yanked_versions": {}
+}
+`);
+    const metadata = new MetadataFile("metadata.json");
+
+    expect(metadata.versions).toEqual(["0.5.0", "1.2.1", "1.2.3", "5.2.3"]);
+  });
+
+  test("sorts release candidate versions", () => {
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [],
+    "repository": [
+        "github:bar/rules_foo"
+    ],
+    "versions": [
+      "1.0.0-rc1",
+      "1.0.0-rc0",
+      "0.0.1",
+      "2.0.0-rc5"
+    ],
+    "yanked_versions": {}
+}
+`);
+    const metadata = new MetadataFile("metadata.json");
+
+    expect(metadata.versions).toEqual([
+      "0.0.1",
+      "1.0.0-rc0",
+      "1.0.0-rc1",
+      "2.0.0-rc5",
+    ]);
+  });
+
+  test("sorts non-semver versions above semver versions", () => {
+    // See: https://docs.bazel.build/versions/5.0.0/bzlmod.html#version-format
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [],
+    "repository": [
+        "github:bar/rules_foo"
+    ],
+    "versions": [
+      "2.0.0",
+      "20210324.2",
+      "1.0.0"
+    ],
+    "yanked_versions": {}
+}
+`);
+    const metadata = new MetadataFile("metadata.json");
+
+    expect(metadata.versions).toEqual(["20210324.2", "1.0.0", "2.0.0"]);
+  });
+
+  test("sorts non-semver versions lexicographically", () => {
+    // See: https://docs.bazel.build/versions/5.0.0/bzlmod.html#version-format
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [],
+    "repository": [
+        "github:bar/rules_foo"
+    ],
+    "versions": [
+      "55",
+      "12.4.2.1.1",
+      "20210324.2"
+    ],
+    "yanked_versions": {}
+}
+`);
+    const metadata = new MetadataFile("metadata.json");
+
+    expect(metadata.versions).toEqual(["12.4.2.1.1", "20210324.2", "55"]);
+  });
 });
 
 describe("save", () => {
@@ -331,6 +424,37 @@ describe("save", () => {
 
     const written = mocked(fs.writeFileSync).mock.calls[0][1] as string;
     expect(JSON.parse(written).maintainers[0].disposition).toEqual("bearded");
+  });
+
+  test("saves versions sorted by semver", () => {
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [],
+    "repository": [
+        "github:bar/rules_foo"
+    ],
+    "versions": [
+      "1.0.0",
+      "2.0.0"
+    ],
+    "yanked_versions": {}
+}
+`);
+    const metadata = new MetadataFile("metadata.json");
+
+    metadata.addVersions("0.5.0", "1.2.3", "5.3.1");
+
+    metadata.save("metadata.json");
+
+    const written = mocked(fs.writeFileSync).mock.calls[0][1] as string;
+    expect(JSON.parse(written).versions).toEqual([
+      "0.5.0",
+      "1.0.0",
+      "1.2.3",
+      "2.0.0",
+      "5.3.1",
+    ]);
   });
 });
 
