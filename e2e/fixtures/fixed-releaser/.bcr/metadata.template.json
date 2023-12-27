@@ -1,0 +1,13 @@
+{
+  "homepage": "https://github.com/testorg/fixed-releaser",
+  "maintainers": [
+    {
+      "name": "Foo McBar",
+      "email": "foo@test.org",
+      "github": "foobar"
+    }
+  ],
+  "repository": ["github:testorg/fixed-releaser"],
+  "versions": [],
+  "yanked_versions": {}
+}

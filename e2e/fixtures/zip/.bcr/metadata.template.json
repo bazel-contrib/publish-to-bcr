@@ -1,0 +1,13 @@
+{
+  "homepage": "https://github.com/testorg/zip",
+  "maintainers": [
+    {
+      "name": "Foo McBar",
+      "email": "foo@test.org",
+      "github": "foobar"
+    }
+  ],
+  "repository": ["github:testorg/zip"],
+  "versions": [],
+  "yanked_versions": {}
+}

@@ -9,11 +9,13 @@
   "scripts": {
     "prebuild": "node tools/clean-dist-files.js",
     "build": "tsc && node tools/copy-dist-files.js",
-    "test": "jest"
+    "test": "jest src",
+    "pree2e": "yarn build",
+    "e2e": "jest e2e"
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.1.2",
-    "@google-cloud/secret-manager": "^4.0.0",
+    "@google-cloud/secret-manager": "^5.0.1",
     "@octokit/auth-app": "^4.0.4",
     "@octokit/core": "^4.0.4",
     "@octokit/rest": "^19.0.3",
@@ -29,20 +31,29 @@
     "semver": "^7.5.4",
     "simple-git": "^3.16.0",
     "source-map-support": "^0.5.21",
-    "tar": "^6.1.12",
+    "tar": "^6.2.0",
     "yaml": "^2.1.1"
   },
   "devDependencies": {
+    "@octokit/webhooks-methods": "^4.0.0",
+    "@types/archiver": "^6.0.2",
     "@types/diff": "^5.0.2",
+    "@types/imapflow": "1.0.16",
     "@types/jest": "^28.0.0",
+    "@types/mailparser": "^3.4.4",
     "@types/node": "^18.6.2",
     "@types/nodemailer": "^6.4.5",
     "@types/semver": "^7.5.6",
     "@types/source-map-support": "^0.5.4",
-    "@types/tar": "^6.1.3",
+    "@types/tar": "^6.1.10",
     "@types/uuid": "^8.3.4",
+    "archiver": "^6.0.1",
     "globby": "^13.1.2",
+    "imapflow": "^1.0.147",
     "jest": "^28.1.3",
+    "mailparser": "3.6.5",
+    "mockttp": "^3.10.0",
+    "portfinder": "^1.0.32",
     "ts-jest": "^28.0.7",
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4"

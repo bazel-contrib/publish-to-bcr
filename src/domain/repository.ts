@@ -7,7 +7,6 @@ export class Repository {
   public static gitClient: GitClient;
 
   private _diskPath: string | null = null;
-  public readonly url = `https://github.com/${this.canonicalName}.git`;
 
   public static fromCanonicalName(canonicalName: string) {
     const [owner, name] = canonicalName.split("/");
@@ -19,6 +18,15 @@ export class Repository {
 
   public get canonicalName(): string {
     return `${this.owner}/${this.name}`;
+  }
+
+  public get url(): string {
+    if (process.env.INTEGRATION_TESTING) {
+      // During integration testing all remote repos are instead
+      // sourced from defiend disk path.
+      return path.join(process.env.PREPARED_FIXTURES_PATH, this.name);
+    }
+    return `https://github.com/${this.canonicalName}.git`;
   }
 
   public isCheckedOut(): boolean {
