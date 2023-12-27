@@ -33,7 +33,6 @@ export class CreateEntryService {
     moduleRoot: string
   ): Promise<void> {
     await Promise.all([rulesetRepo.checkout(tag), bcrRepo.checkout("main")]);
-
     const version = RulesetRepository.getVersionFromTag(tag);
 
     const sourceTemplate = rulesetRepo.sourceTemplate(moduleRoot);
@@ -134,6 +133,13 @@ export class CreateEntryService {
         "authed-fork",
         authenticatedRemoteUrl
       );
+    }
+
+    if (process.env.INTEGRATION_TESTING) {
+      // It is too difficult to mock the responses to `git push` when
+      // not using a real git server. Just perform a no-op during testing.
+      await this.gitClient.push(bcr.diskPath, "origin", branch);
+      return;
     }
     await this.gitClient.push(bcr.diskPath, "authed-fork", branch);
   }
