@@ -135,6 +135,15 @@ export class CreateEntryService {
         authenticatedRemoteUrl
       );
     }
+
+    if (process.env.INTEGRATION_TESTING) {
+      // It is too difficult to mock the responses to `git push` when
+      // not using a real git server. Just push to the original remote,
+      // which, during testing, is just a local repo on disk, so that
+      // we can examine the result.
+      await this.gitClient.push(bcr.diskPath, "origin", branch);
+      return;
+    }
     await this.gitClient.push(bcr.diskPath, "authed-fork", branch);
   }
 

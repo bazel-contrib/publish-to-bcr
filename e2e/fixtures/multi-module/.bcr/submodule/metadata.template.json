@@ -1,0 +1,13 @@
+{
+  "homepage": "https://github.com/testorg/multi-module",
+  "maintainers": [
+    {
+      "name": "Foo McBar",
+      "email": "foo@test.org",
+      "github": "foobar"
+    }
+  ],
+  "repository": ["github:testorg/multi-module"],
+  "versions": [],
+  "yanked_versions": {}
+}

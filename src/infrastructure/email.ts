@@ -35,7 +35,7 @@ export class EmailClient {
     const transporter = nodemailer.createTransport({
       host: this.host,
       port: this.port,
-      secure: true,
+      secure: process.env.INTEGRATION_TESTING ? false : true,
       auth: this.auth,
       tls: {
         rejectUnauthorized: false,

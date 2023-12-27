@@ -9,7 +9,7 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "src/**/*.spec.ts", "src/test"]

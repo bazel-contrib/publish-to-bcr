@@ -1,0 +1,4 @@
+module(
+    name = "empty-prefix",
+    version = "1.0.0",
+)
