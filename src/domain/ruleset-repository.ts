@@ -7,8 +7,8 @@ import { MetadataFile, MetadataFileError } from "./metadata-file.js";
 import { ModuleFile } from "./module-file.js";
 import { Repository } from "./repository.js";
 import {
-  InvalidSourceTemplateError as _InvalidSourceTemplateError,
   SourceTemplate,
+  InvalidSourceTemplateError as _InvalidSourceTemplateError,
 } from "./source-template.js";
 
 export class RulesetRepoError extends UserFacingError {
@@ -114,7 +114,6 @@ export class RulesetRepository extends Repository {
     await rulesetRepo.checkout(verifyAtRef);
 
     rulesetRepo._config = loadConfiguration(rulesetRepo);
-
     const requiredFiles = [];
     for (let root of rulesetRepo._config.moduleRoots) {
       requiredFiles.push(

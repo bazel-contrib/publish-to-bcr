@@ -1,0 +1,348 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`e2e tests [snapshot] empty strip prefix 1`] = `
+"----------------------------------------------------
+modules/no-prefix/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"no-prefix\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/no-prefix/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/no-prefix/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-ScDFsfydUTULydOmMJJarFI+XVyz/kDBLSigZjKHFbg=\\",
+    \\"url\\": \\"https://github.com/testorg/no-prefix/archive/refs/tags/v1.0.0.tar.gz\\"
+}
+
+----------------------------------------------------
+modules/no-prefix/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/no-prefix\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/no-prefix\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+"
+`;
+
+exports[`e2e tests [snapshot] missing strip prefix 1`] = `
+"----------------------------------------------------
+modules/empty-prefix/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"empty-prefix\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/empty-prefix/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/empty-prefix/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-cFvZpXBbS+JgM4AHkogIqfB4MP3OfnQPE/XCgpacxqk=\\",
+    \\"strip_prefix\\": \\"\\",
+    \\"url\\": \\"https://github.com/testorg/empty-prefix/archive/refs/tags/v1.0.0.tar.gz\\"
+}
+
+----------------------------------------------------
+modules/empty-prefix/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/empty-prefix\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/empty-prefix\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+"
+`;
+
+exports[`e2e tests [snapshot] ruleset with tarball release archive 1`] = `
+"----------------------------------------------------
+modules/tarball/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"tarball\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/tarball/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/tarball/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-cXQ/GxNFuhvRkdWBMbyWRee3ZAsKwJ+9lQiLJYSeJPM=\\",
+    \\"strip_prefix\\": \\"tarball-1.0.0\\",
+    \\"url\\": \\"https://github.com/testorg/tarball/archive/refs/tags/v1.0.0.tar.gz\\"
+}
+
+----------------------------------------------------
+modules/tarball/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/tarball\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/tarball\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+"
+`;
+
+exports[`e2e tests [snapshot] ruleset with unversioned module in source 1`] = `
+"----------------------------------------------------
+modules/unversioned/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"unversioned\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/unversioned/1.0.0/patches/module_dot_bazel_version.patch
+----------------------------------------------------
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,4 +1,4 @@
+ module(
+     name = \\"unversioned\\",
+-    version = \\"0.0.0\\",
++    version = \\"1.0.0\\",
+ )
+\\\\ No newline at end of file
+
+----------------------------------------------------
+modules/unversioned/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/unversioned/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-LBi7bU01Dno5Yb4J6dbkjLYaXFCnrP4miXLU0KzVtr0=\\",
+    \\"strip_prefix\\": \\"unversioned-1.0.0\\",
+    \\"url\\": \\"https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz\\",
+    \\"patches\\": {
+        \\"module_dot_bazel_version.patch\\": \\"sha256-y0kC8heeH9bQKhrfx2JuX+RK0KyjwHhPac3wBc4Nkg4=\\"
+    },
+    \\"patch_strip\\": 1
+}
+
+----------------------------------------------------
+modules/unversioned/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/unversioned\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/unversioned\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+"
+`;
+
+exports[`e2e tests [snapshot] ruleset with versioned module in source 1`] = `
+"----------------------------------------------------
+modules/versioned/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"versioned\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/versioned/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/versioned/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-ivBszpSduSjKBryI3hSnvjIbNk5JK9UrcNcGGKMS1kM=\\",
+    \\"strip_prefix\\": \\"versioned-1.0.0\\",
+    \\"url\\": \\"https://github.com/testorg/versioned/archive/refs/tags/v1.0.0.tar.gz\\"
+}
+
+----------------------------------------------------
+modules/versioned/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/versioned\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/versioned\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+"
+`;
+
+exports[`e2e tests [snapshot] ruleset with zip release archive 1`] = `
+"----------------------------------------------------
+modules/zip/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"zip\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/zip/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/zip/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-7qAmTBNY+y8DVPhj5nuzZFflX9tWa1h2OfuUMSUg6Hs=\\",
+    \\"strip_prefix\\": \\"zip-1.0.0\\",
+    \\"url\\": \\"https://github.com/testorg/zip/archive/refs/tags/v1.0.0.zip\\"
+}
+
+----------------------------------------------------
+modules/zip/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/zip\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/zip\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+"
+`;

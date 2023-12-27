@@ -4,6 +4,7 @@ import extractZip from "extract-zip";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { parse as parseUrl } from "node:url";
 import tar from "tar";
 import { UserFacingError } from "./error.js";
 
@@ -91,6 +92,17 @@ export class ReleaseArchive {
 }
 
 async function download(url: string, dest: string): Promise<void> {
+  if (process.env.INTEGRATION_TESTING) {
+    const [host, port] =
+      process.env.GITHUB_API_ENDPOINT.split("://")[1].split(":");
+
+    const parsed = parseUrl(url);
+    parsed.host = host;
+    parsed.port = port;
+
+    url = `http://${host}:${port}${parsed.path}`;
+  }
+
   const writer = fs.createWriteStream(dest, { flags: "w" });
 
   // Retry the request in case the artifact is still being uploaded

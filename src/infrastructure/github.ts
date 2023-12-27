@@ -21,13 +21,22 @@ export class GitHubClient {
   }
 
   private getOctokit(): Octokit {
-    return new Octokit();
+    return new Octokit({
+      ...((process.env.INTEGRATION_TESTING && {
+        baseUrl: process.env.GITHUB_API_ENDPOINT,
+      }) ||
+        {}),
+    });
   }
 
   private getAppAuthorizedOctokit(): Octokit {
     return new Octokit({
       authStrategy: createAppAuth,
       auth: this.appAuth,
+      ...((process.env.INTEGRATION_TESTING && {
+        baseUrl: process.env.GITHUB_API_ENDPOINT,
+      }) ||
+        {}),
     });
   }
 
@@ -37,6 +46,10 @@ export class GitHubClient {
     const token = await this.getInstallationToken(repository);
     return new Octokit({
       auth: token,
+      ...((process.env.INTEGRATION_TESTING && {
+        baseUrl: process.env.GITHUB_API_ENDPOINT,
+      }) ||
+        {}),
     });
   }
 
@@ -125,6 +138,7 @@ export class GitHubClient {
         });
       return installation;
     } catch (error) {
+      console.log(error);
       if (error.status === 404) {
         throw new MissingRepositoryInstallationError(repository);
       }
@@ -156,6 +170,7 @@ export class GitHubClient {
     repository: Repository
   ): Promise<string> {
     const token = await this.getInstallationToken(repository);
+
     return `https://x-access-token:${token}@github.com/${repository.canonicalName}.git`;
   }
 }
