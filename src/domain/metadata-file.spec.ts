@@ -376,6 +376,28 @@ describe("constructor", () => {
 
     expect(metadata.versions).toEqual(["12.4.2.1.1", "20210324.2", "55"]);
   });
+
+  test("sorts non-semver versions that look like semver as non-semver", () => {
+    // https://github.com/bazel-contrib/publish-to-bcr/issues/97
+    mockMetadataFile(`\
+{
+    "homepage": "https://foo.bar",
+    "maintainers": [],
+    "repository": [
+        "github:bar/rules_foo"
+    ],
+    "versions": [
+      "1.0.0-rc0",
+      "1.0.0-rc1",
+      "1.0.0rc1"
+    ],
+    "yanked_versions": {}
+}
+`);
+    const metadata = new MetadataFile("metadata.json");
+
+    expect(metadata.versions).toEqual(["1.0.0rc1", "1.0.0-rc0", "1.0.0-rc1"]);
+  });
 });
 
 describe("save", () => {

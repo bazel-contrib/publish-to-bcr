@@ -137,14 +137,18 @@ export class MetadataFile {
   }
 
   private sortVersions(): void {
-    const semver = this.metadata.versions.filter(validSemver);
+    const semver = this.metadata.versions.filter(
+      (v: string) => !!validSemver(v, { loose: false })
+    );
     const nonSemver = this.metadata.versions.filter(
       (v: string) => !validSemver(v)
     );
 
     this.metadata.versions = [
       ...nonSemver.sort(),
-      ...semver.sort(semverCompare),
+      ...semver.sort((a: string, b: string) =>
+        semverCompare(a, b, { loose: false })
+      ),
     ];
   }
 }
