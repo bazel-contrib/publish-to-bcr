@@ -1,4 +1,5 @@
 import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
+import gcpMetadata from "gcp-metadata";
 
 export class SecretsClient {
   private readonly googleSecretsClient;
@@ -19,7 +20,7 @@ export class SecretsClient {
   }
 
   public async accessSecret(name: string): Promise<string> {
-    const projectId = process.env.GCP_PROJECT;
+    const projectId = await getProjectIdOfExecutingCloudFunction();
     const secretName = `projects/${projectId}/secrets/${name}/versions/latest`;
 
     const [response] = await this.googleSecretsClient.accessSecretVersion({
@@ -29,4 +30,11 @@ export class SecretsClient {
     const secret = response.payload!.data!.toString();
     return secret;
   }
+}
+
+async function getProjectIdOfExecutingCloudFunction(): Promise<string> {
+  if (process.env.INTEGRATION_TESTING) {
+    return "test-project";
+  }
+  return await gcpMetadata.project("numeric-project-id");
 }
