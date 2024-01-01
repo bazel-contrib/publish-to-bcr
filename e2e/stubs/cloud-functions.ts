@@ -38,7 +38,6 @@ export class CloudFunctions implements StubbedServer {
           SMTP_HOST: this.emailAccount.smtp.host,
           SMTP_PORT: this.emailAccount.smtp.port.toString(),
           NOTIFICATIONS_EMAIL: this.emailAccount.user,
-          GCP_PROJECT: "test-project",
           SECRET_MANAGER_HOST: this.secrets.getHost(),
           SECRET_MANAGER_PORT: this.secrets.getPort().toString(),
           BAZEL_CENTRAL_REGISTRY: "bazelbuild/bazel-central-registry",
