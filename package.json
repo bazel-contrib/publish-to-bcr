@@ -23,7 +23,7 @@
     "@octokit/webhooks-methods": "^3.0.0",
     "@octokit/webhooks-types": "^6.2.4",
     "axios": "^1.4.0",
-    "axios-retry": "^3.4.0",
+    "axios-retry": "^4.0.0",
     "diff": "^5.1.0",
     "extract-zip": "^2.0.1",
     "gcp-metadata": "^5.0.0",
