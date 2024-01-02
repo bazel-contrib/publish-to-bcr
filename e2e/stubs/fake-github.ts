@@ -202,7 +202,7 @@ export class FakeGitHub implements StubbedServer {
     const pattern = /\/users\/([^/]+)\/repos/;
     await this.server.forGet(pattern).thenCallback((request) => {
       const match = request.path.match(pattern);
-      const owner = match![1];
+      const owner = decodeURIComponent(match![1]);
 
       if (this.ownedRepos.has(owner)) {
         return {

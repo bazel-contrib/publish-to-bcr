@@ -31,7 +31,7 @@ export enum Fixture {
 export async function setupLocalRemoteRulesetRepo(
   fixture: Fixture,
   tag: string,
-  releaser: Partial<User>
+  commitAuthor: Partial<User>
 ): Promise<void> {
   const gitRepoPath = path.join(PREPARED_FIXTURES_PATH, fixture);
   let git: SimpleGit;
@@ -44,8 +44,8 @@ export async function setupLocalRemoteRulesetRepo(
     git = simpleGit(gitRepoPath);
     await git.init();
     await git.add("./*");
-    await git.addConfig("user.name", releaser.login!);
-    await git.addConfig("user.email", releaser.email!);
+    await git.addConfig("user.name", commitAuthor.login!);
+    await git.addConfig("user.email", commitAuthor.email!);
     await git.commit("first commit");
   } else {
     git = simpleGit(gitRepoPath);

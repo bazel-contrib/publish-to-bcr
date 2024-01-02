@@ -10,6 +10,18 @@ export class MissingRepositoryInstallationError extends Error {
 }
 
 export class GitHubClient {
+  // The GitHub API does not return a name or an email for the github-actions[bot].
+  // See https://api.github.com/users/github-actions%5Bbot%5D
+  // Yet, an email and a name are implicitly set when the bot is an author of a
+  // commit. Hardcode the (stable) name and email so that we can also author commits
+  // as the GitHub actions bot.
+  // See https://github.com/orgs/community/discussions/26560#discussioncomment-3252340.
+  public static readonly GITHUB_ACTIONS_BOT: User = {
+    username: "github-actions[bot]",
+    name: "github-actions[bot]",
+    email: "41898282+github-actions[bot]@users.noreply.github.com",
+  };
+
   // Cache installation tokens as they expire after an hour, which is more than
   // enough time for a cloud function to run.
   private readonly _installationTokenCache: any = {};
@@ -109,6 +121,9 @@ export class GitHubClient {
     username: string,
     repository: Repository
   ): Promise<User> {
+    if (username === GitHubClient.GITHUB_ACTIONS_BOT.username) {
+      return GitHubClient.GITHUB_ACTIONS_BOT;
+    }
     const octokit = await this.getRepoAuthorizedOctokit(repository);
     const { data } = await octokit.rest.users.getByUsername({ username });
     return { name: data.name, username, email: data.email };
