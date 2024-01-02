@@ -2,7 +2,7 @@ import { createTwoFilesPatch, parsePatch } from "diff";
 import { mocked } from "jest-mock";
 import fs from "node:fs";
 import { fakeModuleFile } from "../test/mock-template-files";
-import { ModuleFile } from "./module-file";
+import { ModuleFile, PatchModuleError } from "./module-file";
 
 jest.mock("node:fs");
 
@@ -99,5 +99,29 @@ describe("patchContent", () => {
 
     moduleFile.patchContent(patch[0]);
     expect(moduleFile.content).toEqual(patchedModuleFile);
+  });
+
+  test("throws when the patch could not be applied", () => {
+    const patchedModuleFile = fakeModuleFile({
+      moduleName: "rules_foo",
+      version: "1.2.3",
+      deps: true,
+    });
+
+    const moduleFile = new ModuleFile("MODULE.bazel");
+
+    const patch = parsePatch(
+      createTwoFilesPatch(
+        "a/MODULE.bazel",
+        "b/MODULE.bazel",
+        moduleFile.content,
+        patchedModuleFile
+      )
+    );
+
+    // Change the module file's version so that the generated patch
+    // will no longer apply correctly.
+    moduleFile.stampVersion("10.20.30");
+    expect(() => moduleFile.patchContent(patch[0])).toThrow(PatchModuleError);
   });
 });

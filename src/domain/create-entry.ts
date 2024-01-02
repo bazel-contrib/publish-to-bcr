@@ -7,7 +7,10 @@ import { GitHubClient } from "../infrastructure/github.js";
 import { UserFacingError } from "./error.js";
 import { computeIntegrityHash } from "./integrity-hash.js";
 import { MetadataFile } from "./metadata-file.js";
-import { ModuleFile } from "./module-file.js";
+import {
+  ModuleFile,
+  PatchModuleError as _PatchModuleError,
+} from "./module-file.js";
 import { ReleaseArchive } from "./release-archive.js";
 import { Repository } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
@@ -17,6 +20,12 @@ import { User } from "./user.js";
 export class VersionAlreadyPublishedError extends UserFacingError {
   public constructor(version: string) {
     super(`Version ${version} has already been published.`);
+  }
+}
+
+export class PatchModuleError extends UserFacingError {
+  public constructor(patchPath: string) {
+    super(`Failed to apply patch ${patchPath} to MODULE.bazel`);
   }
 }
 
@@ -185,7 +194,14 @@ export class CreateEntryService {
           diff.oldFileName === "a/MODULE.bazel" &&
           diff.newFileName === "b/MODULE.bazel"
         ) {
-          moduleFile.patchContent(diff);
+          try {
+            moduleFile.patchContent(diff);
+          } catch (e) {
+            if (e instanceof _PatchModuleError) {
+              throw new PatchModuleError(patchSrc);
+            }
+            throw e;
+          }
         }
       }
     }
