@@ -46,7 +46,7 @@
     "@types/semver": "^7.5.6",
     "@types/source-map-support": "^0.5.4",
     "@types/tar": "^6.1.10",
-    "@types/uuid": "^8.3.4",
+    "@types/uuid": "^9.0.0",
     "archiver": "^6.0.1",
     "globby": "^13.1.2",
     "imapflow": "^1.0.147",
