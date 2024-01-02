@@ -4,7 +4,7 @@
   "type": "module",
   "main": "./application/cloudfunction/index.js",
   "engines": {
-    "node": "^18"
+    "node": "^20.0.0"
   },
   "scripts": {
     "prebuild": "node tools/clean-dist-files.js",
@@ -41,7 +41,7 @@
     "@types/imapflow": "1.0.16",
     "@types/jest": "^28.0.0",
     "@types/mailparser": "^3.4.4",
-    "@types/node": "^18.6.2",
+    "@types/node": "^20.0.0",
     "@types/nodemailer": "^6.4.5",
     "@types/semver": "^7.5.6",
     "@types/source-map-support": "^0.5.4",
