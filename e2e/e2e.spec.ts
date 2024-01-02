@@ -635,6 +635,54 @@ describe("e2e tests", () => {
 
     expect(messages[0].subject).toEqual(`Publish to BCR`);
   });
+
+  test("commits are properly attributed to the github-actions[bot] when it is the releaser", async () => {
+    const repo = Fixture.Versioned;
+    const tag = "v1.0.0";
+    await setupLocalRemoteRulesetRepo(repo, tag, {
+      login: "committer",
+      email: "committer@test.org",
+    });
+
+    fakeGitHub.mockUser({ login: "github-actions[bot]" });
+    fakeGitHub.mockRepository(testOrg, repo);
+    fakeGitHub.mockRepository(
+      testOrg,
+      "bazel-central-registry",
+      "bazelbuild",
+      "bazel-central-registry"
+    );
+    fakeGitHub.mockAppInstallation(testOrg, repo);
+    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+
+    const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
+    await fakeGitHub.mockReleaseArchive(
+      `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
+      releaseArchive
+    );
+
+    const response = await publishReleaseEvent(
+      cloudFunctions.getBaseUrl(),
+      secrets.webhookSecret,
+      {
+        owner: testOrg,
+        repo,
+        tag,
+        releaser: { login: "github-actions[bot]" },
+      }
+    );
+
+    expect(response.status).toEqual(200);
+
+    const git = getBcr();
+    const entryBranch = await getLatestBranch(git);
+    const logs = await git.log({ maxCount: 1, from: entryBranch });
+
+    expect(logs.latest?.author_email).toEqual(
+      "41898282+github-actions[bot]@users.noreply.github.com"
+    );
+    expect(logs.latest?.author_name).toEqual("github-actions[bot]");
+  });
 });
 
 const testReleaseArchives: string[] = [];
