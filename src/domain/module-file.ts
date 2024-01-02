@@ -1,6 +1,12 @@
 import { ParsedDiff, applyPatch } from "diff";
 import fs from "node:fs";
 
+export class PatchModuleError extends Error {
+  public constructor() {
+    super("Failed to apply patch to MODULE.bazel file");
+  }
+}
+
 export class ModuleFile {
   private moduleContent: string;
 
@@ -37,6 +43,12 @@ export class ModuleFile {
   }
 
   public patchContent(patch: ParsedDiff): void {
-    this.moduleContent = applyPatch(this.moduleContent, patch);
+    const result = applyPatch(this.moduleContent, patch);
+
+    if (result === false) {
+      throw new PatchModuleError();
+    }
+
+    this.moduleContent = result;
   }
 }

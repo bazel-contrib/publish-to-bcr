@@ -15,6 +15,7 @@ import {
 import { expectThrownError } from "../test/util";
 import {
   CreateEntryService,
+  PatchModuleError,
   VersionAlreadyPublishedError,
 } from "./create-entry";
 import { CANONICAL_BCR } from "./find-registry-fork";
@@ -807,6 +808,62 @@ describe("createEntryFiles", () => {
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       moduleFilePath,
       exptectedPatchedModule
+    );
+  });
+
+  test("throws when a patch that alters MODULE.bazel cannot be applied", async () => {
+    const patchFrom = fakeModuleFile({
+      version: "1.0.0",
+      moduleName: "rules_bar",
+      deps: false,
+    });
+
+    const patchTo = fakeModuleFile({
+      version: "1.2.3",
+      moduleName: "rules_bar",
+      deps: true,
+    });
+
+    const badPatch = createTwoFilesPatch(
+      "a/MODULE.bazel",
+      "b/MODULE.bazel",
+      patchFrom,
+      patchTo
+    );
+
+    mockRulesetFiles({
+      // Different from the patch origin
+      extractedModuleContent: fakeModuleFile({
+        version: "1.2.3",
+        moduleName: "rules_bar",
+        deps: false,
+      }),
+      patches: {
+        "patch_deps.patch": badPatch,
+      },
+    });
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+
+    let caughtError: any;
+    try {
+      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+    } catch (e) {
+      caughtError = e;
+    }
+
+    expect(caughtError).toBeDefined();
+    expect(caughtError instanceof PatchModuleError);
+    const patchPath = path.join(
+      rulesetRepo.diskPath,
+      RulesetRepository.BCR_TEMPLATE_DIR,
+      "patches",
+      "patch_deps.patch"
+    );
+    expect((caughtError as Error).message).toEqual(
+      expect.stringContaining(patchPath)
     );
   });
 });
