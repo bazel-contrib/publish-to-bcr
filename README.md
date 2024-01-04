@@ -16,7 +16,9 @@ Prepare your ruleset for bzlmod by following the [Bzlmod User Guide](https://baz
    _Note: Authors of rulesets under the `bazelbuild` org should add the app to their personal fork of `bazelbuild/bazel-central-registry`._
 
 1. Include these [template files](./templates) in your ruleset repository.
-1. Cut a release. You will be tagged in a pull request against the BCR.
+1. Cut a release.
+    * If successful, you will discover a branch in your fork of the BCR and you will be tagged in a pull request against the actual BCR.
+    * If unsuccessful, check your email for error logs.
 
 ## A note on release automation
 
