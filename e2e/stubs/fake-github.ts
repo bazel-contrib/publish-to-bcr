@@ -38,6 +38,7 @@ export class FakeGitHub implements StubbedServer {
       this.setupGetOwnedReposHandler(),
       this.setupGetRepoHandler(),
       this.setupCreatePullHandler(),
+      this.setupAppHandler(),
     ]);
   }
 
@@ -184,7 +185,7 @@ export class FakeGitHub implements StubbedServer {
     const pattern = /\/users\/([^/]+)$/;
     await this.server.forGet(pattern).thenCallback((request) => {
       const match = request.path.match(pattern);
-      const login = match![1];
+      const login = decodeURIComponent(match![1]);
 
       if (this.users.has(login)) {
         return {
@@ -226,7 +227,7 @@ export class FakeGitHub implements StubbedServer {
 
   private async setupGetRepoHandler(): Promise<void> {
     const pattern = /\/repos\/([^/]+)\/([^/]+)$/;
-    this.server.forGet(pattern).thenCallback((request) => {
+    await this.server.forGet(pattern).thenCallback((request) => {
       const match = request.path.match(pattern);
       const [, owner, repo] = match!;
 
@@ -271,5 +272,16 @@ export class FakeGitHub implements StubbedServer {
     await this.server
       .forPost("/repos/bazelbuild/bazel-central-registry/pulls")
       .thenCallback((request) => this.pullRequestHandler(request));
+  }
+
+  private async setupAppHandler(): Promise<void> {
+    await this.server.forGet("/app").thenCallback((request) => {
+      return {
+        json: {
+          slug: "publish-to-bcr-bot",
+        },
+        statusCode: 200,
+      };
+    });
   }
 }

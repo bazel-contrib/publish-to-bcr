@@ -5,7 +5,7 @@ import fs, { PathLike } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git";
-import { GitHubClient } from "../infrastructure/github";
+import { GitHubApp, GitHubClient } from "../infrastructure/github";
 import {
   fakeMetadataFile,
   fakeModuleFile,
@@ -29,7 +29,8 @@ import { User } from "./user";
 
 let createEntryService: CreateEntryService;
 let mockGitClient: Mocked<GitClient>;
-let mockGithubClient: Mocked<GitHubClient>;
+let mockBcrForkGitHubClient: Mocked<GitHubClient>;
+let mockBcrGitHubClient: Mocked<GitHubClient>;
 
 jest.mock("../infrastructure/git");
 jest.mock("../infrastructure/github");
@@ -88,10 +89,15 @@ beforeEach(() => {
   });
 
   mockGitClient = mocked(new GitClient());
-  mockGithubClient = mocked(new GitHubClient({} as any));
+  mockBcrForkGitHubClient = mocked(new GitHubClient({} as any));
+  mockBcrGitHubClient = mocked(new GitHubClient({} as any));
   mocked(computeIntegrityHash).mockReturnValue(`sha256-${randomUUID()}`);
   Repository.gitClient = mockGitClient;
-  createEntryService = new CreateEntryService(mockGitClient, mockGithubClient);
+  createEntryService = new CreateEntryService(
+    mockGitClient,
+    mockBcrForkGitHubClient,
+    mockBcrGitHubClient
+  );
 });
 
 describe("createEntryFiles", () => {
@@ -895,6 +901,41 @@ describe("commitEntryToNewBranch", () => {
     );
   });
 
+  test("sets the commit author to the publish-to-bcr bot when the release it the github-actions bot", async () => {
+    // https://github.com/bazel-contrib/publish-to-bcr/issues/120
+    mockRulesetFiles();
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+    const releaser = GitHubClient.GITHUB_ACTIONS_BOT;
+    const botUser: User = {
+      name: "publish-to-bcr",
+      username: "publish-to-bcr[bot]",
+      email: `12345+"publish-to-bcr[bot]@users.noreply.github.com`,
+    };
+    const botApp = { slug: "publish-to-bcr" } as GitHubApp;
+
+    mockBcrGitHubClient.getApp.mockResolvedValue(botApp);
+    mockBcrGitHubClient.getBotAppUser.mockResolvedValue(botUser);
+
+    await createEntryService.commitEntryToNewBranch(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      releaser
+    );
+
+    expect(mockBcrGitHubClient.getApp).toHaveBeenCalled();
+    expect(mockBcrGitHubClient.getBotAppUser).toHaveBeenCalledWith(botApp);
+
+    expect(mockGitClient.setUserNameAndEmail).toHaveBeenCalledWith(
+      bcrRepo.diskPath,
+      botUser.name,
+      botUser.email
+    );
+  });
+
   test("checks out a new branch on the bcr repo", async () => {
     mockRulesetFiles();
 
@@ -1012,9 +1053,9 @@ describe("pushEntryToFork", () => {
     const branchName = `repo/owner@v1.2.3`;
 
     await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
-    expect(mockGithubClient.getAuthenticatedRemoteUrl).toHaveBeenCalledWith(
-      bcrForkRepo
-    );
+    expect(
+      mockBcrForkGitHubClient.getAuthenticatedRemoteUrl
+    ).toHaveBeenCalledWith(bcrForkRepo);
   });
 
   test("adds a remote with the authenticated url for the fork to the local bcr repo", async () => {
@@ -1023,7 +1064,7 @@ describe("pushEntryToFork", () => {
     const branchName = `repo/owner@v1.2.3`;
     const authenticatedUrl = randomUUID();
 
-    mockGithubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
+    mockBcrForkGitHubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
       Promise.resolve(authenticatedUrl)
     );
 
@@ -1041,7 +1082,7 @@ describe("pushEntryToFork", () => {
     const branchName = `repo/owner@v1.2.3`;
     const authenticatedUrl = randomUUID();
 
-    mockGithubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
+    mockBcrForkGitHubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
       Promise.resolve(authenticatedUrl)
     );
 
@@ -1060,7 +1101,7 @@ describe("pushEntryToFork", () => {
     const authenticatedUrl = randomUUID();
 
     mockGitClient.hasRemote.mockReturnValueOnce(Promise.resolve(true));
-    mockGithubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
+    mockBcrForkGitHubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
       Promise.resolve(authenticatedUrl)
     );
 

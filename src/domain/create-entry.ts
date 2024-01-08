@@ -32,7 +32,8 @@ export class PatchModuleError extends UserFacingError {
 export class CreateEntryService {
   constructor(
     private readonly gitClient: GitClient,
-    private readonly githubClient: GitHubClient
+    private readonly bcrForkGitHubClient: GitHubClient,
+    private readonly bcrGitHubClient: GitHubClient
   ) {}
 
   public async createEntryFiles(
@@ -112,10 +113,21 @@ export class CreateEntryService {
     const repoAndVersion = `${rulesetRepo.canonicalName}@${tag}`;
     const branchName = `${repoAndVersion}-${randomBytes(4).toString("hex")}`;
 
+    let commitAuthor: Partial<User> = releaser;
+    if (releaser.username === GitHubClient.GITHUB_ACTIONS_BOT.username) {
+      const botApp = await this.bcrGitHubClient.getApp();
+      const botAppUser = await this.bcrGitHubClient.getBotAppUser(botApp);
+
+      commitAuthor = {
+        name: botAppUser.name,
+        email: botAppUser.email,
+      };
+    }
+
     await this.gitClient.setUserNameAndEmail(
       bcrRepo.diskPath,
-      releaser.name,
-      releaser.email
+      commitAuthor.name,
+      commitAuthor.email
     );
     await this.gitClient.checkoutNewBranchFromHead(
       bcrRepo.diskPath,
@@ -135,7 +147,7 @@ export class CreateEntryService {
     branch: string
   ): Promise<void> {
     const authenticatedRemoteUrl =
-      await this.githubClient.getAuthenticatedRemoteUrl(bcrForkRepo);
+      await this.bcrForkGitHubClient.getAuthenticatedRemoteUrl(bcrForkRepo);
 
     if (!(await this.gitClient.hasRemote(bcr.diskPath, "authed-fork"))) {
       await this.gitClient.addRemote(
