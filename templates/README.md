@@ -77,7 +77,7 @@ The `integrity` hash will automatically be filled out by the app.
 {
   "integrity": "", // <-- Leave this alone
   "strip_prefix": "{REPO}-{VERSION}",
-  "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.tar.gz"
 }
 ```
 
