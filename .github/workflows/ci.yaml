@@ -23,6 +23,10 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    # Don't run e2es on PRs from forks as it requires access to secrets
+    # when using `pull_request`.
+    # See https://securitylab.github.com/research/github-actions-preventing-pwn-requests
+    if: ${{ github.event.pull_request.head.repo.full_name == 'bazel-contrib/publish-to-bcr' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
