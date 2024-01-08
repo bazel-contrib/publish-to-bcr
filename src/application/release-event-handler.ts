@@ -127,7 +127,8 @@ export class ReleaseEventHandler {
             );
             const createEntryService = new CreateEntryService(
               gitClient,
-              forkGitHubClient
+              forkGitHubClient,
+              bcrGitHubClient
             );
 
             const attempt = await this.attemptPublish(

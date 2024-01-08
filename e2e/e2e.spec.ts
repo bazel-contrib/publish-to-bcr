@@ -8,6 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { TestAccount } from "nodemailer";
 import { simpleGit } from "simple-git";
+import { GitHubClient } from "../src/infrastructure/github";
 import {
   makeReleaseTarball as _makeReleaseTarball,
   makeReleaseZip as _makeReleaseZip,
@@ -641,7 +642,9 @@ describe("e2e tests", () => {
     expect(messages[0].subject).toEqual(`Publish to BCR`);
   });
 
-  test("commits are properly attributed to the github-actions[bot] when it is the releaser", async () => {
+  test("commits are attributed to the publish-to-bcr bot user when the github-actions[bot] is the releaser", async () => {
+    // https://github.com/bazel-contrib/publish-to-bcr/issues/120
+
     const repo = Fixture.Versioned;
     const tag = "v1.0.0";
     await setupLocalRemoteRulesetRepo(repo, tag, {
@@ -649,7 +652,11 @@ describe("e2e tests", () => {
       email: "committer@test.org",
     });
 
-    fakeGitHub.mockUser({ login: "github-actions[bot]" });
+    fakeGitHub.mockUser({
+      login: GitHubClient.GITHUB_ACTIONS_BOT.username,
+      id: GitHubClient.GITHUB_ACTIONS_BOT.id,
+    });
+    fakeGitHub.mockUser({ login: "publish-to-bcr-bot[bot]", id: 123 });
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
@@ -685,9 +692,9 @@ describe("e2e tests", () => {
     const logs = await git.log({ maxCount: 1, from: entryBranch });
 
     expect(logs.latest?.author_email).toEqual(
-      "41898282+github-actions[bot]@users.noreply.github.com"
+      "123+publish-to-bcr-bot[bot]@users.noreply.github.com"
     );
-    expect(logs.latest?.author_name).toEqual("github-actions[bot]");
+    expect(logs.latest?.author_name).toEqual("publish-to-bcr-bot");
   });
 });
 

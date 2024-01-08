@@ -6,6 +6,7 @@ import { User } from "../domain/user.js";
 
 export type Installation =
   Endpoints["GET /repos/{owner}/{repo}/installation"]["response"]["data"];
+export type GitHubApp = Endpoints["GET /app"]["response"]["data"];
 
 export class MissingRepositoryInstallationError extends Error {
   constructor(repository: Repository) {
@@ -74,6 +75,7 @@ export class GitHubClient {
   // as the GitHub actions bot.
   // See https://github.com/orgs/community/discussions/26560#discussioncomment-3252340.
   public static readonly GITHUB_ACTIONS_BOT: User = {
+    id: 41898282,
     username: "github-actions[bot]",
     name: "github-actions[bot]",
     email: "41898282+github-actions[bot]@users.noreply.github.com",
@@ -216,5 +218,30 @@ export class GitHubClient {
   ): Promise<string> {
     const token = await this.getInstallationToken(repository);
     return `https://x-access-token:${token}@github.com/${repository.canonicalName}.git`;
+  }
+
+  public async getApp(): Promise<GitHubApp> {
+    try {
+      const response = await this.octokit.apps.getAuthenticated();
+      return response.data;
+    } catch (e) {
+      throw new Error(`Could not authenticated app: ${e.message}`);
+    }
+  }
+
+  public async getBotAppUser(botApp: GitHubApp): Promise<User> {
+    const botUsername = `${botApp.slug}[bot]`;
+
+    // Lookup the user to get the user id, which is needed to
+    // form the correct email.
+    const { data: user } = await this.octokit.rest.users.getByUsername({
+      username: botUsername,
+    });
+
+    return {
+      name: botApp.slug,
+      username: botUsername,
+      email: `${user.id}+${botUsername}@users.noreply.github.com`,
+    };
   }
 }
