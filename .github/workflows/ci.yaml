@@ -26,7 +26,7 @@ jobs:
     # Don't run e2es on PRs from forks as it requires access to secrets
     # when using `pull_request`.
     # See https://securitylab.github.com/research/github-actions-preventing-pwn-requests
-    if: ${{ github.event.pull_request.head.repo.full_name == 'bazel-contrib/publish-to-bcr' }}
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == 'bazel-contrib/publish-to-bcr' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,16 +43,3 @@ jobs:
           version: ">= 363.0.0"
       - run: yarn install --frozen-lockfile
       - run: yarn e2e
-
-  # Join CI jobs into a single status so that only one status needs to be
-  # marked as required under branch protection rules.
-  all_ci_tests:
-    runs-on: ubuntu-latest
-    needs:
-      - test
-      - e2e
-    if: ${{ always() }}
-    steps:
-      - uses: cgrindel/gha_join_jobs@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
