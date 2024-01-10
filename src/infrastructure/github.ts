@@ -1,12 +1,69 @@
-import { createAppAuth, StrategyOptions } from "@octokit/auth-app";
+import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "@octokit/rest";
+import { Endpoints } from "@octokit/types";
 import { Repository } from "../domain/repository.js";
 import { User } from "../domain/user.js";
+
+export type Installation =
+  Endpoints["GET /repos/{owner}/{repo}/installation"]["response"]["data"];
 
 export class MissingRepositoryInstallationError extends Error {
   constructor(repository: Repository) {
     super(`Missing installation for repository ${repository.canonicalName}`);
   }
+}
+
+export function getUnauthorizedOctokit(): Octokit {
+  return new Octokit({
+    ...((process.env.INTEGRATION_TESTING && {
+      baseUrl: process.env.GITHUB_API_ENDPOINT,
+    }) ||
+      {}),
+  });
+}
+
+export function getAppAuthorizedOctokit(
+  appId: number,
+  privateKey: string,
+  clientId: string,
+  clientSecret: string
+): Octokit {
+  return new Octokit({
+    authStrategy: createAppAuth,
+    auth: {
+      appId: appId,
+      privateKey: privateKey,
+      clientId: clientId,
+      clientSecret: clientSecret,
+    },
+    ...((process.env.INTEGRATION_TESTING && {
+      baseUrl: process.env.GITHUB_API_ENDPOINT,
+    }) ||
+      {}),
+  });
+}
+
+export async function getInstallationAuthorizedOctokit(
+  appOctokit: Octokit,
+  installationId: number,
+  repo: string
+): Promise<Octokit> {
+  const octokit = await appOctokit.auth({
+    type: "installation",
+    installationId,
+    repositoryNames: [repo],
+    factory: (auth: any) =>
+      new Octokit({
+        authStrategy: createAppAuth,
+        auth,
+        ...((process.env.INTEGRATION_TESTING && {
+          baseUrl: process.env.GITHUB_API_ENDPOINT,
+        }) ||
+          {}),
+      }),
+  });
+
+  return octokit as any as Octokit;
 }
 
 export class GitHubClient {
@@ -22,54 +79,36 @@ export class GitHubClient {
     email: "41898282+github-actions[bot]@users.noreply.github.com",
   };
 
-  // Cache installation tokens as they expire after an hour, which is more than
-  // enough time for a cloud function to run.
-  private readonly _installationTokenCache: any = {};
+  public static async forRepoInstallation(
+    appOctokit: Octokit,
+    repository: Repository,
+    installationId?: number
+  ): Promise<GitHubClient> {
+    if (installationId === undefined) {
+      const appClient = new GitHubClient(appOctokit);
+      const installation = await appClient.getRepositoryInstallation(
+        repository
+      );
+      installationId = installation.id;
+    }
 
-  private appAuth: StrategyOptions | null = null;
+    const installationOctokit = await getInstallationAuthorizedOctokit(
+      appOctokit,
+      installationId,
+      repository.name
+    );
+    const client = new GitHubClient(installationOctokit);
 
-  public setAppAuth(appAuth: StrategyOptions) {
-    this.appAuth = appAuth;
+    return client;
   }
 
-  private getOctokit(): Octokit {
-    return new Octokit({
-      ...((process.env.INTEGRATION_TESTING && {
-        baseUrl: process.env.GITHUB_API_ENDPOINT,
-      }) ||
-        {}),
-    });
-  }
-
-  private getAppAuthorizedOctokit(): Octokit {
-    return new Octokit({
-      authStrategy: createAppAuth,
-      auth: this.appAuth,
-      ...((process.env.INTEGRATION_TESTING && {
-        baseUrl: process.env.GITHUB_API_ENDPOINT,
-      }) ||
-        {}),
-    });
-  }
-
-  private async getRepoAuthorizedOctokit(
-    repository: Repository
-  ): Promise<Octokit> {
-    const token = await this.getInstallationToken(repository);
-    return new Octokit({
-      auth: token,
-      ...((process.env.INTEGRATION_TESTING && {
-        baseUrl: process.env.GITHUB_API_ENDPOINT,
-      }) ||
-        {}),
-    });
-  }
+  public constructor(private readonly octokit: Octokit) {}
 
   public async getForkedRepositoriesByOwner(
     owner: string
   ): Promise<Repository[]> {
     // This endpoint works for org owners as well as user owners
-    const response = await this.getOctokit().rest.repos.listForUser({
+    const response = await this.octokit.rest.repos.listForUser({
       username: owner,
       type: "owner",
       per_page: 100,
@@ -83,7 +122,7 @@ export class GitHubClient {
   public async getSourceRepository(
     repository: Repository
   ): Promise<Repository | null> {
-    const response = await this.getOctokit().rest.repos.get({
+    const response = await this.octokit.rest.repos.get({
       owner: repository.owner,
       repo: repository.name,
     });
@@ -103,8 +142,7 @@ export class GitHubClient {
     title: string,
     body: string
   ): Promise<number> {
-    const app = await this.getRepoAuthorizedOctokit(toRepo);
-    const { data: pull } = await app.rest.pulls.create({
+    const { data: pull } = await this.octokit.rest.pulls.create({
       owner: toRepo.owner,
       repo: toRepo.name,
       title: title,
@@ -124,8 +162,7 @@ export class GitHubClient {
     if (username === GitHubClient.GITHUB_ACTIONS_BOT.username) {
       return GitHubClient.GITHUB_ACTIONS_BOT;
     }
-    const octokit = await this.getRepoAuthorizedOctokit(repository);
-    const { data } = await octokit.rest.users.getByUsername({ username });
+    const { data } = await this.octokit.rest.users.getByUsername({ username });
     return { name: data.name, username, email: data.email };
   }
 
@@ -141,13 +178,12 @@ export class GitHubClient {
     }
   }
 
-  private async getRepositoryInstallation(
+  public async getRepositoryInstallation(
     repository: Repository
-  ): Promise<any> {
-    const octokit = this.getAppAuthorizedOctokit();
+  ): Promise<Installation> {
     try {
       const { data: installation } =
-        await octokit.rest.apps.getRepoInstallation({
+        await this.octokit.rest.apps.getRepoInstallation({
           owner: repository.owner,
           repo: repository.name,
         });
@@ -163,21 +199,16 @@ export class GitHubClient {
   }
 
   public async getInstallationToken(repository: Repository): Promise<string> {
-    if (!this._installationTokenCache[repository.canonicalName]) {
-      const installationId = (await this.getRepositoryInstallation(repository))
-        .id;
+    const installationId = (await this.getRepositoryInstallation(repository))
+      .id;
 
-      const octokit = this.getAppAuthorizedOctokit();
-      const auth = (await octokit.auth({
-        type: "installation",
-        installationId: installationId,
-        repositoryNames: [repository.name],
-      })) as any;
+    const auth = (await this.octokit.auth({
+      type: "installation",
+      installationId: installationId,
+      repositoryNames: [repository.name],
+    })) as any;
 
-      this._installationTokenCache[repository.canonicalName] = auth.token;
-    }
-
-    return this._installationTokenCache[repository.canonicalName];
+    return auth.token;
   }
 
   public async getAuthenticatedRemoteUrl(
