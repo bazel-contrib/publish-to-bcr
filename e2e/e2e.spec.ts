@@ -106,7 +106,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(repo, "unversioned-1.0.0");
@@ -118,6 +118,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -144,7 +145,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
@@ -156,6 +157,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -183,7 +185,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(repo, "tarball-1.0.0");
@@ -195,6 +197,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -222,7 +225,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseZip(repo, "zip-1.0.0");
@@ -234,6 +237,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -261,7 +265,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(repo);
@@ -273,6 +277,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -300,7 +305,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(repo);
@@ -312,6 +317,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -327,12 +333,6 @@ describe("e2e tests", () => {
   });
 
   test("happy path", async () => {
-    // This test checks for authentication token requests which may be cached.
-    // Restart the cloud functions server to ensure a consistently uncached
-    // state for this test.
-    await cloudFunctions.shutdown();
-    await cloudFunctions.start();
-
     const repo = Fixture.Versioned;
     const tag = "v1.0.0";
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
@@ -357,6 +357,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      rulesetInstallationId,
       {
         owner: testOrg,
         repo,
@@ -422,7 +423,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive1 = await makeReleaseTarball(repo, "module-1.0.0");
@@ -441,6 +442,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -510,7 +512,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(
@@ -525,6 +527,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -556,7 +559,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(releaser.login!, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
@@ -568,6 +571,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -605,7 +609,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     // App not installed to fork
     // fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
@@ -618,6 +622,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,
@@ -652,7 +657,7 @@ describe("e2e tests", () => {
       "bazelbuild",
       "bazel-central-registry"
     );
-    fakeGitHub.mockAppInstallation(testOrg, repo);
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
     const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
@@ -664,6 +669,7 @@ describe("e2e tests", () => {
     const response = await publishReleaseEvent(
       cloudFunctions.getBaseUrl(),
       secrets.webhookSecret,
+      installationId,
       {
         owner: testOrg,
         repo,

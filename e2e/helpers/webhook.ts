@@ -7,6 +7,7 @@ import type { DeepPartial } from "./types";
 export async function publishReleaseEvent(
   webhookUrl: string,
   webhookSecret: string,
+  installationId: number,
   release: { owner: string; repo: string; tag: string; releaser: Partial<User> }
 ): Promise<AxiosResponse> {
   const body: DeepPartial<ReleasePublishedEvent> = {
@@ -21,6 +22,9 @@ export async function publishReleaseEvent(
     release: {
       html_url: `https://github.com/${release.owner}/${release.repo}/releases/tag/${release.tag}`,
       tag_name: release.tag,
+    },
+    installation: {
+      id: installationId,
     },
   };
 

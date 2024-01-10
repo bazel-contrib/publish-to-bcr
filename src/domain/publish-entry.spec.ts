@@ -9,7 +9,7 @@ let publishEntryService: PublishEntryService;
 let mockGithubClient: Mocked<GitHubClient>;
 beforeEach(() => {
   mocked(GitHubClient, true).mockClear();
-  mockGithubClient = mocked(new GitHubClient());
+  mockGithubClient = mocked(new GitHubClient({} as any));
   publishEntryService = new PublishEntryService(mockGithubClient);
 });
 

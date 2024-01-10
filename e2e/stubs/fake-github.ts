@@ -1,5 +1,5 @@
 import { User } from "@octokit/webhooks-types";
-import { randomInt, randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import * as mockttp from "mockttp";
 import url from "node:url";
 import { StubbedServer } from "./stubbed-server";
@@ -74,14 +74,15 @@ export class FakeGitHub implements StubbedServer {
     this.repositories.clear();
   }
 
+  private nextInstallationId = 1;
   public mockAppInstallation(owner: string, repo: string): number {
-    const installationId = randomInt(50000);
+    const installationId = this.nextInstallationId++;
     this.appInstallations.set(`${owner}/${repo}`, installationId);
     return installationId;
   }
 
   public mockBotAppInstallation(owner: string, repo: string): number {
-    const installationId = randomInt(50000);
+    const installationId = this.nextInstallationId++;
     this.botAppInstallations.set(`${owner}/${repo}`, installationId);
     return installationId;
   }

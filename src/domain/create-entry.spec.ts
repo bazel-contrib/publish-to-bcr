@@ -88,7 +88,7 @@ beforeEach(() => {
   });
 
   mockGitClient = mocked(new GitClient());
-  mockGithubClient = mocked(new GitHubClient());
+  mockGithubClient = mocked(new GitHubClient({} as any));
   mocked(computeIntegrityHash).mockReturnValue(`sha256-${randomUUID()}`);
   Repository.gitClient = mockGitClient;
   createEntryService = new CreateEntryService(mockGitClient, mockGithubClient);

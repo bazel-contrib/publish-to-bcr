@@ -25,7 +25,7 @@ beforeEach(() => {
   mocked(GitHubClient, true).mockClear();
   mockRulesetRepoCreate.mockClear();
 
-  mockGithubClient = mocked(new GitHubClient());
+  mockGithubClient = mocked(new GitHubClient({} as any));
   findRegistryForkService = new FindRegistryForkService(mockGithubClient);
 });
 
