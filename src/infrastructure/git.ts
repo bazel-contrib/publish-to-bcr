@@ -2,7 +2,12 @@ import { simpleGit } from "simple-git";
 
 export class GitClient {
   public async clone(url: string, repoPath: string): Promise<void> {
-    await simpleGit().clone(url, repoPath);
+    const personalAccessToken = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+    await simpleGit()
+    .env({ // Set environment variables for authentication
+        GIT_ASKPASS: "echo", // Disable credential prompt
+    })
+    .clone(url.replace('https://', `https://${personalAccessToken}@`), repoPath);
   }
 
   public async checkout(repoPath: string, ref?: string): Promise<void> {

@@ -92,6 +92,7 @@ export class ReleaseArchive {
 }
 
 async function download(url: string, dest: string): Promise<void> {
+  const personalAccessToken = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
   if (process.env.INTEGRATION_TESTING) {
     // Point downloads to the standin github server
     // during integration testing.
@@ -118,6 +119,9 @@ async function download(url: string, dest: string): Promise<void> {
   try {
     response = await axios.get(url, {
       responseType: "stream",
+      headers: {
+        Authorization: `Bearer ${personalAccessToken}`,
+    },
     });
   } catch (e: any) {
     // https://axios-http.com/docs/handling_errors
