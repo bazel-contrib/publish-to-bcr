@@ -231,7 +231,8 @@ export class CreateEntryService {
   ): void {
     if (moduleFile.version !== version) {
       console.log(
-        "Archived MODULE.bazel version does not match release version. Creating a version patch."
+        `Archived MODULE.bazel version ${moduleFile.version} does not match release version ${version}.`,
+        "Creating a version patch.",
       );
       const patchFileName = "module_dot_bazel_version.patch";
       const existingContent = moduleFile.content;

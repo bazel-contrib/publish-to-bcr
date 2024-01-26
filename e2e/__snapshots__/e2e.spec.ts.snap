@@ -168,23 +168,17 @@ exports[`e2e tests [snapshot] ruleset with unversioned module in source 1`] = `
 "----------------------------------------------------
 modules/unversioned/1.0.0/MODULE.bazel
 ----------------------------------------------------
-module(
-    name = \\"unversioned\\",
-    version = \\"1.0.0\\",
-)
+module(name = \\"unversioned\\", version = \\"1.0.0\\")
+
 ----------------------------------------------------
 modules/unversioned/1.0.0/patches/module_dot_bazel_version.patch
 ----------------------------------------------------
 ===================================================================
 --- a/MODULE.bazel
 +++ b/MODULE.bazel
-@@ -1,4 +1,4 @@
- module(
-     name = \\"unversioned\\",
--    version = \\"0.0.0\\",
-+    version = \\"1.0.0\\",
- )
-\\\\ No newline at end of file
+@@ -1,1 +1,1 @@
+-module(name = \\"unversioned\\")
++module(name = \\"unversioned\\", version = \\"1.0.0\\")
 
 ----------------------------------------------------
 modules/unversioned/1.0.0/presubmit.yml
@@ -204,11 +198,11 @@ bcr_test_module:
 modules/unversioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-eXQOU+DNwg/Q29tX59jP0+SFLvRHrQf3z+KJVS/gIRk=\\",
+    \\"integrity\\": \\"sha256-X2ZIYATg3qceheFSj/qaTU0SqqW/hFc8UIGkrK3FmZQ=\\",
     \\"strip_prefix\\": \\"unversioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz\\",
     \\"patches\\": {
-        \\"module_dot_bazel_version.patch\\": \\"sha256-y0kC8heeH9bQKhrfx2JuX+RK0KyjwHhPac3wBc4Nkg4=\\"
+        \\"module_dot_bazel_version.patch\\": \\"sha256-OoXz9ahBlGjW4IVb4QCmXMZInK7XbFEjCHya3wx8AAk=\\"
     },
     \\"patch_strip\\": 1
 }

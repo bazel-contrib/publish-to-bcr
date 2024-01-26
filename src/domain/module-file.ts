@@ -23,8 +23,8 @@ export class ModuleFile {
 
   public get version(): string {
     const regex = /module\([^)]*?version\s*=\s*"(.+?)"/s;
-    const version = this.moduleContent.match(regex)[1];
-    return version;
+    const match = this.moduleContent.match(regex);
+    return match ? match[1] : "";
   }
 
   public get content(): string {
@@ -32,10 +32,19 @@ export class ModuleFile {
   }
 
   public stampVersion(version: string): void {
-    this.moduleContent = this.moduleContent.replace(
-      /(^.*?module\(.*?version\s*=\s*")[\w.]+(".*$)/s,
-      `$1${version}$2`
-    );
+    if (this.version) {
+      // update the version
+      this.moduleContent = this.moduleContent.replace(
+        /(^.*?module\(.*?version\s*=\s*")[\w.]+(".*$)/s,
+        `$1${version}$2`
+      );
+    } else {
+      // add the version
+      this.moduleContent = this.moduleContent.replace(
+        /(^.*?module\(.*?)\)/s,
+        `$1, version = "${version}")`
+      );
+    }
   }
 
   public save(destPath: string) {
