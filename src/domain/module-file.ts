@@ -41,8 +41,8 @@ export class ModuleFile {
     } else {
       // add the version
       this.moduleContent = this.moduleContent.replace(
-        /(^.*?module\(.*?)(\s*)\)/s,
-        `$1,\n  version = "${version}"\n)`
+        /(^.*?module\(.*?),?(\s*)\)/s,
+        `$1,\n  version = "${version}",\n)`
       );
     }
   }

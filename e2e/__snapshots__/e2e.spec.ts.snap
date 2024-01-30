@@ -170,7 +170,7 @@ modules/unversioned/1.0.0/MODULE.bazel
 ----------------------------------------------------
 module(
     name = \\"unversioned\\",
-  version = \\"1.0.0\\"
+  version = \\"1.0.0\\",
 )
 
 ----------------------------------------------------
@@ -183,7 +183,7 @@ modules/unversioned/1.0.0/patches/module_dot_bazel_version.patch
  module(
 -    name = \\"unversioned\\"
 +    name = \\"unversioned\\",
-+  version = \\"1.0.0\\"
++  version = \\"1.0.0\\",
  )
 
 ----------------------------------------------------
@@ -208,7 +208,7 @@ modules/unversioned/1.0.0/source.json
     \\"strip_prefix\\": \\"unversioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz\\",
     \\"patches\\": {
-        \\"module_dot_bazel_version.patch\\": \\"sha256-CahdP4+xcGJVM9GyA0Sg2rUe5rIPHzKJ6J4SfFTm2x8=\\"
+        \\"module_dot_bazel_version.patch\\": \\"sha256-LGXyh9FLhgIPbe0gHfxAPnEQ7HVR+HUP/IDbPdl3ZkA=\\"
     },
     \\"patch_strip\\": 1
 }
