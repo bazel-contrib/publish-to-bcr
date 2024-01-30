@@ -36,10 +36,18 @@ describe("moduleName", () => {
   });
 });
 
-describe("moduleVersion", () => {
+describe("version", () => {
   test("parses module version", () => {
     const moduleFile = new ModuleFile("MODULE.bazel");
     expect(moduleFile.version).toEqual("1.2.3");
+  });
+
+  test("returns undefined when the version is missing", () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(name = "rules_foo")
+`);
+    const moduleFile = new ModuleFile("MODULE.bazel");
+    expect(moduleFile.version).toBeUndefined();
   });
 });
 
@@ -59,6 +67,21 @@ describe("stampVersion", () => {
     expect(moduleFile.content).toEqual(
       fakeModuleFile({ moduleName: "rules_foo", version: "4.5.6" })
     );
+  });
+
+  test("stamps the version when the version field was originally missing", () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(
+  name = "rules_foo"
+)`);
+    const moduleFile = new ModuleFile("MODULE.bazel");
+    moduleFile.stampVersion("4.5.6");
+
+    expect(moduleFile.content).toEqual(`\
+module(
+  name = "rules_foo",
+  version = "4.5.6"
+)`);
   });
 });
 

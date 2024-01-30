@@ -21,10 +21,10 @@ export class ModuleFile {
     return name;
   }
 
-  public get version(): string {
+  public get version(): string | undefined {
     const regex = /module\([^)]*?version\s*=\s*"(.+?)"/s;
     const match = this.moduleContent.match(regex);
-    return match ? match[1] : "";
+    return match ? match[1] : undefined;
   }
 
   public get content(): string {
@@ -32,7 +32,7 @@ export class ModuleFile {
   }
 
   public stampVersion(version: string): void {
-    if (this.version) {
+    if (this.version !== undefined) {
       // update the version
       this.moduleContent = this.moduleContent.replace(
         /(^.*?module\(.*?version\s*=\s*")[\w.]+(".*$)/s,
@@ -41,8 +41,8 @@ export class ModuleFile {
     } else {
       // add the version
       this.moduleContent = this.moduleContent.replace(
-        /(^.*?module\(.*?)\)/s,
-        `$1, version = "${version}")`
+        /(^.*?module\(.*?)(\s*)\)/s,
+        `$1,\n  version = "${version}"\n)`
       );
     }
   }

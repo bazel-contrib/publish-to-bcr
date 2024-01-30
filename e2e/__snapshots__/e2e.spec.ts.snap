@@ -168,7 +168,10 @@ exports[`e2e tests [snapshot] ruleset with unversioned module in source 1`] = `
 "----------------------------------------------------
 modules/unversioned/1.0.0/MODULE.bazel
 ----------------------------------------------------
-module(name = \\"unversioned\\", version = \\"1.0.0\\")
+module(
+    name = \\"unversioned\\",
+  version = \\"1.0.0\\"
+)
 
 ----------------------------------------------------
 modules/unversioned/1.0.0/patches/module_dot_bazel_version.patch
@@ -176,9 +179,12 @@ modules/unversioned/1.0.0/patches/module_dot_bazel_version.patch
 ===================================================================
 --- a/MODULE.bazel
 +++ b/MODULE.bazel
-@@ -1,1 +1,1 @@
--module(name = \\"unversioned\\")
-+module(name = \\"unversioned\\", version = \\"1.0.0\\")
+@@ -1,3 +1,4 @@
+ module(
+-    name = \\"unversioned\\"
++    name = \\"unversioned\\",
++  version = \\"1.0.0\\"
+ )
 
 ----------------------------------------------------
 modules/unversioned/1.0.0/presubmit.yml
@@ -198,11 +204,11 @@ bcr_test_module:
 modules/unversioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-X2ZIYATg3qceheFSj/qaTU0SqqW/hFc8UIGkrK3FmZQ=\\",
+    \\"integrity\\": \\"sha256-oLg/mgWyhr6DFepRYkjoPphQ8KOriLgu6M4x2RSsLbU=\\",
     \\"strip_prefix\\": \\"unversioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz\\",
     \\"patches\\": {
-        \\"module_dot_bazel_version.patch\\": \\"sha256-OoXz9ahBlGjW4IVb4QCmXMZInK7XbFEjCHya3wx8AAk=\\"
+        \\"module_dot_bazel_version.patch\\": \\"sha256-CahdP4+xcGJVM9GyA0Sg2rUe5rIPHzKJ6J4SfFTm2x8=\\"
     },
     \\"patch_strip\\": 1
 }
@@ -326,7 +332,7 @@ bcr_test_module:
 modules/zero-versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-P4olS5x2mo1PJPI6iU0TMfPHWs9inbRZFJZHmhEY4no=\\",
+    \\"integrity\\": \\"sha256-sLh05DKTEOuO3vz9+IDUJJNOf0GSLxdGDJ8qOLZRUCQ=\\",
     \\"strip_prefix\\": \\"zero-versioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/zero-versioned/archive/refs/tags/v1.0.0.tar.gz\\",
     \\"patches\\": {
