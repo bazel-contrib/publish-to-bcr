@@ -1,0 +1,15 @@
+{
+  "homepage": "https://github.com/testorg/zero-versioned",
+  "maintainers": [
+    {
+      "name": "Foo McBar",
+      "email": "foo@test.org",
+      "github": "foobar"
+    }
+  ],
+  "repository": [
+    "github:testorg/zero-versioned"
+  ],
+  "versions": [],
+  "yanked_versions": {}
+}

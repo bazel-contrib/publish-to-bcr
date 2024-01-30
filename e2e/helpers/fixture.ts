@@ -16,6 +16,7 @@ export enum Fixture {
   NoPrefix = "no-prefix",
   Tarball = "tarball",
   Unversioned = "unversioned",
+  ZeroVersioned = "zero-versioned",
   Versioned = "versioned",
   Zip = "zip",
 }

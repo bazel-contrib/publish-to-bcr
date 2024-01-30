@@ -133,6 +133,45 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
+  test("[snapshot] ruleset with zero-versioned module in source", async () => {
+    const repo = Fixture.ZeroVersioned;
+    const tag = "v1.0.0";
+    await setupLocalRemoteRulesetRepo(repo, tag, releaser);
+
+    fakeGitHub.mockUser(releaser);
+    fakeGitHub.mockRepository(testOrg, repo);
+    fakeGitHub.mockRepository(
+      testOrg,
+      "bazel-central-registry",
+      "bazelbuild",
+      "bazel-central-registry"
+    );
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
+    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+
+    const releaseArchive = await makeReleaseTarball(repo, "zero-versioned-1.0.0");
+    await fakeGitHub.mockReleaseArchive(
+      `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
+      releaseArchive
+    );
+
+    const response = await publishReleaseEvent(
+      cloudFunctions.getBaseUrl(),
+      secrets.webhookSecret,
+      installationId,
+      {
+        owner: testOrg,
+        repo,
+        tag,
+        releaser,
+      }
+    );
+    expect(response.status).toEqual(200);
+
+    const snapshot = await rollupEntryFiles();
+    expect(snapshot).toMatchSnapshot();
+  });
+
   test("[snapshot] ruleset with versioned module in source", async () => {
     const repo = Fixture.Versioned;
     const tag = "v1.0.0";

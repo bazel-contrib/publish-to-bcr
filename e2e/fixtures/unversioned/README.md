@@ -1,1 +1,1 @@
-Ruleset repo that doesn't update the source MODULE.bazel's `version` field.
+Ruleset repo that doesn't have the source MODULE.bazel's `version` field.
