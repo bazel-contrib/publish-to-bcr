@@ -54,6 +54,15 @@ modules/no-prefix/metadata.json
 "
 `;
 
+exports[`e2e tests [snapshot] error message for incorrect strip prefix 1`] = `
+"Failed to publish entry for testorg/versioned@v1.0.0 to the Bazel Central Registry.
+
+Could not find MODULE.bazel in release archive at ./versioned-1.0.0/MODULE.bazel.
+Is the strip prefix in source.template.json correct? (currently it's 'versioned-1.0.0')
+
+"
+`;
+
 exports[`e2e tests [snapshot] missing strip prefix 1`] = `
 "----------------------------------------------------
 modules/empty-prefix/1.0.0/MODULE.bazel

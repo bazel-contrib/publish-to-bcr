@@ -40,6 +40,7 @@ jest.mock("node:fs");
 
 const mockedFileReads: { [path: string]: string } = {};
 const EXTRACTED_MODULE_PATH = "/fake/path/to/MODULE.bazel";
+let mockReleaseArchive: ReleaseArchive;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -79,14 +80,15 @@ beforeEach(() => {
     delete mockedFileReads[key];
   }
 
-  mocked(ReleaseArchive.fetch).mockImplementation(async () => {
-    return {
-      extractModuleFile: jest.fn(async () => {
-        return new ModuleFile(EXTRACTED_MODULE_PATH);
-      }),
-      diskPath: path.join(os.tmpdir(), "archive.tar.gz"),
-    } as unknown as ReleaseArchive;
-  });
+  mockReleaseArchive = {
+    extractModuleFile: jest.fn(async () => {
+      return new ModuleFile(EXTRACTED_MODULE_PATH);
+    }),
+    diskPath: path.join(os.tmpdir(), "archive.tar.gz"),
+    cleanup: jest.fn(),
+  } as Partial<ReleaseArchive> as ReleaseArchive;
+
+  mocked(ReleaseArchive.fetch).mockResolvedValue(mockReleaseArchive);
 
   mockGitClient = mocked(new GitClient());
   mockBcrForkGitHubClient = mocked(new GitHubClient({} as any));
@@ -183,6 +185,18 @@ describe("createEntryFiles", () => {
       expect.any(String),
       presubmitFilePath
     );
+  });
+
+  test("cleans up the release archive extraction", async () => {
+    mockRulesetFiles();
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+
+    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+
+    expect(mockReleaseArchive.cleanup).toHaveBeenCalled();
   });
 
   test("creates the required entry files for a different module root", async () => {

@@ -149,7 +149,10 @@ describe("e2e tests", () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
-    const releaseArchive = await makeReleaseTarball(repo, "zero-versioned-1.0.0");
+    const releaseArchive = await makeReleaseTarball(
+      repo,
+      "zero-versioned-1.0.0"
+    );
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -466,8 +469,14 @@ describe("e2e tests", () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
-    const releaseArchive1 = await makeReleaseTarball(repo, "module-1.0.0");
-    const releaseArchive2 = await makeReleaseTarball(repo, "submodule-1.0.0");
+    const releaseArchive1 = await makeReleaseTarball(
+      repo,
+      "multi-module-1.0.0"
+    );
+    const releaseArchive2 = await makeReleaseTarball(
+      repo,
+      "multi-module-1.0.0"
+    );
 
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/releases/download/${tag}/module-${tag}.tar.gz`,
@@ -734,6 +743,48 @@ describe("e2e tests", () => {
       "123+publish-to-bcr-bot[bot]@users.noreply.github.com"
     );
     expect(logs.latest?.author_name).toEqual("publish-to-bcr-bot");
+  });
+
+  test("[snapshot] error message for incorrect strip prefix", async () => {
+    const repo = Fixture.Versioned;
+    const tag = "v1.0.0";
+    await setupLocalRemoteRulesetRepo(repo, tag, releaser);
+
+    fakeGitHub.mockUser(releaser);
+    fakeGitHub.mockRepository(testOrg, repo);
+    fakeGitHub.mockRepository(
+      testOrg,
+      "bazel-central-registry",
+      "bazelbuild",
+      "bazel-central-registry"
+    );
+    const rulesetInstallationId = fakeGitHub.mockAppInstallation(testOrg, repo);
+    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+
+    // Strip prefix in release archive doesn't match source.template.json
+    const releaseArchive = await makeReleaseTarball(repo, "invalid-prefix");
+    await fakeGitHub.mockReleaseArchive(
+      `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
+      releaseArchive
+    );
+
+    const response = await publishReleaseEvent(
+      cloudFunctions.getBaseUrl(),
+      secrets.webhookSecret,
+      rulesetInstallationId,
+      {
+        owner: testOrg,
+        repo,
+        tag,
+        releaser,
+      }
+    );
+
+    expect(response.status).toEqual(200);
+
+    const messages = await fetchEmails(emailClient);
+    expect(messages.length).toEqual(1);
+    expect(messages[0].text).toMatchSnapshot();
   });
 });
 
