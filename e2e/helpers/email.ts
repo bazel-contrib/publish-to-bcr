@@ -41,17 +41,10 @@ export async function fetchEmails(
     )) {
       messages.push(await mailparser.simpleParser(message.source, {}));
     }
+    await emailClient.messageFlagsAdd({ seq: "1:*", seen: false }, ["\\Seen"]);
   } finally {
     await emailClient.mailboxClose();
   }
 
   return messages;
-}
-
-export async function deleteAllMail(emailClient: ImapFlow): Promise<void> {
-  try {
-    await emailClient.messageDelete("1:*");
-  } finally {
-    await emailClient.mailboxClose();
-  }
 }

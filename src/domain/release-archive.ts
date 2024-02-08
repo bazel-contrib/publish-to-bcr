@@ -28,17 +28,30 @@ export class ArchiveDownloadError extends UserFacingError {
   }
 }
 
+export class MissingModuleFileError extends UserFacingError {
+  constructor(pathInArchive: string, stripPrefix: string) {
+    super(
+      `Could not find MODULE.bazel in release archive at ${pathInArchive}.\nIs the strip prefix in source.template.json correct? (currently it's '${stripPrefix}')`
+    );
+  }
+}
+
 export class ReleaseArchive {
   public static async fetch(
     url: string,
     stripPrefix: string
   ): Promise<ReleaseArchive> {
     const filename = url.substring(url.lastIndexOf("/") + 1);
-    const downloadedPath = path.join(os.tmpdir(), filename);
+    const downloadedPath = path.join(
+      fs.mkdtempSync(path.join(os.tmpdir(), "archive-")),
+      filename
+    );
     await download(url, downloadedPath);
 
     return new ReleaseArchive(downloadedPath, stripPrefix);
   }
+
+  private extractDir: string | undefined;
 
   private constructor(
     private readonly _diskPath: string,
@@ -46,48 +59,56 @@ export class ReleaseArchive {
   ) {}
 
   public async extractModuleFile(moduleRoot: string): Promise<ModuleFile> {
-    const extractDir = path.dirname(this._diskPath);
+    this.extractDir = path.dirname(this._diskPath);
 
     if (this._diskPath.endsWith(".tar.gz")) {
-      await this.extractModuleFileFromTarball(extractDir);
+      await this.extractReleaseTarball(this.extractDir);
     } else if (this._diskPath.endsWith(".zip")) {
-      await this.extractModuleFileFromZip(extractDir);
+      await this.extractReleaseZip(this.extractDir);
     } else {
       const extension = this._diskPath.split(".").slice(1).join(".");
       throw new UnsupportedArchiveFormat(extension);
     }
 
-    const extractedModulePath = path.join(
-      extractDir,
+    const pathInArchive = path.join(
+      this.stripPrefix,
       moduleRoot,
       "MODULE.bazel"
     );
+
+    const extractedModulePath = path.join(this.extractDir, pathInArchive);
+
+    if (!fs.existsSync(extractedModulePath)) {
+      throw new MissingModuleFileError(`./${pathInArchive}`, this.stripPrefix);
+    }
+
     return new ModuleFile(extractedModulePath);
   }
 
-  private async extractModuleFileFromTarball(
-    extractDir: string
-  ): Promise<void> {
-    const stripComponents = this.stripPrefix
-      ? this.stripPrefix.split("/").length
-      : 0;
+  private async extractReleaseTarball(extractDir: string): Promise<void> {
     await tar.x({
       cwd: extractDir,
       file: this._diskPath,
-      strip: stripComponents,
     });
   }
 
-  private async extractModuleFileFromZip(extractDir: string): Promise<void> {
+  private async extractReleaseZip(extractDir: string): Promise<void> {
     await extractZip(this._diskPath, { dir: extractDir });
-    fs.copyFileSync(
-      path.join(extractDir, this.stripPrefix, "MODULE.bazel"),
-      path.join(extractDir, "MODULE.bazel")
-    );
   }
 
   public get diskPath(): string {
     return this._diskPath;
+  }
+
+  /**
+   * Delete the release archive and extracted contents
+   */
+  public cleanup(): void {
+    fs.rmSync(this._diskPath, { force: true });
+
+    if (this.extractDir) {
+      fs.rmSync(this.extractDir, { force: true, recursive: true });
+    }
   }
 }
 

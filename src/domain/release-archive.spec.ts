@@ -1,6 +1,5 @@
 import axios from "axios";
 import axiosRetry from "axios-retry";
-import extractZip from "extract-zip";
 import { mocked } from "jest-mock";
 import fs, { WriteStream } from "node:fs";
 import os from "node:os";
@@ -10,6 +9,7 @@ import { fakeModuleFile } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
 import {
   ArchiveDownloadError,
+  MissingModuleFileError,
   ReleaseArchive,
   UnsupportedArchiveFormat,
 } from "./release-archive";
@@ -24,6 +24,7 @@ jest.mock("extract-zip");
 const RELEASE_ARCHIVE_URL = "https://foo.bar/rules-foo-v1.2.3.tar.gz";
 const STRIP_PREFIX = "rules-foo";
 const TEMP_DIR = "/tmp";
+const EXTRACT_DIR = `${TEMP_DIR}/archive-1234`;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -50,6 +51,9 @@ beforeEach(() => {
   );
 
   mocked(os.tmpdir).mockReturnValue(TEMP_DIR);
+  mocked(fs.mkdtempSync).mockReturnValue(EXTRACT_DIR);
+
+  mocked(fs.existsSync).mockReturnValue(true); // Existence check on MODULE.bazel
 });
 
 describe("fetch", () => {
@@ -73,7 +77,7 @@ describe("fetch", () => {
   test("saves the archive to disk", async () => {
     await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
 
-    const expectedPath = path.join(TEMP_DIR, "rules-foo-v1.2.3.tar.gz");
+    const expectedPath = path.join(EXTRACT_DIR, "rules-foo-v1.2.3.tar.gz");
     expect(fs.createWriteStream).toHaveBeenCalledWith(expectedPath, {
       flags: "w",
     });
@@ -94,7 +98,7 @@ describe("fetch", () => {
       STRIP_PREFIX
     );
 
-    const expectedPath = path.join(TEMP_DIR, "rules-foo-v1.2.3.tar.gz");
+    const expectedPath = path.join(EXTRACT_DIR, "rules-foo-v1.2.3.tar.gz");
     expect(releaseArchive.diskPath).toEqual(expectedPath);
   });
 
@@ -161,42 +165,7 @@ describe("extractModuleFile", () => {
     expect(tar.x).toHaveBeenCalledWith({
       cwd: path.dirname(releaseArchive.diskPath),
       file: releaseArchive.diskPath,
-      strip: 1,
     });
-  });
-
-  test("extracts a tarball when the strip_prefix is empty", async () => {
-    const releaseArchive = await ReleaseArchive.fetch(
-      "https://foo.bar/rules-foo-v1.2.3.tar.gz",
-      ""
-    );
-    await releaseArchive.extractModuleFile(".");
-
-    expect(tar.x).toHaveBeenCalledWith({
-      cwd: path.dirname(releaseArchive.diskPath),
-      file: releaseArchive.diskPath,
-      strip: 0,
-    });
-  });
-
-  test("extracts the full zip archive next to the zip archive", async () => {
-    const releaseArchive = await ReleaseArchive.fetch(
-      "https://foo.bar/rules-foo-v1.2.3.zip",
-      STRIP_PREFIX
-    );
-    await releaseArchive.extractModuleFile(".");
-
-    expect(extractZip).toHaveBeenCalledWith(releaseArchive.diskPath, {
-      dir: path.dirname(releaseArchive.diskPath),
-    });
-    expect(fs.copyFileSync).toHaveBeenCalledWith(
-      path.join(
-        path.dirname(releaseArchive.diskPath),
-        STRIP_PREFIX,
-        "MODULE.bazel"
-      ),
-      path.join(path.dirname(releaseArchive.diskPath), "MODULE.bazel")
-    );
   });
 
   test("loads the extracted MODULE.bazel file", async () => {
@@ -208,6 +177,7 @@ describe("extractModuleFile", () => {
 
     const expectedPath = path.join(
       path.dirname(releaseArchive.diskPath),
+      STRIP_PREFIX,
       "MODULE.bazel"
     );
     expect(fs.readFileSync).toHaveBeenCalledWith(expectedPath, "utf8");
@@ -222,6 +192,7 @@ describe("extractModuleFile", () => {
 
     const expectedPath = path.join(
       path.dirname(releaseArchive.diskPath),
+      STRIP_PREFIX,
       "sub",
       "dir",
       "MODULE.bazel"
@@ -238,5 +209,18 @@ describe("extractModuleFile", () => {
 
     expect(moduleFile.moduleName).toEqual("rules_foo");
     expect(moduleFile.version).toEqual("1.2.3");
+  });
+
+  test("throws when MODULE.bazel cannot be found in the release archive", async () => {
+    const releaseArchive = await ReleaseArchive.fetch(
+      RELEASE_ARCHIVE_URL,
+      STRIP_PREFIX
+    );
+
+    mocked(fs.existsSync).mockReturnValue(false);
+
+    await expect(releaseArchive.extractModuleFile(".")).rejects.toThrow(
+      MissingModuleFileError
+    );
   });
 });

@@ -58,50 +58,55 @@ export class CreateEntryService {
       sourceTemplate.url,
       sourceTemplate.stripPrefix
     );
-    const integrityHash = computeIntegrityHash(releaseArchive.diskPath);
-    sourceTemplate.setIntegrityHash(integrityHash);
 
-    const moduleFile = await releaseArchive.extractModuleFile(moduleRoot);
+    try {
+      const integrityHash = computeIntegrityHash(releaseArchive.diskPath);
+      sourceTemplate.setIntegrityHash(integrityHash);
 
-    const bcrEntryPath = path.resolve(
-      bcrRepo.diskPath,
-      "modules",
-      moduleFile.moduleName
-    );
-    const bcrVersionEntryPath = path.join(bcrEntryPath, version);
+      const moduleFile = await releaseArchive.extractModuleFile(moduleRoot);
 
-    if (!fs.existsSync(bcrEntryPath)) {
-      fs.mkdirSync(bcrEntryPath);
+      const bcrEntryPath = path.resolve(
+        bcrRepo.diskPath,
+        "modules",
+        moduleFile.moduleName
+      );
+      const bcrVersionEntryPath = path.join(bcrEntryPath, version);
+
+      if (!fs.existsSync(bcrEntryPath)) {
+        fs.mkdirSync(bcrEntryPath);
+      }
+
+      const metadataTemplate = rulesetRepo.metadataTemplate(moduleRoot);
+
+      updateMetadataFile(metadataTemplate, bcrEntryPath, version);
+
+      fs.mkdirSync(bcrVersionEntryPath);
+
+      this.addPatches(
+        rulesetRepo,
+        sourceTemplate,
+        moduleFile,
+        bcrVersionEntryPath,
+        moduleRoot
+      );
+
+      this.patchModuleVersionIfMismatch(
+        moduleFile,
+        version,
+        sourceTemplate,
+        bcrVersionEntryPath
+      );
+
+      sourceTemplate.save(path.join(bcrVersionEntryPath, "source.json"));
+      moduleFile.save(path.join(bcrVersionEntryPath, "MODULE.bazel"));
+
+      fs.copyFileSync(
+        rulesetRepo.presubmitPath(moduleRoot),
+        path.join(bcrVersionEntryPath, "presubmit.yml")
+      );
+    } finally {
+      releaseArchive.cleanup();
     }
-
-    const metadataTemplate = rulesetRepo.metadataTemplate(moduleRoot);
-
-    updateMetadataFile(metadataTemplate, bcrEntryPath, version);
-
-    fs.mkdirSync(bcrVersionEntryPath);
-
-    this.addPatches(
-      rulesetRepo,
-      sourceTemplate,
-      moduleFile,
-      bcrVersionEntryPath,
-      moduleRoot
-    );
-
-    this.patchModuleVersionIfMismatch(
-      moduleFile,
-      version,
-      sourceTemplate,
-      bcrVersionEntryPath
-    );
-
-    sourceTemplate.save(path.join(bcrVersionEntryPath, "source.json"));
-    moduleFile.save(path.join(bcrVersionEntryPath, "MODULE.bazel"));
-
-    fs.copyFileSync(
-      rulesetRepo.presubmitPath(moduleRoot),
-      path.join(bcrVersionEntryPath, "presubmit.yml")
-    );
   }
 
   public async commitEntryToNewBranch(
@@ -232,7 +237,7 @@ export class CreateEntryService {
     if (moduleFile.version !== version) {
       console.log(
         `Archived MODULE.bazel version ${moduleFile.version} does not match release version ${version}.`,
-        "Creating a version patch.",
+        "Creating a version patch."
       );
       const patchFileName = "module_dot_bazel_version.patch";
       const existingContent = moduleFile.content;
