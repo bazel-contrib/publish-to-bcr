@@ -469,23 +469,11 @@ describe("e2e tests", () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
-    const releaseArchive1 = await makeReleaseTarball(
-      repo,
-      "multi-module-1.0.0"
-    );
-    const releaseArchive2 = await makeReleaseTarball(
-      repo,
-      "multi-module-1.0.0"
-    );
+    const releaseArchive = await makeReleaseTarball(repo, "multi-module-1.0.0");
 
     await fakeGitHub.mockReleaseArchive(
-      `/${testOrg}/${repo}/releases/download/${tag}/module-${tag}.tar.gz`,
-      releaseArchive1
-    );
-
-    await fakeGitHub.mockReleaseArchive(
-      `/${testOrg}/${repo}/releases/download/${tag}/submodule-${tag}.tar.gz`,
-      releaseArchive2
+      `/${testOrg}/${repo}/releases/download/${tag}.tar.gz`,
+      releaseArchive
     );
 
     const response = await publishReleaseEvent(
@@ -791,18 +779,18 @@ describe("e2e tests", () => {
 const testReleaseArchives: string[] = [];
 async function makeReleaseTarball(
   fixture: Fixture,
-  stripPrefix?: string
+  prefix?: string
 ): Promise<string> {
-  const filename = await _makeReleaseTarball(fixture, stripPrefix);
+  const filename = await _makeReleaseTarball(fixture, prefix);
   testReleaseArchives.push(filename);
   return filename;
 }
 
 async function makeReleaseZip(
   fixture: string,
-  stripPrefix?: string
+  prefix?: string
 ): Promise<string> {
-  const filename = await _makeReleaseZip(fixture, stripPrefix);
+  const filename = await _makeReleaseZip(fixture, prefix);
   testReleaseArchives.push(filename);
   return filename;
 }
