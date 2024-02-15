@@ -7,7 +7,7 @@ import tar from "tar";
 
 export async function makeReleaseTarball(
   fixture: string,
-  stripPrefix?: string
+  prefix?: string
 ): Promise<string> {
   const filename = path.join(
     os.tmpdir(),
@@ -17,7 +17,7 @@ export async function makeReleaseTarball(
   await tar.create(
     {
       gzip: { level: 1 },
-      prefix: stripPrefix,
+      prefix,
       file: filename,
       cwd: path.join("e2e", "fixtures", fixture),
       portable: true,
@@ -31,7 +31,7 @@ export async function makeReleaseTarball(
 
 export async function makeReleaseZip(
   fixture: string,
-  stripPrefix?: string
+  prefix?: string
 ): Promise<string> {
   const filename = path.join(
     os.tmpdir(),
@@ -44,13 +44,9 @@ export async function makeReleaseZip(
   archive.pipe(output);
 
   const hermeticDate = new Date(0);
-  archive.directory(
-    path.join("e2e", "fixtures", fixture),
-    stripPrefix || false,
-    {
-      date: hermeticDate,
-    }
-  );
+  archive.directory(path.join("e2e", "fixtures", fixture), prefix || false, {
+    date: hermeticDate,
+  });
 
   await archive.finalize();
 

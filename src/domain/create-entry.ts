@@ -63,7 +63,7 @@ export class CreateEntryService {
       const integrityHash = computeIntegrityHash(releaseArchive.diskPath);
       sourceTemplate.setIntegrityHash(integrityHash);
 
-      const moduleFile = await releaseArchive.extractModuleFile(moduleRoot);
+      const moduleFile = await releaseArchive.extractModuleFile();
 
       const bcrEntryPath = path.resolve(
         bcrRepo.diskPath,
