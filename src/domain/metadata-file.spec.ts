@@ -284,7 +284,7 @@ describe("constructor", () => {
     expect(metadata.maintainers[0].github).toBeUndefined();
   });
 
-  test("sorts versions by semver", () => {
+  test("sorts semver versions", () => {
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -333,8 +333,8 @@ describe("constructor", () => {
     ]);
   });
 
-  test("sorts non-semver versions above semver versions", () => {
-    // See: https://docs.bazel.build/versions/5.0.0/bzlmod.html#version-format
+  test("sorts versions with a different number of identifiers", () => {
+    // See: https://bazel.build/external/module#version_format
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -352,11 +352,11 @@ describe("constructor", () => {
 `);
     const metadata = new MetadataFile("metadata.json");
 
-    expect(metadata.versions).toEqual(["20210324.2", "1.0.0", "2.0.0"]);
+    expect(metadata.versions).toEqual(["1.0.0", "2.0.0", "20210324.2"]);
   });
 
-  test("sorts non-semver versions lexicographically", () => {
-    // See: https://docs.bazel.build/versions/5.0.0/bzlmod.html#version-format
+  test("sorts non-numeric versions lexicographically", () => {
+    // See: https://bazel.build/external/module#version_format
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -365,38 +365,16 @@ describe("constructor", () => {
         "github:bar/rules_foo"
     ],
     "versions": [
-      "55",
-      "12.4.2.1.1",
-      "20210324.2"
+      "xyz",
+      "abc.e",
+      "abc.d"
     ],
     "yanked_versions": {}
 }
 `);
     const metadata = new MetadataFile("metadata.json");
 
-    expect(metadata.versions).toEqual(["12.4.2.1.1", "20210324.2", "55"]);
-  });
-
-  test("sorts non-semver versions that look like semver as non-semver", () => {
-    // https://github.com/bazel-contrib/publish-to-bcr/issues/97
-    mockMetadataFile(`\
-{
-    "homepage": "https://foo.bar",
-    "maintainers": [],
-    "repository": [
-        "github:bar/rules_foo"
-    ],
-    "versions": [
-      "1.0.0-rc0",
-      "1.0.0-rc1",
-      "1.0.0rc1"
-    ],
-    "yanked_versions": {}
-}
-`);
-    const metadata = new MetadataFile("metadata.json");
-
-    expect(metadata.versions).toEqual(["1.0.0rc1", "1.0.0-rc0", "1.0.0-rc1"]);
+    expect(metadata.versions).toEqual(["abc.d", "abc.e", "xyz"]);
   });
 });
 
