@@ -46,15 +46,19 @@ The tasks are run by the BCR's CI pipelines.
 We recommend using test workspace in your ruleset that exercises your module
 with bzlmod.
 
+Note that the `bazel` version must be specified for all tasks.
+
 ```yaml
 bcr_test_module:
   module_path: "e2e/bzlmod"
   matrix:
     platform: ["debian10", "macos", "ubuntu2004", "windows"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: "Run test module"
       platform: ${{ platform }}
+      bazel: ${{ bazel }}
       test_targets:
         - "//..."
 ```
