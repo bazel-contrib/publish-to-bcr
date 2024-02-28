@@ -315,8 +315,8 @@ describe("constructor", () => {
         "github:bar/rules_foo"
     ],
     "versions": [
-      "1.0.0-rc1",
       "1.0.0-rc0",
+      "1.0.0-rc1",
       "0.0.1",
       "2.0.0-rc5"
     ],

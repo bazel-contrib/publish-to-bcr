@@ -9,8 +9,8 @@ describe("compareVersions", () => {
         "0.32.1",
         "0.32.11",
         "2.11.0",
-        "1.0.0-rc1",
         "1.0.0-rc0",
+        "1.0.0-rc1",
         "1.0.0-rc23",
         "1.0.1-rc1",
         "2.10.1",
@@ -68,5 +68,13 @@ describe("compareVersions", () => {
       "x.6.y",
       "x.7.z",
     ]);
+  });
+
+  it("should sort string identifiers that begin with a digit after numeric identifiers", () => {
+    expect(
+      ["1.0.0rc1", "1.0.0rc2", "1.0.0rc3", "0.12.0", "1.0.1", "1.1.0"].sort(
+        compareVersions
+      )
+    ).toEqual(["0.12.0", "1.0.1", "1.0.0rc1", "1.0.0rc2", "1.0.0rc3", "1.1.0"]);
   });
 });
