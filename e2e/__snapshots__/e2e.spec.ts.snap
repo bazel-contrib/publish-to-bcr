@@ -15,10 +15,12 @@ bcr_test_module:
   module_path: \\"e2e/bzlmod\\"
   matrix:
     platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: \\"Run test module\\"
       platform: \${{ platform }}
+      bazel: \${{ bazel }}
       test_targets:
         - \\"//...\\"
 
@@ -26,7 +28,7 @@ bcr_test_module:
 modules/no-prefix/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-C+/h1qGARuDojvPpWzmYG2DbGxno+auAp2AeVWDgHpI=\\",
+    \\"integrity\\": \\"sha256-RC79Eu4W6kAE9zmAhMpQ5tEPIiJOKkioWkLZonpNW4E=\\",
     \\"url\\": \\"https://github.com/testorg/no-prefix/archive/refs/tags/v1.0.0.tar.gz\\"
 }
 
@@ -78,10 +80,12 @@ bcr_test_module:
   module_path: \\"e2e/bzlmod\\"
   matrix:
     platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: \\"Run test module\\"
       platform: \${{ platform }}
+      bazel: \${{ bazel }}
       test_targets:
         - \\"//...\\"
 
@@ -89,7 +93,7 @@ bcr_test_module:
 modules/empty-prefix/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-SZyzKXKklQTcm3nek6r6A6C+eU/hcJqbsIolv2cHNp0=\\",
+    \\"integrity\\": \\"sha256-E6I1qHSyRvONHVwMEEtOOYog+4xmohiEXI3gBan0XFQ=\\",
     \\"strip_prefix\\": \\"\\",
     \\"url\\": \\"https://github.com/testorg/empty-prefix/archive/refs/tags/v1.0.0.tar.gz\\"
 }
@@ -133,10 +137,12 @@ bcr_test_module:
   module_path: \\"e2e/bzlmod\\"
   matrix:
     platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: \\"Run test module\\"
       platform: \${{ platform }}
+      bazel: \${{ bazel }}
       test_targets:
         - \\"//...\\"
 
@@ -144,7 +150,7 @@ bcr_test_module:
 modules/tarball/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-OSeDLWfRYlYyur+lXnrIys8CuAsVQ5axng+LpVHs3c4=\\",
+    \\"integrity\\": \\"sha256-mWs9GDwmyMS21X73234Y9icqvygw4ALtwZ1aZ5hfYqQ=\\",
     \\"strip_prefix\\": \\"tarball-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/tarball/archive/refs/tags/v1.0.0.tar.gz\\"
 }
@@ -202,10 +208,12 @@ bcr_test_module:
   module_path: \\"e2e/bzlmod\\"
   matrix:
     platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: \\"Run test module\\"
       platform: \${{ platform }}
+      bazel: \${{ bazel }}
       test_targets:
         - \\"//...\\"
 
@@ -213,7 +221,7 @@ bcr_test_module:
 modules/unversioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-oLg/mgWyhr6DFepRYkjoPphQ8KOriLgu6M4x2RSsLbU=\\",
+    \\"integrity\\": \\"sha256-CnxkDLL9SgbYQmsmoCjZyQkHvHhZuxtzsCfm/3YGpK8=\\",
     \\"strip_prefix\\": \\"unversioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz\\",
     \\"patches\\": {
@@ -261,10 +269,12 @@ bcr_test_module:
   module_path: \\"e2e/bzlmod\\"
   matrix:
     platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: \\"Run test module\\"
       platform: \${{ platform }}
+      bazel: \${{ bazel }}
       test_targets:
         - \\"//...\\"
 
@@ -272,7 +282,7 @@ bcr_test_module:
 modules/versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-bQZY1F6G6wJWatGQeMeCh3OgsliTX4fazGsblBLV9jY=\\",
+    \\"integrity\\": \\"sha256-RJiovEbqW4xZLGydBDpEkBAA4ah7/p+7EiGllA0Ul7I=\\",
     \\"strip_prefix\\": \\"versioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/versioned/archive/refs/tags/v1.0.0.tar.gz\\"
 }
@@ -330,10 +340,12 @@ bcr_test_module:
   module_path: \\"e2e/bzlmod\\"
   matrix:
     platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: \\"Run test module\\"
       platform: \${{ platform }}
+      bazel: \${{ bazel }}
       test_targets:
         - \\"//...\\"
 
@@ -341,7 +353,7 @@ bcr_test_module:
 modules/zero-versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-sLh05DKTEOuO3vz9+IDUJJNOf0GSLxdGDJ8qOLZRUCQ=\\",
+    \\"integrity\\": \\"sha256-f7zvwMqIcCPSWBUNCk6qILVFs+c7xmyxrCkDBLdjtX8=\\",
     \\"strip_prefix\\": \\"zero-versioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/zero-versioned/archive/refs/tags/v1.0.0.tar.gz\\",
     \\"patches\\": {
@@ -389,10 +401,12 @@ bcr_test_module:
   module_path: \\"e2e/bzlmod\\"
   matrix:
     platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
   tasks:
     run_tests:
       name: \\"Run test module\\"
       platform: \${{ platform }}
+      bazel: \${{ bazel }}
       test_targets:
         - \\"//...\\"
 
@@ -400,7 +414,7 @@ bcr_test_module:
 modules/zip/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-7qAmTBNY+y8DVPhj5nuzZFflX9tWa1h2OfuUMSUg6Hs=\\",
+    \\"integrity\\": \\"sha256-fencLRegfGaNYdAWP/WaXxUWJwzD19XQtpWf2qcmkZw=\\",
     \\"strip_prefix\\": \\"zip-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/zip/archive/refs/tags/v1.0.0.zip\\"
 }
