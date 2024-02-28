@@ -88,6 +88,6 @@ class Identifier {
 
   public constructor(value: string) {
     const numeric = parseInt(value);
-    this.value = isNaN(numeric) ? value : numeric;
+    this.value = /^\d+$/.test(value) ? numeric : value;
   }
 }
