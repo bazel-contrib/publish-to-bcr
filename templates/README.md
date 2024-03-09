@@ -14,7 +14,7 @@ For more information about the files that make up a BCR entry, see the [Bzlmod U
 Insert your ruleset's homepage and fill out the list of maintainers. Replace `OWNER/REPO` with your repository's
 canonical name. Leave `versions` alone as this will be filled automatically.
 
-_Note_: Maintainers will be emailed if any releases fail and will be tagged on the BCR pull request.
+_Note_: Maintainers will be emailed if a release fails.
 
 ```jsonc
 {

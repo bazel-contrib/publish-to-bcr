@@ -441,10 +441,6 @@ describe("e2e tests", () => {
       })
     );
 
-    // PR body tags releaser and maintainer
-    expect(body.body).toEqual(expect.stringContaining(`@${releaser.login}`));
-    expect(body.body).toEqual(expect.stringContaining(`@foobar`));
-
     // PR body has a link to the github release
     expect(body.body).toEqual(
       expect.stringContaining(
