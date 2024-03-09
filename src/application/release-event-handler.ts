@@ -270,8 +270,6 @@ export class ReleaseEventHandler {
         bcrFork,
         bcr,
         branch,
-        releaser,
-        rulesetRepo.metadataTemplate(moduleRoot).maintainers,
         rulesetRepo.getModuleName(moduleRoot),
         releaseUrl
       );
