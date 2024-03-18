@@ -1,4 +1,5 @@
 import { createTwoFilesPatch } from "diff";
+import { BackoffOptions, backOff } from "exponential-backoff";
 import { Mocked, mocked } from "jest-mock";
 import { randomUUID } from "node:crypto";
 import fs, { PathLike } from "node:fs";
@@ -37,6 +38,9 @@ jest.mock("../infrastructure/github");
 jest.mock("./integrity-hash");
 jest.mock("./release-archive");
 jest.mock("node:fs");
+jest.mock("exponential-backoff");
+
+const realExponentialBackoff = jest.requireActual("exponential-backoff");
 
 const mockedFileReads: { [path: string]: string } = {};
 const EXTRACTED_MODULE_PATH = "/fake/path/to/MODULE.bazel";
@@ -1061,6 +1065,17 @@ describe("commitEntryToNewBranch", () => {
 });
 
 describe("pushEntryToFork", () => {
+  beforeEach(() => {
+    // Reduce the exponential-backoff delay to 0 for tests
+    (backOff as unknown as jest.SpyInstance).mockImplementation(
+      (request: () => Promise<void>, options?: BackoffOptions) =>
+        realExponentialBackoff.backOff(request, {
+          ...options,
+          startingDelay: 0,
+        })
+    );
+  });
+
   test("acquires an authenticated remote url for the bcr fork", async () => {
     const bcrRepo = CANONICAL_BCR;
     const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
@@ -1135,6 +1150,45 @@ describe("pushEntryToFork", () => {
       "authed-fork",
       branchName
     );
+  });
+
+  test("retries 5 times if it fails", async () => {
+    const bcrRepo = CANONICAL_BCR;
+    const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
+    const branchName = `repo/owner@v1.2.3`;
+
+    (backOff as unknown as jest.SpyInstance).mockImplementation(
+      (request: () => Promise<any>, options?: BackoffOptions) => {
+        return realExponentialBackoff.backOff(request, {
+          ...options,
+          startingDelay: 0,
+        });
+      }
+    );
+
+    mockGitClient.push
+      .mockRejectedValueOnce(new Error("failed push"))
+      .mockRejectedValueOnce(new Error("failed push"))
+      .mockRejectedValueOnce(new Error("failed push"))
+      .mockRejectedValueOnce(new Error("failed push"))
+      .mockResolvedValueOnce(undefined);
+
+    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+
+    expect(mockGitClient.push).toHaveBeenCalledTimes(5);
+  });
+
+  test("fails after the 5th retry", async () => {
+    const bcrRepo = CANONICAL_BCR;
+    const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
+    const branchName = `repo/owner@v1.2.3`;
+
+    mockGitClient.push.mockRejectedValue(new Error("failed push"));
+
+    await expect(
+      createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName)
+    ).rejects.toThrow();
+    expect(mockGitClient.push).toHaveBeenCalledTimes(5);
   });
 });
 
