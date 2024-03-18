@@ -1,4 +1,5 @@
 import { createTwoFilesPatch, parsePatch } from "diff";
+import { backOff } from "exponential-backoff";
 import { randomBytes } from "node:crypto";
 import fs, { readFileSync } from "node:fs";
 import path from "node:path";
@@ -170,7 +171,13 @@ export class CreateEntryService {
       await this.gitClient.push(bcr.diskPath, "origin", branch);
       return;
     }
-    await this.gitClient.push(bcr.diskPath, "authed-fork", branch);
+
+    await backOff(
+      () => this.gitClient.push(bcr.diskPath, "authed-fork", branch),
+      {
+        numOfAttempts: 5,
+      }
+    );
   }
 
   private addPatches(
