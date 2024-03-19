@@ -2493,9 +2493,9 @@ fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.0.0:
   integrity sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==
 
 fast-redact@^3.1.1:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/fast-redact/-/fast-redact-3.3.0.tgz#7c83ce3a7be4898241a46560d51de10f653f7634"
-  integrity sha512-6T5V1QK1u4oF+ATxs1lWUmlEk6P2T9HqJG3e2DnHOdVgZy2rFJBoEnrIedcTXlkAHU/zKC+7KETJ+KGGKwxgMQ==
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/fast-redact/-/fast-redact-3.4.1.tgz#5ddc658915864bfdb0ca830b61d4df7784ceac5c"
+  integrity sha512-G7mumVmRGBTa4UKRnYoiWRqqOqK2Ot80XIYjeFpTaPctGLZfK0g5HoSifgUsx1+uZMXGoz6L/28lYNIMvZY8vA==
 
 fastq@^1.6.0:
   version "1.16.0"
@@ -2988,19 +2988,19 @@ ignore@^5.2.4:
   integrity sha512-g7dmpshy+gD7mh88OC9NwSGTKoc3kyLAZQRU1mt53Aw/vnvfXnbC+F/7F7QoYVKbV+KNvJx8wArewKy1vXMtlg==
 
 imapflow@^1.0.147:
-  version "1.0.147"
-  resolved "https://registry.yarnpkg.com/imapflow/-/imapflow-1.0.147.tgz#90daac34c99544873917fb47910a1e01c0344ebd"
-  integrity sha512-ICMPIkgQ0ysrjj4uQyz6JN8e4hUFpDMZJaNHvRW52uZCTIEGDNmH6IoIAfsdErwsn5z/1g+86e7v/n09A/0XmA==
+  version "1.0.158"
+  resolved "https://registry.yarnpkg.com/imapflow/-/imapflow-1.0.158.tgz#83d96585540c1744cad730b0f8d394c73798d6ce"
+  integrity sha512-8ysCZm3Eb80I5/AM3w0Chd+pi9HfUer9QRWE/Ca3MZbu/q97Xve3G4n40V7P+KJ3SXc0GM0tiotIaCcXqIccHw==
   dependencies:
     encoding-japanese "2.0.0"
     iconv-lite "0.6.3"
-    libbase64 "1.2.1"
-    libmime "5.2.1"
-    libqp "2.0.1"
+    libbase64 "1.3.0"
+    libmime "5.3.4"
+    libqp "2.1.0"
     mailsplit "5.4.0"
-    nodemailer "6.9.7"
-    pino "8.16.1"
-    socks "2.7.1"
+    nodemailer "6.9.12"
+    pino "8.19.0"
+    socks "2.8.1"
 
 import-local@^3.0.2:
   version "3.1.0"
@@ -3032,6 +3032,14 @@ inherits@2, inherits@2.0.4, inherits@^2.0.1, inherits@^2.0.3, inherits@~2.0.3:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
+
+ip-address@^9.0.5:
+  version "9.0.5"
+  resolved "https://registry.yarnpkg.com/ip-address/-/ip-address-9.0.5.tgz#117a960819b08780c3bd1f14ef3c1cc1d3f3ea5a"
+  integrity sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==
+  dependencies:
+    jsbn "1.1.0"
+    sprintf-js "^1.1.3"
 
 ip@^1.1.8:
   version "1.1.8"
@@ -3573,6 +3581,11 @@ js-yaml@^3.13.1:
     argparse "^1.0.7"
     esprima "^4.0.0"
 
+jsbn@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/jsbn/-/jsbn-1.1.0.tgz#b01307cb29b618a1ed26ec79e911f803c4da0040"
+  integrity sha512-4bYVV3aAMtDTTu4+xsDYa6sy9GyJ69/amsu9sYF2zqjiEoZA5xJi3BrfX3uY+/IekIu7MwdObdbDWpoZdBv3/A==
+
 jsesc@^2.5.1:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-2.5.2.tgz#80564d2e483dacf6e8ef209650a67df3f0c283a4"
@@ -3684,6 +3697,11 @@ libbase64@1.2.1:
   resolved "https://registry.yarnpkg.com/libbase64/-/libbase64-1.2.1.tgz#fb93bf4cb6d730f29b92155b6408d1bd2176a8c8"
   integrity sha512-l+nePcPbIG1fNlqMzrh68MLkX/gTxk/+vdvAb388Ssi7UuUN31MI44w4Yf33mM3Cm4xDfw48mdf3rkdHszLNew==
 
+libbase64@1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/libbase64/-/libbase64-1.3.0.tgz#053314755a05d2e5f08bbfc48d0290e9322f4406"
+  integrity sha512-GgOXd0Eo6phYgh0DJtjQ2tO8dc0IVINtZJeARPeiIJqge+HdsWSuaDTe8ztQ7j/cONByDZ3zeB325AHiv5O0dg==
+
 libmime@5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/libmime/-/libmime-5.2.0.tgz#c4ed5cbd2d9fdd27534543a68bb8d17c658d51d8"
@@ -3704,10 +3722,25 @@ libmime@5.2.1:
     libbase64 "1.2.1"
     libqp "2.0.1"
 
+libmime@5.3.4:
+  version "5.3.4"
+  resolved "https://registry.yarnpkg.com/libmime/-/libmime-5.3.4.tgz#e7ac598dab2d461a74890da79d726bd22e283c20"
+  integrity sha512-TsqPdercr6DHrnoQx1F0nS2Y4yPT+fWuOjEP2rqzvV77hMYWomTe/rpm0u9JORQ/FavEXybAGcBJsQbLr9+hjA==
+  dependencies:
+    encoding-japanese "2.0.0"
+    iconv-lite "0.6.3"
+    libbase64 "1.3.0"
+    libqp "2.1.0"
+
 libqp@2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/libqp/-/libqp-2.0.1.tgz#b8fed76cc1ea6c9ceff8888169e4e0de70cd5cf2"
   integrity sha512-Ka0eC5LkF3IPNQHJmYBWljJsw0UvM6j+QdKRbWyCdTmYwvIDE6a7bCm0UkTAL/K+3KXK5qXT/ClcInU01OpdLg==
+
+libqp@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/libqp/-/libqp-2.1.0.tgz#ce84bffd86b76029032093bd866d316e12a3d3f5"
+  integrity sha512-O6O6/fsG5jiUVbvdgT7YX3xY3uIadR6wEZ7+vy9u7PKHAlSEB6blvC1o5pHBjgsi95Uo0aiBBdkyFecj6jtb7A==
 
 lines-and-columns@^1.1.6:
   version "1.2.4"
@@ -4056,10 +4089,10 @@ node-releases@^2.0.6:
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.6.tgz#8a7088c63a55e493845683ebf3c828d8c51c5503"
   integrity sha512-PiVXnNuFm5+iYkLBNeq5211hvO38y63T0i2KKh2KnUs3RpzJ+JtODFjkD8yjLwnDkTYF1eKXheUwdssR+NRZdg==
 
-nodemailer@6.9.7:
-  version "6.9.7"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.9.7.tgz#ec2f488f62ba1558e7b19239b62778df4a5c4397"
-  integrity sha512-rUtR77ksqex/eZRLmQ21LKVH5nAAsVicAtAYudK7JgwenEDZ0UIQ1adUGqErz7sMkWYxWTTU1aeP2Jga6WQyJw==
+nodemailer@6.9.12:
+  version "6.9.12"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.9.12.tgz#48560eaf3575f8b0215eb38a45ca9025ffad2314"
+  integrity sha512-pnLo7g37Br3jXbF0bl5DekBJihm2q+3bB3l2o/B060sWmb5l+VqeScAQCBqaQ+5ezRZFzW5SciZNGdRDEbq89w==
 
 nodemailer@6.9.8, nodemailer@^6.7.8:
   version "6.9.8"
@@ -4286,17 +4319,17 @@ pino-std-serializers@^6.0.0:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-6.2.2.tgz#d9a9b5f2b9a402486a5fc4db0a737570a860aab3"
   integrity sha512-cHjPPsE+vhj/tnhCy/wiMh3M3z3h/j15zHQX+S9GkTBgqJuTuJzYJ4gUyACLhDaJ7kk9ba9iRDmbH2tJU03OiA==
 
-pino@8.16.1:
-  version "8.16.1"
-  resolved "https://registry.yarnpkg.com/pino/-/pino-8.16.1.tgz#dcaf82764b1a27f24101317cdd6453e96290f1d9"
-  integrity sha512-3bKsVhBmgPjGV9pyn4fO/8RtoVDR8ssW1ev819FsRXlRNgW8gR/9Kx+gCK4UPWd4JjrRDLWpzd/pb1AyWm3MGA==
+pino@8.19.0:
+  version "8.19.0"
+  resolved "https://registry.yarnpkg.com/pino/-/pino-8.19.0.tgz#ccc15ef736f103ec02cfbead0912bc436dc92ce4"
+  integrity sha512-oswmokxkav9bADfJ2ifrvfHUwad6MLp73Uat0IkQWY3iAw5xTRoznXbXksZs8oaOUMpmhVWD+PZogNzllWpJaA==
   dependencies:
     atomic-sleep "^1.0.0"
     fast-redact "^3.1.1"
     on-exit-leak-free "^2.1.0"
     pino-abstract-transport v1.1.0
     pino-std-serializers "^6.0.0"
-    process-warning "^2.0.0"
+    process-warning "^3.0.0"
     quick-format-unescaped "^4.0.3"
     real-require "^0.2.0"
     safe-stable-stringify "^2.3.1"
@@ -4348,10 +4381,10 @@ process-nextick-args@~2.0.0:
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.1.tgz#7820d9b16120cc55ca9ae7792680ae7dba6d7fe2"
   integrity sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
 
-process-warning@^2.0.0:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/process-warning/-/process-warning-2.3.2.tgz#70d8a3251aab0eafe3a595d8ae2c5d2277f096a5"
-  integrity sha512-n9wh8tvBe5sFmsqlg+XQhaQLumwpqoAUruLwjCopgTmUBjJ/fjtBsJzKleCaIGBOMXYEhp1YfKl4d7rJ5ZKJGA==
+process-warning@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/process-warning/-/process-warning-3.0.0.tgz#96e5b88884187a1dce6f5c3166d611132058710b"
+  integrity sha512-mqn0kFRl0EoqhnL0GQ0veqFHyIN1yig9RHh/InzORTUiZHFRAur+aMtRkELNwGs9aNwKS6tg/An4NYBPGwvtzQ==
 
 process@^0.11.10:
   version "0.11.10"
@@ -4785,7 +4818,15 @@ socks-proxy-agent@^8.0.2:
     debug "^4.3.4"
     socks "^2.7.1"
 
-socks@2.7.1, socks@^2.6.2, socks@^2.7.1:
+socks@2.8.1:
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/socks/-/socks-2.8.1.tgz#22c7d9dd7882649043cba0eafb49ae144e3457af"
+  integrity sha512-B6w7tkwNid7ToxjZ08rQMT8M9BJAf8DKx8Ft4NivzH0zBUfd6jldGcisJn/RLgxcX3FPNDdNQCUEMMT79b+oCQ==
+  dependencies:
+    ip-address "^9.0.5"
+    smart-buffer "^4.2.0"
+
+socks@^2.6.2, socks@^2.7.1:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/socks/-/socks-2.7.1.tgz#d8e651247178fde79c0663043e07240196857d55"
   integrity sha512-7maUZy1N7uo6+WVEX6psASxtNlKaNVMlGQKkG/63nEDdLOWNbiUMoLK7X4uYoLhQstau72mLgfEWcXcwsaHbYQ==
@@ -4794,9 +4835,9 @@ socks@2.7.1, socks@^2.6.2, socks@^2.7.1:
     smart-buffer "^4.2.0"
 
 sonic-boom@^3.7.0:
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/sonic-boom/-/sonic-boom-3.7.0.tgz#b4b7b8049a912986f4a92c51d4660b721b11f2f2"
-  integrity sha512-IudtNvSqA/ObjN97tfgNmOKyDOs4dNcg4cUUsHDebqsgb8wGBBwb31LIgShNO8fye0dFI52X1+tFoKKI6Rq1Gg==
+  version "3.8.0"
+  resolved "https://registry.yarnpkg.com/sonic-boom/-/sonic-boom-3.8.0.tgz#e442c5c23165df897d77c3c14ef3ca40dec66a66"
+  integrity sha512-ybz6OYOUjoQQCQ/i4LU8kaToD8ACtYP+Cj5qd2AO36bwbdewxWJ3ArmJ2cr6AvxlL2o0PqnCcPGUgkILbfkaCA==
   dependencies:
     atomic-sleep "^1.0.0"
 
@@ -4851,6 +4892,11 @@ split2@^4.0.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/split2/-/split2-4.2.0.tgz#c9c5920904d148bab0b9f67145f245a86aadbfa4"
   integrity sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==
+
+sprintf-js@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.1.3.tgz#4914b903a2f8b685d17fdf78a70e917e872e444a"
+  integrity sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==
 
 sprintf-js@~1.0.2:
   version "1.0.3"
