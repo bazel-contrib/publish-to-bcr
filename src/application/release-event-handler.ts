@@ -246,7 +246,7 @@ export class ReleaseEventHandler {
     console.log(`Attempting publish to fork ${bcrFork.canonicalName}.`);
 
     try {
-      await createEntryService.createEntryFiles(
+      const {moduleName} = await createEntryService.createEntryFiles(
         rulesetRepo,
         bcr,
         tag,
@@ -270,7 +270,7 @@ export class ReleaseEventHandler {
         bcrFork,
         bcr,
         branch,
-        rulesetRepo.getModuleName(moduleRoot),
+        moduleName,
         releaseUrl
       );
 

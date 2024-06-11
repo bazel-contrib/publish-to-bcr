@@ -191,6 +191,18 @@ describe("createEntryFiles", () => {
     );
   });
 
+  test("returns the module name from the release archive", async () => {
+    mockRulesetFiles({extractedModuleName: "foomodule"});
+
+    const tag = "v1.2.3";
+    const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
+    const bcrRepo = CANONICAL_BCR;
+
+    const result = await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+
+    expect(result.moduleName).toEqual("foomodule");
+  });
+
   test("cleans up the release archive extraction", async () => {
     mockRulesetFiles();
 
