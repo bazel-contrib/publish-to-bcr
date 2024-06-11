@@ -42,7 +42,7 @@ export class CreateEntryService {
     bcrRepo: Repository,
     tag: string,
     moduleRoot: string
-  ): Promise<void> {
+  ): Promise<{moduleName: string}> {
     await Promise.all([rulesetRepo.checkout(tag), bcrRepo.checkout("main")]);
 
     const version = RulesetRepository.getVersionFromTag(tag);
@@ -105,6 +105,8 @@ export class CreateEntryService {
         rulesetRepo.presubmitPath(moduleRoot),
         path.join(bcrVersionEntryPath, "presubmit.yml")
       );
+
+      return {moduleName: moduleFile.moduleName };
     } finally {
       releaseArchive.cleanup();
     }

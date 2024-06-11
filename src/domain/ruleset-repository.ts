@@ -4,7 +4,6 @@ import yaml from "yaml";
 import { Configuration } from "./config.js";
 import { UserFacingError } from "./error.js";
 import { MetadataFile, MetadataFileError } from "./metadata-file.js";
-import { ModuleFile } from "./module-file.js";
 import { Repository } from "./repository.js";
 import {
   SourceTemplate,
@@ -250,11 +249,6 @@ export class RulesetRepository extends Repository {
 
   public get config(): Configuration {
     return this._config;
-  }
-
-  public getModuleName(moduleRoot: string): string {
-    return new ModuleFile(path.join(this.diskPath, moduleRoot, "MODULE.bazel"))
-      .moduleName;
   }
 }
 
