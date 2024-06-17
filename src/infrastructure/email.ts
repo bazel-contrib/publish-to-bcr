@@ -1,8 +1,10 @@
+import { Injectable } from "@nestjs/common";
 import nodemailer from "nodemailer";
 import { AuthenticationTypeLogin } from "nodemailer/lib/smtp-connection";
 
 export type Authentication = AuthenticationTypeLogin;
 
+@Injectable()
 export class EmailClient {
   private auth: Authentication | undefined;
 

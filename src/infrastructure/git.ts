@@ -1,5 +1,7 @@
+import { Injectable } from "@nestjs/common";
 import { simpleGit } from "simple-git";
 
+@Injectable()
 export class GitClient {
   public async clone(url: string, repoPath: string): Promise<void> {
     await simpleGit().clone(url, repoPath);

@@ -6,8 +6,7 @@ import { Repository } from "./repository";
 jest.mock("../infrastructure/git");
 
 beforeEach(() => {
-  mocked(GitClient, true).mockClear();
-  Repository.gitClient = new GitClient();
+  jest.clearAllMocks();
 });
 
 describe("fromCanonicalName", () => {
@@ -48,11 +47,13 @@ describe("checkout", () => {
   test("clones and checks out the repository", async () => {
     const repository = new Repository("foo", "bar");
     await repository.checkout("main");
-    expect(Repository.gitClient.clone).toHaveBeenCalledWith(
+
+    const mockGitClient = mocked(GitClient).mock.instances[0];
+    expect(mockGitClient.clone).toHaveBeenCalledWith(
       repository.url,
       repository.diskPath
     );
-    expect(Repository.gitClient.checkout).toHaveBeenCalledWith(
+    expect(mockGitClient.checkout).toHaveBeenCalledWith(
       repository.diskPath,
       "main"
     );
@@ -61,11 +62,12 @@ describe("checkout", () => {
   test("clones and checks out the default branch when branch not specified", async () => {
     const repository = new Repository("foo", "bar");
     await repository.checkout();
-    expect(Repository.gitClient.clone).toHaveBeenCalledWith(
+    const mockGitClient = mocked(GitClient).mock.instances[0];
+    expect(mockGitClient.clone).toHaveBeenCalledWith(
       repository.url,
       repository.diskPath
     );
-    expect(Repository.gitClient.checkout).toHaveBeenCalledWith(
+    expect(mockGitClient.checkout).toHaveBeenCalledWith(
       repository.diskPath,
       undefined
     );

@@ -1,4 +1,4 @@
-import { Mocked, mocked } from "jest-mock";
+import { mocked } from "jest-mock";
 import fs from "node:fs";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git";
@@ -10,7 +10,6 @@ import {
 } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
 import { FixedReleaser } from "./config";
-import { Repository } from "./repository";
 import {
   InvalidConfigFileError,
   InvalidMetadataTemplateError,
@@ -24,12 +23,8 @@ import {
 jest.mock("node:fs");
 jest.mock("../infrastructure/git");
 
-let gitClient: Mocked<GitClient>;
-
 beforeEach(() => {
   jest.clearAllMocks();
-  gitClient = mocked(new GitClient());
-  Repository.gitClient = gitClient;
 });
 
 describe("create", () => {
@@ -399,62 +394,72 @@ function mockRulesetFiles(
     fileContentMocks?: Record<string, string>;
   } = {}
 ) {
-  gitClient.clone.mockImplementationOnce(async (url, repoPath) => {
-    const templatesDir = path.join(
-      repoPath,
-      RulesetRepository.BCR_TEMPLATE_DIR
-    );
+  mocked(GitClient).mockImplementation(() => {
+    return {
+      checkout: jest.fn(),
+      clone: jest.fn().mockImplementation(async (url, repoPath) => {
+        const templatesDir = path.join(
+          repoPath,
+          RulesetRepository.BCR_TEMPLATE_DIR
+        );
 
-    mocked(fs.existsSync).mockImplementation(((p: string) => {
-      if (
-        options.fileExistsMocks &&
-        path.relative(repoPath, p) in options.fileExistsMocks!
-      ) {
-        return options.fileExistsMocks[path.relative(repoPath, p)];
-      } else if (p === path.join(templatesDir, "metadata.template.json")) {
-        return !options.skipMetadataFile;
-      } else if (p === path.join(templatesDir, "presubmit.yml")) {
-        return !options.skipPresubmitFile;
-      } else if (p === path.join(templatesDir, "source.template.json")) {
-        return !options.skipSourceFile;
-      } else if (
-        p === path.join(templatesDir, `config.${options.configExt || "yml"}`)
-      ) {
-        return options.configExists || options.configContent !== undefined;
-      } else if (p === repoPath) {
-        return true;
-      }
-      return (jest.requireActual("node:fs") as any).existsSync(path);
-    }) as any);
+        mocked(fs.existsSync).mockImplementation(((p: string) => {
+          if (
+            options.fileExistsMocks &&
+            path.relative(repoPath, p) in options.fileExistsMocks!
+          ) {
+            return options.fileExistsMocks[path.relative(repoPath, p)];
+          } else if (p === path.join(templatesDir, "metadata.template.json")) {
+            return !options.skipMetadataFile;
+          } else if (p === path.join(templatesDir, "presubmit.yml")) {
+            return !options.skipPresubmitFile;
+          } else if (p === path.join(templatesDir, "source.template.json")) {
+            return !options.skipSourceFile;
+          } else if (
+            p ===
+            path.join(templatesDir, `config.${options.configExt || "yml"}`)
+          ) {
+            return options.configExists || options.configContent !== undefined;
+          } else if (p === repoPath) {
+            return true;
+          }
+          return (jest.requireActual("node:fs") as any).existsSync(path);
+        }) as any);
 
-    mocked(fs.readFileSync).mockImplementation(((p: string, ...args: any[]) => {
-      if (
-        options.fileContentMocks &&
-        path.relative(repoPath, p) in options.fileContentMocks!
-      ) {
-        return options.fileContentMocks[path.relative(repoPath, p)];
-      } else if (p === path.join(templatesDir, "metadata.template.json")) {
-        return fakeMetadataFile({
-          malformed: options.invalidMetadataFile,
-          missingVersions: options.metadataMissingVersions,
-        });
-      } else if (p === path.join(templatesDir, "source.template.json")) {
-        return fakeSourceFile({ malformed: options.invalidSourceTemplate });
-      } else if (p === path.join(templatesDir, "presubmit.yml")) {
-        return fakePresubmitFile({ malformed: options.invalidPresubmit });
-      } else if (
-        p === path.join(templatesDir, `config.${options.configExt || "yml"}`)
-      ) {
-        return fakeConfigFile({
-          content: options.configContent,
-          fixedReleaser: options.fixedReleaser,
-          invalidFixedReleaser: options.invalidFixedReleaser,
-        });
-      }
-      return (jest.requireActual("node:fs") as any).readFileSync.apply([
-        path,
-        ...args,
-      ]);
-    }) as any);
+        mocked(fs.readFileSync).mockImplementation(((
+          p: string,
+          ...args: any[]
+        ) => {
+          if (
+            options.fileContentMocks &&
+            path.relative(repoPath, p) in options.fileContentMocks!
+          ) {
+            return options.fileContentMocks[path.relative(repoPath, p)];
+          } else if (p === path.join(templatesDir, "metadata.template.json")) {
+            return fakeMetadataFile({
+              malformed: options.invalidMetadataFile,
+              missingVersions: options.metadataMissingVersions,
+            });
+          } else if (p === path.join(templatesDir, "source.template.json")) {
+            return fakeSourceFile({ malformed: options.invalidSourceTemplate });
+          } else if (p === path.join(templatesDir, "presubmit.yml")) {
+            return fakePresubmitFile({ malformed: options.invalidPresubmit });
+          } else if (
+            p ===
+            path.join(templatesDir, `config.${options.configExt || "yml"}`)
+          ) {
+            return fakeConfigFile({
+              content: options.configContent,
+              fixedReleaser: options.fixedReleaser,
+              invalidFixedReleaser: options.invalidFixedReleaser,
+            });
+          }
+          return (jest.requireActual("node:fs") as any).readFileSync.apply([
+            path,
+            ...args,
+          ]);
+        }) as any);
+      }),
+    } as any;
   });
 }

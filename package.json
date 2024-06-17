@@ -2,7 +2,7 @@
   "name": "publish-to-bcr",
   "private": true,
   "type": "module",
-  "main": "./application/cloudfunction/index.js",
+  "main": "./application/webhook/index.js",
   "engines": {
     "node": "^18"
   },
@@ -16,6 +16,8 @@
   "dependencies": {
     "@google-cloud/functions-framework": "^3.1.2",
     "@google-cloud/secret-manager": "^5.0.1",
+    "@nestjs/common": "^10.3.9",
+    "@nestjs/core": "^10.3.9",
     "@octokit/auth-app": "^4.0.4",
     "@octokit/core": "^4.0.4",
     "@octokit/rest": "^19.0.3",
@@ -29,6 +31,8 @@
     "extract-zip": "^2.0.1",
     "gcp-metadata": "^6.0.0",
     "nodemailer": "^6.7.8",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "7.8.1",
     "simple-git": "^3.16.0",
     "source-map-support": "^0.5.21",
     "tar": "^6.2.0",

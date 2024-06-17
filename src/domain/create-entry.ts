@@ -1,3 +1,4 @@
+import { Inject, Injectable } from "@nestjs/common";
 import { createTwoFilesPatch, parsePatch } from "diff";
 import { backOff } from "exponential-backoff";
 import { randomBytes } from "node:crypto";
@@ -30,11 +31,11 @@ export class PatchModuleError extends UserFacingError {
   }
 }
 
+@Injectable()
 export class CreateEntryService {
   constructor(
     private readonly gitClient: GitClient,
-    private readonly bcrForkGitHubClient: GitHubClient,
-    private readonly bcrGitHubClient: GitHubClient
+    @Inject("bcrGitHubClient") private bcrGitHubClient: GitHubClient
   ) {}
 
   public async createEntryFiles(
@@ -42,7 +43,7 @@ export class CreateEntryService {
     bcrRepo: Repository,
     tag: string,
     moduleRoot: string
-  ): Promise<{moduleName: string}> {
+  ): Promise<{ moduleName: string }> {
     await Promise.all([rulesetRepo.checkout(tag), bcrRepo.checkout("main")]);
 
     const version = RulesetRepository.getVersionFromTag(tag);
@@ -106,7 +107,7 @@ export class CreateEntryService {
         path.join(bcrVersionEntryPath, "presubmit.yml")
       );
 
-      return {moduleName: moduleFile.moduleName };
+      return { moduleName: moduleFile.moduleName };
     } finally {
       releaseArchive.cleanup();
     }
@@ -152,10 +153,12 @@ export class CreateEntryService {
   public async pushEntryToFork(
     bcrForkRepo: Repository,
     bcr: Repository,
-    branch: string
+    branch: string,
+    githubClient: GitHubClient
   ): Promise<void> {
-    const authenticatedRemoteUrl =
-      await this.bcrForkGitHubClient.getAuthenticatedRemoteUrl(bcrForkRepo);
+    const authenticatedRemoteUrl = await githubClient.getAuthenticatedRemoteUrl(
+      bcrForkRepo
+    );
 
     if (!(await this.gitClient.hasRemote(bcr.diskPath, "authed-fork"))) {
       await this.gitClient.addRemote(

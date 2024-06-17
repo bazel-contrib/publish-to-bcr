@@ -98,10 +98,8 @@ beforeEach(() => {
   mockBcrForkGitHubClient = mocked(new GitHubClient({} as any));
   mockBcrGitHubClient = mocked(new GitHubClient({} as any));
   mocked(computeIntegrityHash).mockReturnValue(`sha256-${randomUUID()}`);
-  Repository.gitClient = mockGitClient;
   createEntryService = new CreateEntryService(
     mockGitClient,
-    mockBcrForkGitHubClient,
     mockBcrGitHubClient
   );
 });
@@ -192,13 +190,18 @@ describe("createEntryFiles", () => {
   });
 
   test("returns the module name from the release archive", async () => {
-    mockRulesetFiles({extractedModuleName: "foomodule"});
+    mockRulesetFiles({ extractedModuleName: "foomodule" });
 
     const tag = "v1.2.3";
     const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
     const bcrRepo = CANONICAL_BCR;
 
-    const result = await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
+    const result = await createEntryService.createEntryFiles(
+      rulesetRepo,
+      bcrRepo,
+      tag,
+      "."
+    );
 
     expect(result.moduleName).toEqual("foomodule");
   });
@@ -1093,7 +1096,12 @@ describe("pushEntryToFork", () => {
     const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
     const branchName = `repo/owner@v1.2.3`;
 
-    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    await createEntryService.pushEntryToFork(
+      bcrForkRepo,
+      bcrRepo,
+      branchName,
+      mockBcrForkGitHubClient
+    );
     expect(
       mockBcrForkGitHubClient.getAuthenticatedRemoteUrl
     ).toHaveBeenCalledWith(bcrForkRepo);
@@ -1109,7 +1117,12 @@ describe("pushEntryToFork", () => {
       Promise.resolve(authenticatedUrl)
     );
 
-    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    await createEntryService.pushEntryToFork(
+      bcrForkRepo,
+      bcrRepo,
+      branchName,
+      mockBcrForkGitHubClient
+    );
     expect(mockGitClient.addRemote).toHaveBeenCalledWith(
       bcrRepo.diskPath,
       expect.any(String),
@@ -1127,7 +1140,12 @@ describe("pushEntryToFork", () => {
       Promise.resolve(authenticatedUrl)
     );
 
-    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    await createEntryService.pushEntryToFork(
+      bcrForkRepo,
+      bcrRepo,
+      branchName,
+      mockBcrForkGitHubClient
+    );
     expect(mockGitClient.addRemote).toHaveBeenCalledWith(
       expect.any(String),
       "authed-fork",
@@ -1146,7 +1164,12 @@ describe("pushEntryToFork", () => {
       Promise.resolve(authenticatedUrl)
     );
 
-    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    await createEntryService.pushEntryToFork(
+      bcrForkRepo,
+      bcrRepo,
+      branchName,
+      mockBcrForkGitHubClient
+    );
     expect(mockGitClient.addRemote).not.toHaveBeenCalled();
   });
 
@@ -1155,7 +1178,12 @@ describe("pushEntryToFork", () => {
     const bcrForkRepo = new Repository("bazel-central-registry", "aspect");
     const branchName = `repo/owner@v1.2.3`;
 
-    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    await createEntryService.pushEntryToFork(
+      bcrForkRepo,
+      bcrRepo,
+      branchName,
+      mockBcrForkGitHubClient
+    );
 
     expect(mockGitClient.push).toHaveBeenCalledWith(
       bcrRepo.diskPath,
@@ -1185,7 +1213,12 @@ describe("pushEntryToFork", () => {
       .mockRejectedValueOnce(new Error("failed push"))
       .mockResolvedValueOnce(undefined);
 
-    await createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName);
+    await createEntryService.pushEntryToFork(
+      bcrForkRepo,
+      bcrRepo,
+      branchName,
+      mockBcrForkGitHubClient
+    );
 
     expect(mockGitClient.push).toHaveBeenCalledTimes(5);
   });
@@ -1198,7 +1231,12 @@ describe("pushEntryToFork", () => {
     mockGitClient.push.mockRejectedValue(new Error("failed push"));
 
     await expect(
-      createEntryService.pushEntryToFork(bcrForkRepo, bcrRepo, branchName)
+      createEntryService.pushEntryToFork(
+        bcrForkRepo,
+        bcrRepo,
+        branchName,
+        mockBcrForkGitHubClient
+      )
     ).rejects.toThrow();
     expect(mockGitClient.push).toHaveBeenCalledTimes(5);
   });
@@ -1260,6 +1298,10 @@ function mockRulesetFiles(
       }
     }
   );
+
+  mocked(GitClient).mockImplementation(() => {
+    return mockGitClient;
+  });
 }
 
 function mockBcrMetadataExists(
