@@ -1,7 +1,9 @@
 import { HttpFunction } from "@google-cloud/functions-framework";
+import { ContextIdFactory, NestFactory } from "@nestjs/core";
 import { Webhooks } from "@octokit/webhooks";
 import { SecretsClient } from "../../infrastructure/secrets.js";
 import { ReleaseEventHandler } from "../release-event-handler.js";
+import { AppModule } from "./app.module.js";
 
 // Handle incoming GitHub webhook messages. This is the entrypoint for
 // the webhook cloud function.
@@ -9,19 +11,25 @@ export const handleGithubWebhookEvent: HttpFunction = async (
   request,
   response
 ) => {
-  // Setup application dependencies using constructor dependency injection.
-  const secretsClient = new SecretsClient();
+  const app = await NestFactory.createApplicationContext(AppModule);
 
-  const releaseEventHandler = new ReleaseEventHandler(secretsClient);
-
+  const secretsClient = app.get(SecretsClient);
   const githubWebhookSecret = await secretsClient.accessSecret(
     "github-app-webhook-secret"
   );
 
   const webhooks = new Webhooks({ secret: githubWebhookSecret });
-  webhooks.on("release.published", (event) =>
-    releaseEventHandler.handle(event)
-  );
+  webhooks.on("release.published", async (event) => {
+    // Register the webhook event as the NestJS "request" so that it's available to inject.
+    const contextId = ContextIdFactory.create();
+    app.registerRequestByContextId(event, contextId);
+
+    const releaseEventHandler = await app.resolve(
+      ReleaseEventHandler,
+      contextId
+    );
+    await releaseEventHandler.handle(event);
+  });
 
   await webhooks.verifyAndReceive({
     id: request.headers["x-github-delivery"] as string,
@@ -30,5 +38,6 @@ export const handleGithubWebhookEvent: HttpFunction = async (
     signature: request.headers["x-hub-signature-256"] as string,
   });
 
+  await app.close();
   response.status(200).send();
 };

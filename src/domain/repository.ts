@@ -4,8 +4,6 @@ import path from "node:path";
 import { GitClient } from "../infrastructure/git.js";
 
 export class Repository {
-  public static gitClient: GitClient;
-
   private _diskPath: string | null = null;
 
   public static fromCanonicalName(canonicalName: string) {
@@ -41,12 +39,13 @@ export class Repository {
   }
 
   public async checkout(ref?: string): Promise<void> {
+    const gitClient = new GitClient();
     if (!this.isCheckedOut()) {
       this._diskPath = path.join(os.tmpdir(), randomUUID(), this.name);
-      await Repository.gitClient.clone(this.url, this._diskPath);
+      await gitClient.clone(this.url, this._diskPath);
     }
 
-    await Repository.gitClient.checkout(this._diskPath, ref);
+    await gitClient.checkout(this._diskPath, ref);
   }
 
   public equals(other: Repository): boolean {

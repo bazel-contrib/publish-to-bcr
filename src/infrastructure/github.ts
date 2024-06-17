@@ -47,12 +47,12 @@ export function getAppAuthorizedOctokit(
 export async function getInstallationAuthorizedOctokit(
   appOctokit: Octokit,
   installationId: number,
-  repo: string
+  repository: string
 ): Promise<Octokit> {
   const octokit = await appOctokit.auth({
     type: "installation",
     installationId,
-    repositoryNames: [repo],
+    repositoryNames: [repository],
     factory: (auth: any) =>
       new Octokit({
         authStrategy: createAppAuth,

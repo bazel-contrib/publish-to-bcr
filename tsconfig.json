@@ -8,6 +8,8 @@
     "target": "es2020",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "allowJs": true,
     "types": ["jest", "node"]
   },

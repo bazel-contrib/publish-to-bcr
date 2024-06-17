@@ -1,6 +1,8 @@
 import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
+import { Injectable } from "@nestjs/common";
 import gcpMetadata from "gcp-metadata";
 
+@Injectable()
 export class SecretsClient {
   private readonly googleSecretsClient;
 

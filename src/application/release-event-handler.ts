@@ -1,3 +1,5 @@
+import { Inject, Injectable } from "@nestjs/common";
+import { Octokit } from "@octokit/rest";
 import { ReleasePublishedEvent } from "@octokit/webhooks-types";
 import { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import { CreateEntryService } from "../domain/create-entry.js";
@@ -10,15 +12,8 @@ import {
   RulesetRepository,
 } from "../domain/ruleset-repository.js";
 import { User } from "../domain/user.js";
-import { EmailClient } from "../infrastructure/email.js";
-import { GitClient } from "../infrastructure/git.js";
 import { GitHubClient } from "../infrastructure/github.js";
-import { SecretsClient } from "../infrastructure/secrets.js";
 import { NotificationsService } from "./notifications.js";
-import {
-  createAppAuthorizedOctokit,
-  createBotAppAuthorizedOctokit,
-} from "./octokit.js";
 
 interface PublishAttempt {
   readonly successful: boolean;
@@ -26,8 +21,17 @@ interface PublishAttempt {
   readonly error?: Error;
 }
 
+@Injectable()
 export class ReleaseEventHandler {
-  constructor(private readonly secretsClient: SecretsClient) {}
+  constructor(
+    @Inject("rulesetRepoGitHubClient")
+    private rulesetRepoGitHubClient: GitHubClient,
+    @Inject("appOctokit") private appOctokit: Octokit,
+    private readonly findRegistryForkService: FindRegistryForkService,
+    private readonly createEntryService: CreateEntryService,
+    private readonly publishEntryService: PublishEntryService,
+    private readonly notificationsService: NotificationsService
+  ) {}
 
   public readonly handle: HandlerFunction<"release.published", unknown> =
     async (event) => {
@@ -36,41 +40,8 @@ export class ReleaseEventHandler {
         process.env.BAZEL_CENTRAL_REGISTRY
       );
 
-      // The "app" refers to the public facing GitHub app installed to users'
-      // ruleset repos and BCR Forks that creates and pushes the entry to the
-      // fork. The "bot app" refers to the private app only installed to the
-      // canonical BCR which has reduced permissions and only opens PRs.
-      const appOctokit = await createAppAuthorizedOctokit(this.secretsClient);
-      const rulesetGitHubClient = await GitHubClient.forRepoInstallation(
-        appOctokit,
-        repository,
-        event.payload.installation.id
-      );
-
-      const botAppOctokit = await createBotAppAuthorizedOctokit(
-        this.secretsClient
-      );
-      const bcrGitHubClient = await GitHubClient.forRepoInstallation(
-        botAppOctokit,
-        bcr
-      );
-
-      const gitClient = new GitClient();
-      Repository.gitClient = gitClient;
-
-      const emailClient = new EmailClient();
-      const findRegistryForkService = new FindRegistryForkService(
-        rulesetGitHubClient
-      );
-      const publishEntryService = new PublishEntryService(bcrGitHubClient);
-      const notificationsService = new NotificationsService(
-        emailClient,
-        this.secretsClient,
-        rulesetGitHubClient
-      );
-
       const repoCanonicalName = `${event.payload.repository.owner.login}/${event.payload.repository.name}`;
-      let releaser = await rulesetGitHubClient.getRepoUser(
+      let releaser = await this.rulesetRepoGitHubClient.getRepoUser(
         event.payload.sender.login,
         repository
       );
@@ -82,8 +53,7 @@ export class ReleaseEventHandler {
         const createRepoResult = await this.validateRulesetRepoOrNotifyFailure(
           repository,
           tag,
-          releaser,
-          notificationsService
+          releaser
         );
         if (!createRepoResult.successful) {
           return;
@@ -93,18 +63,14 @@ export class ReleaseEventHandler {
 
         console.log(`Release author: ${releaser.username}`);
 
-        releaser = await this.overrideReleaser(
-          releaser,
-          rulesetRepo,
-          rulesetGitHubClient
-        );
+        releaser = await this.overrideReleaser(releaser, rulesetRepo);
 
         console.log(
           `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
         );
 
         const candidateBcrForks =
-          await findRegistryForkService.findCandidateForks(
+          await this.findRegistryForkService.findCandidateForks(
             rulesetRepo,
             releaser
           );
@@ -122,13 +88,8 @@ export class ReleaseEventHandler {
 
           for (let bcrFork of candidateBcrForks) {
             const forkGitHubClient = await GitHubClient.forRepoInstallation(
-              appOctokit,
+              this.appOctokit,
               bcrFork
-            );
-            const createEntryService = new CreateEntryService(
-              gitClient,
-              forkGitHubClient,
-              bcrGitHubClient
             );
 
             const attempt = await this.attemptPublish(
@@ -139,8 +100,7 @@ export class ReleaseEventHandler {
               moduleRoot,
               releaser,
               releaseUrl,
-              createEntryService,
-              publishEntryService
+              forkGitHubClient
             );
             attempts.push(attempt);
 
@@ -152,7 +112,7 @@ export class ReleaseEventHandler {
 
           // Send out error notifications if none of the attempts succeeded
           if (!attempts.some((a) => a.successful)) {
-            await notificationsService.notifyError(
+            await this.notificationsService.notifyError(
               releaser,
               rulesetRepo.metadataTemplate(moduleRoot).maintainers,
               rulesetRepo,
@@ -165,7 +125,7 @@ export class ReleaseEventHandler {
         // Handle any other unexpected errors
         console.log(error);
 
-        await notificationsService.notifyError(
+        await this.notificationsService.notifyError(
           releaser,
           [],
           Repository.fromCanonicalName(repoCanonicalName),
@@ -180,8 +140,7 @@ export class ReleaseEventHandler {
   private async validateRulesetRepoOrNotifyFailure(
     repository: Repository,
     tag: string,
-    releaser: User,
-    notificationsService: NotificationsService
+    releaser: User
   ): Promise<{ rulesetRepo?: RulesetRepository; successful: boolean }> {
     try {
       const rulesetRepo = await RulesetRepository.create(
@@ -217,7 +176,7 @@ export class ReleaseEventHandler {
         );
       }
 
-      await notificationsService.notifyError(
+      await this.notificationsService.notifyError(
         releaser,
         maintainers,
         repository,
@@ -240,32 +199,36 @@ export class ReleaseEventHandler {
     moduleRoot: string,
     releaser: User,
     releaseUrl: string,
-    createEntryService: CreateEntryService,
-    publishEntryService: PublishEntryService
+    bcrForkGitHubClient: GitHubClient
   ): Promise<PublishAttempt> {
     console.log(`Attempting publish to fork ${bcrFork.canonicalName}.`);
 
     try {
-      const {moduleName} = await createEntryService.createEntryFiles(
+      const { moduleName } = await this.createEntryService.createEntryFiles(
         rulesetRepo,
         bcr,
         tag,
         moduleRoot
       );
 
-      const branch = await createEntryService.commitEntryToNewBranch(
+      const branch = await this.createEntryService.commitEntryToNewBranch(
         rulesetRepo,
         bcr,
         tag,
         releaser
       );
-      await createEntryService.pushEntryToFork(bcrFork, bcr, branch);
+      await this.createEntryService.pushEntryToFork(
+        bcrFork,
+        bcr,
+        branch,
+        bcrForkGitHubClient
+      );
 
       console.log(
         `Pushed bcr entry for module '${moduleRoot}' to fork ${bcrFork.canonicalName} on branch ${branch}`
       );
 
-      await publishEntryService.sendRequest(
+      await this.publishEntryService.sendRequest(
         tag,
         bcrFork,
         bcr,
@@ -297,8 +260,7 @@ export class ReleaseEventHandler {
 
   private async overrideReleaser(
     releaser: User,
-    rulesetRepo: RulesetRepository,
-    githubClient: GitHubClient
+    rulesetRepo: RulesetRepository
   ): Promise<User> {
     // Use the release author unless a fixedReleaser is configured
     if (rulesetRepo.config.fixedReleaser) {
@@ -307,7 +269,7 @@ export class ReleaseEventHandler {
       );
 
       // Fetch the releaser to get their name
-      const fixedReleaser = await githubClient.getRepoUser(
+      const fixedReleaser = await this.rulesetRepoGitHubClient.getRepoUser(
         rulesetRepo.config.fixedReleaser.login,
         rulesetRepo
       );

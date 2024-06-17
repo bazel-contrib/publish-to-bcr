@@ -1,3 +1,4 @@
+import { Inject, Injectable } from "@nestjs/common";
 import { GitHubClient } from "../infrastructure/github.js";
 import { UserFacingError } from "./error.js";
 import { Repository } from "./repository.js";
@@ -20,8 +21,11 @@ Install the app here: https://github.com/apps/publish-to-bcr.`);
   }
 }
 
+@Injectable()
 export class FindRegistryForkService {
-  constructor(private readonly githubClient: GitHubClient) {}
+  constructor(
+    @Inject("rulesetRepoGitHubClient") private githubClient: GitHubClient
+  ) {}
 
   // Find potential bcr forks that can be pushed to. Will return a fork
   // owned by the ruleset owner, followed by a fork owned by the releaser,
