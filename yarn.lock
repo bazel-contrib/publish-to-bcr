@@ -1254,10 +1254,10 @@
   resolved "https://registry.yarnpkg.com/@types/http-errors/-/http-errors-2.0.4.tgz#7eb47726c391b7345a6ec35ad7f4de469cf5ba4f"
   integrity sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==
 
-"@types/imapflow@1.0.17":
-  version "1.0.17"
-  resolved "https://registry.yarnpkg.com/@types/imapflow/-/imapflow-1.0.17.tgz#3a6d185eeaf537bbe8b8e944a2ac6622b1a8a789"
-  integrity sha512-L7qvMfFhaB5sMP+nx83pZL5r48yBhWIoLsSZwPPTvNHxUKbD2F20aViUm2NeL1h+Be9zDAXcnMyvO7pvhjXjng==
+"@types/imapflow@1.0.19":
+  version "1.0.19"
+  resolved "https://registry.yarnpkg.com/@types/imapflow/-/imapflow-1.0.19.tgz#d0e5c3e59683265810d442e23e4b7266d6bce3dc"
+  integrity sha512-U48VZXe4XYhS3AFNI+4ougW8OXI4VaKjyF0nGXgVzIN8SPs9lh2LPNRM0HmIM+hUTw60l7MHgbQO8hsf+Q4U5w==
   dependencies:
     "@types/node" "*"
 
