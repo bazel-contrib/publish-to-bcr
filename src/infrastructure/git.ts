@@ -3,12 +3,20 @@ import { simpleGit } from "simple-git";
 
 @Injectable()
 export class GitClient {
-  public async clone(url: string, repoPath: string): Promise<void> {
-    await simpleGit().clone(url, repoPath);
-  }
-
-  public async checkout(repoPath: string, ref?: string): Promise<void> {
-    await simpleGit(repoPath).clean(["f", "f", "x", "d"]).checkout(ref);
+  public async shallowClone(url: string, diskPath: string, branchOrTag?: string): Promise<void> {
+    await simpleGit().clone(url, diskPath, [
+      ...(branchOrTag ? [
+        // Check out a single commit on the tip of the branch or at a tag
+        // From the docs: "--branch can also take tags and detaches the HEAD at that commit in the resulting repository"
+        // https://git-scm.com/docs/git-clone#Documentation/git-clone.txt-code--branchcodeemltnamegtem
+        "--branch",
+        branchOrTag,
+        "--single-branch"
+      ] : [
+        // Check out a single commit on the main branch
+        "--depth", "1"
+      ])
+    ]);
   }
 
   public async setUserNameAndEmail(

@@ -110,7 +110,7 @@ export class RulesetRepository extends Repository {
     verifyAtRef?: string
   ): Promise<RulesetRepository> {
     const rulesetRepo = new RulesetRepository(name, owner);
-    await rulesetRepo.checkout(verifyAtRef);
+    await rulesetRepo.shallowCloneAndCheckout(verifyAtRef);
 
     rulesetRepo._config = loadConfiguration(rulesetRepo);
 

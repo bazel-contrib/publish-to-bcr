@@ -113,7 +113,8 @@ describe("createEntryFiles", () => {
 
     await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
 
-    expect(mockGitClient.checkout).toHaveBeenCalledWith(
+    expect(mockGitClient.shallowClone).toHaveBeenCalledWith(
+      rulesetRepo.url,
       rulesetRepo.diskPath,
       tag
     );
@@ -124,11 +125,13 @@ describe("createEntryFiles", () => {
 
     const tag = "v1.2.3";
     const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
-    const bcrRepo = CANONICAL_BCR;
+    const bcrRepo = Repository.fromCanonicalName(CANONICAL_BCR.canonicalName);
 
     await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, ".");
 
-    expect(mockGitClient.checkout).toHaveBeenCalledWith(
+    expect(mockGitClient.shallowClone).toHaveBeenCalledTimes(2);
+    expect(mockGitClient.shallowClone).toHaveBeenCalledWith(
+      bcrRepo.url,
       bcrRepo.diskPath,
       "main"
     );
@@ -1256,8 +1259,8 @@ function mockRulesetFiles(
     patches?: { [path: string]: string };
   } = {}
 ) {
-  mockGitClient.checkout.mockImplementation(
-    async (repoPath: string, ref?: string) => {
+  mockGitClient.shallowClone.mockImplementation(
+    async (url: string, diskPath: string, ref?: string) => {
       const moduleRoot = options?.moduleRoot || ".";
       if (options.extractedModuleContent) {
         mockedFileReads[EXTRACTED_MODULE_PATH] = options.extractedModuleContent;
@@ -1268,7 +1271,7 @@ function mockRulesetFiles(
         });
       }
       const templatesDir = path.join(
-        repoPath,
+        diskPath,
         RulesetRepository.BCR_TEMPLATE_DIR
       );
       mockedFileReads[
