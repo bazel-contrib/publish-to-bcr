@@ -396,19 +396,19 @@ function mockRulesetFiles(
 ) {
   mocked(GitClient).mockImplementation(() => {
     return {
-      checkout: jest.fn(),
-      clone: jest.fn().mockImplementation(async (url, repoPath) => {
+      // checkout: jest.fn(),
+      shallowClone: jest.fn().mockImplementation(async (url, diskPath, branchOrTag) => {
         const templatesDir = path.join(
-          repoPath,
+          diskPath,
           RulesetRepository.BCR_TEMPLATE_DIR
         );
 
         mocked(fs.existsSync).mockImplementation(((p: string) => {
           if (
             options.fileExistsMocks &&
-            path.relative(repoPath, p) in options.fileExistsMocks!
+            path.relative(diskPath, p) in options.fileExistsMocks!
           ) {
-            return options.fileExistsMocks[path.relative(repoPath, p)];
+            return options.fileExistsMocks[path.relative(diskPath, p)];
           } else if (p === path.join(templatesDir, "metadata.template.json")) {
             return !options.skipMetadataFile;
           } else if (p === path.join(templatesDir, "presubmit.yml")) {
@@ -420,7 +420,7 @@ function mockRulesetFiles(
             path.join(templatesDir, `config.${options.configExt || "yml"}`)
           ) {
             return options.configExists || options.configContent !== undefined;
-          } else if (p === repoPath) {
+          } else if (p === diskPath) {
             return true;
           }
           return (jest.requireActual("node:fs") as any).existsSync(path);
@@ -432,9 +432,9 @@ function mockRulesetFiles(
         ) => {
           if (
             options.fileContentMocks &&
-            path.relative(repoPath, p) in options.fileContentMocks!
+            path.relative(diskPath, p) in options.fileContentMocks!
           ) {
-            return options.fileContentMocks[path.relative(repoPath, p)];
+            return options.fileContentMocks[path.relative(diskPath, p)];
           } else if (p === path.join(templatesDir, "metadata.template.json")) {
             return fakeMetadataFile({
               malformed: options.invalidMetadataFile,

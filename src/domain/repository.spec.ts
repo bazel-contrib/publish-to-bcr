@@ -28,32 +28,29 @@ describe("canonicalName", () => {
 describe("diskPath", () => {
   test("is a temp dir", async () => {
     const repository = new Repository("foo", "bar");
-    await repository.checkout();
+    await repository.shallowCloneAndCheckout();
     expect(repository.diskPath.startsWith(os.tmpdir())).toEqual(true);
   });
 
   test("is a unique path", async () => {
     const repositoryA = new Repository("foo", "bar");
-    await repositoryA.checkout();
+    await repositoryA.shallowCloneAndCheckout();
 
     const repositoryB = new Repository("foo", "bar");
-    await repositoryB.checkout();
+    await repositoryB.shallowCloneAndCheckout();
 
     expect(repositoryA.diskPath).not.toEqual(repositoryB.diskPath);
   });
 });
 
-describe("checkout", () => {
-  test("clones and checks out the repository", async () => {
+describe("shallowCloneAndCheckout", () => {
+  test("clones the repository at the specified branch ", async () => {
     const repository = new Repository("foo", "bar");
-    await repository.checkout("main");
+    await repository.shallowCloneAndCheckout("main");
 
     const mockGitClient = mocked(GitClient).mock.instances[0];
-    expect(mockGitClient.clone).toHaveBeenCalledWith(
+    expect(mockGitClient.shallowClone).toHaveBeenCalledWith(
       repository.url,
-      repository.diskPath
-    );
-    expect(mockGitClient.checkout).toHaveBeenCalledWith(
       repository.diskPath,
       "main"
     );
@@ -61,13 +58,10 @@ describe("checkout", () => {
 
   test("clones and checks out the default branch when branch not specified", async () => {
     const repository = new Repository("foo", "bar");
-    await repository.checkout();
+    await repository.shallowCloneAndCheckout();
     const mockGitClient = mocked(GitClient).mock.instances[0];
-    expect(mockGitClient.clone).toHaveBeenCalledWith(
+    expect(mockGitClient.shallowClone).toHaveBeenCalledWith(
       repository.url,
-      repository.diskPath
-    );
-    expect(mockGitClient.checkout).toHaveBeenCalledWith(
       repository.diskPath,
       undefined
     );
@@ -82,7 +76,7 @@ describe("isCheckedOut", () => {
 
   test("true when checked out", async () => {
     const repository = new Repository("foo", "bar");
-    await repository.checkout();
+    await repository.shallowCloneAndCheckout();
     expect(repository.isCheckedOut()).toEqual(true);
   });
 });
@@ -96,7 +90,7 @@ describe("equals", () => {
 
   test("true when one is checked out", async () => {
     const a = new Repository("foo", "bar");
-    await a.checkout();
+    await a.shallowCloneAndCheckout();
     const b = new Repository("foo", "bar");
     expect(a.equals(b)).toEqual(true);
   });

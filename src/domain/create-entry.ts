@@ -44,7 +44,7 @@ export class CreateEntryService {
     tag: string,
     moduleRoot: string
   ): Promise<{ moduleName: string }> {
-    await Promise.all([rulesetRepo.checkout(tag), bcrRepo.checkout("main")]);
+    await Promise.all([rulesetRepo.shallowCloneAndCheckout(tag), bcrRepo.shallowCloneAndCheckout("main")]);
 
     const version = RulesetRepository.getVersionFromTag(tag);
 

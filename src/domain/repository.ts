@@ -38,14 +38,12 @@ export class Repository {
     return this._diskPath;
   }
 
-  public async checkout(ref?: string): Promise<void> {
+  public async shallowCloneAndCheckout(branchOrTag?: string): Promise<void> {
     const gitClient = new GitClient();
     if (!this.isCheckedOut()) {
       this._diskPath = path.join(os.tmpdir(), randomUUID(), this.name);
-      await gitClient.clone(this.url, this._diskPath);
+      await gitClient.shallowClone(this.url, this._diskPath, branchOrTag);
     }
-
-    await gitClient.checkout(this._diskPath, ref);
   }
 
   public equals(other: Repository): boolean {
