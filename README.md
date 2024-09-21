@@ -21,7 +21,7 @@ Prepare your ruleset for bzlmod by following the [Bzlmod User Guide](https://baz
 
 ## Publishing multiple modules in the same repo
 
-You can publish BCR entries for multiple modules that exist in your git repository by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
+Multple modules that are versioned together in the same git repository can be published by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
 
 ## Including patches
 

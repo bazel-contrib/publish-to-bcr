@@ -56,11 +56,27 @@ modules/no-prefix/metadata.json
 "
 `;
 
-exports[`e2e tests [snapshot] error message for incorrect strip prefix 1`] = `
-"Failed to publish entry for testorg/versioned@v1.0.0 to the Bazel Central Registry.
+exports[`e2e tests [snapshot] error email for incorrect strip prefix 1`] = `
+"TO: releaser@test.org, foo@test.org
+SUBJECT: Publish to BCR
+
+Failed to publish entry for testorg/versioned@v1.0.0 to the Bazel Central Registry.
 
 Could not find MODULE.bazel in release archive at ./versioned-1.0.0/MODULE.bazel.
 Is the strip prefix in source.template.json correct? (currently it's 'versioned-1.0.0')
+
+
+"
+`;
+
+exports[`e2e tests [snapshot] error email for incorrect strip prefix in multi module repo 1`] = `
+"TO: releaser@test.org, foo@test.org, moo@test.org
+SUBJECT: Publish to BCR
+
+Failed to publish entry for testorg/multi-module@v1.0.0 to the Bazel Central Registry.
+
+Failed to download release archive from http://localhost:8001/testorg/multi-module/releases/download/v1.0.0.tar.gz. Received status 503
+
 
 "
 `;
@@ -112,6 +128,121 @@ modules/empty-prefix/metadata.json
     ],
     \\"repository\\": [
         \\"github:testorg/empty-prefix\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+"
+`;
+
+exports[`e2e tests [snapshot] multiple modules 1`] = `
+"----------------------------------------------------
+modules/module/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"module\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/module/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      bazel: \${{ bazel }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/module/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-yjUiRsFFe2FdefykIyd4CMmF/v12UDm4L/IrqiVkOHU=\\",
+    \\"strip_prefix\\": \\"multi-module-1.0.0\\",
+    \\"url\\": \\"https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz\\"
+}
+
+----------------------------------------------------
+modules/module/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/multi-module\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/multi-module\\"
+    ],
+    \\"versions\\": [
+        \\"1.0.0\\"
+    ],
+    \\"yanked_versions\\": {}
+}
+
+----------------------------------------------------
+modules/submodule/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = \\"submodule\\",
+    version = \\"1.0.0\\",
+)
+----------------------------------------------------
+modules/submodule/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: \\"e2e/bzlmod\\"
+  matrix:
+    platform: [\\"debian10\\", \\"macos\\", \\"ubuntu2004\\", \\"windows\\"]
+    bazel: [6.x, 7.x]
+  tasks:
+    run_tests:
+      name: \\"Run test module\\"
+      platform: \${{ platform }}
+      bazel: \${{ bazel }}
+      test_targets:
+        - \\"//...\\"
+
+----------------------------------------------------
+modules/submodule/1.0.0/source.json
+----------------------------------------------------
+{
+    \\"integrity\\": \\"sha256-yjUiRsFFe2FdefykIyd4CMmF/v12UDm4L/IrqiVkOHU=\\",
+    \\"strip_prefix\\": \\"multi-module-1.0.0/submodule\\",
+    \\"url\\": \\"https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz\\"
+}
+
+----------------------------------------------------
+modules/submodule/metadata.json
+----------------------------------------------------
+{
+    \\"homepage\\": \\"https://github.com/testorg/multi-module\\",
+    \\"maintainers\\": [
+        {
+            \\"name\\": \\"Foo McBar\\",
+            \\"email\\": \\"foo@test.org\\",
+            \\"github\\": \\"foobar\\"
+        },
+        {
+            \\"name\\": \\"Moo Cow\\",
+            \\"email\\": \\"moo@test.org\\",
+            \\"github\\": \\"moocow\\"
+        }
+    ],
+    \\"repository\\": [
+        \\"github:testorg/multi-module\\"
     ],
     \\"versions\\": [
         \\"1.0.0\\"

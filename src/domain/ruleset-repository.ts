@@ -3,7 +3,11 @@ import path from "node:path";
 import yaml from "yaml";
 import { Configuration } from "./config.js";
 import { UserFacingError } from "./error.js";
-import { MetadataFile, MetadataFileError } from "./metadata-file.js";
+import {
+  Maintainer,
+  MetadataFile,
+  MetadataFileError,
+} from "./metadata-file.js";
 import { Repository } from "./repository.js";
 import {
   SourceTemplate,
@@ -249,6 +253,17 @@ export class RulesetRepository extends Repository {
 
   public get config(): Configuration {
     return this._config;
+  }
+
+  public getAllMaintainers(): ReadonlyArray<Maintainer> {
+    return Object.values(
+      Object.values(this._metadataTemplate)
+        .flatMap((template) => template.maintainers)
+        .reduce(
+          (maintainers, curr) => ({ ...maintainers, [curr.email]: curr }),
+          {}
+        )
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 import { ReturnTypeOf } from "@octokit/core/dist-types/types";
 import { User } from "@octokit/webhooks-types";
 import { ImapFlow } from "imapflow";
+import { ParsedMail } from "mailparser";
 import { CompletedRequest } from "mockttp";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
@@ -375,6 +376,46 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
+  test("[snapshot] multiple modules", async () => {
+    const repo = Fixture.MultiModule;
+    const tag = "v1.0.0";
+    await setupLocalRemoteRulesetRepo(repo, tag, releaser);
+
+    fakeGitHub.mockUser(releaser);
+    fakeGitHub.mockRepository(testOrg, repo);
+    fakeGitHub.mockRepository(
+      testOrg,
+      "bazel-central-registry",
+      "bazelbuild",
+      "bazel-central-registry"
+    );
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
+    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+
+    const releaseArchive = await makeReleaseTarball(repo, "multi-module-1.0.0");
+
+    await fakeGitHub.mockReleaseArchive(
+      `/${testOrg}/${repo}/releases/download/${tag}.tar.gz`,
+      releaseArchive
+    );
+
+    const response = await publishReleaseEvent(
+      cloudFunctions.getBaseUrl(),
+      secrets.webhookSecret,
+      installationId,
+      {
+        owner: testOrg,
+        repo,
+        tag,
+        releaser,
+      }
+    );
+    expect(response.status).toEqual(200);
+
+    const snapshot = await rollupEntryFiles();
+    expect(snapshot).toMatchSnapshot();
+  });
+
   test("happy path", async () => {
     const repo = Fixture.Versioned;
     const tag = "v1.0.0";
@@ -491,8 +532,8 @@ describe("e2e tests", () => {
     const messages = await fetchEmails(emailClient);
     expect(messages.length).toEqual(0);
 
-    // Two pull requests were created with the corrects params
-    expect(fakeGitHub.pullRequestHandler).toHaveBeenCalledTimes(2);
+    // One pull requests was created with the corrects params
+    expect(fakeGitHub.pullRequestHandler).toHaveBeenCalledTimes(1);
     let request = fakeGitHub.pullRequestHandler.mock
       .calls[0][0] as CompletedRequest;
     expect(request.path).toEqual(
@@ -505,23 +546,7 @@ describe("e2e tests", () => {
         head: expect.stringMatching(
           new RegExp(`${testOrg}\\:${testOrg}\\/${repo}@${tag}-.+`)
         ),
-        title: "module@1.0.0",
-      })
-    );
-
-    request = fakeGitHub.pullRequestHandler.mock
-      .calls[1][0] as CompletedRequest;
-    expect(request.path).toEqual(
-      expect.stringMatching(/bazelbuild\/bazel-central-registry/)
-    );
-    body = (await request.body.getJson()) as any;
-    expect(body).toEqual(
-      expect.objectContaining({
-        base: "main",
-        head: expect.stringMatching(
-          new RegExp(`${testOrg}\\:${testOrg}\\/${repo}@${tag}-.+`)
-        ),
-        title: "submodule@1.0.0",
+        title: "module@1.0.0, submodule@1.0.0",
       })
     );
   });
@@ -667,7 +692,7 @@ describe("e2e tests", () => {
     // Function exited normally
     expect(response.status).toEqual(200);
 
-    // No error emails were sent
+    // Email was sent
     const messages = await fetchEmails(emailClient);
     expect(messages.length).toEqual(1);
 
@@ -729,7 +754,7 @@ describe("e2e tests", () => {
     expect(logs.latest?.author_name).toEqual("publish-to-bcr-bot");
   });
 
-  test("[snapshot] error message for incorrect strip prefix", async () => {
+  test("[snapshot] error email for incorrect strip prefix", async () => {
     const repo = Fixture.Versioned;
     const tag = "v1.0.0";
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
@@ -768,7 +793,51 @@ describe("e2e tests", () => {
 
     const messages = await fetchEmails(emailClient);
     expect(messages.length).toEqual(1);
-    expect(messages[0].text).toMatchSnapshot();
+
+    expect(emailSnapshot(messages[0])).toMatchSnapshot();
+  });
+
+  test("[snapshot] error email for incorrect strip prefix in multi module repo", async () => {
+    const repo = Fixture.MultiModule;
+    const tag = "v1.0.0";
+    await setupLocalRemoteRulesetRepo(repo, tag, releaser);
+
+    fakeGitHub.mockUser(releaser);
+    fakeGitHub.mockRepository(testOrg, repo);
+    fakeGitHub.mockRepository(
+      testOrg,
+      "bazel-central-registry",
+      "bazelbuild",
+      "bazel-central-registry"
+    );
+    const rulesetInstallationId = fakeGitHub.mockAppInstallation(testOrg, repo);
+    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+
+    // Strip prefix in release archive doesn't match source.template.json
+    const releaseArchive = await makeReleaseTarball(repo, "invalid-prefix");
+    await fakeGitHub.mockReleaseArchive(
+      `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
+      releaseArchive
+    );
+
+    const response = await publishReleaseEvent(
+      cloudFunctions.getBaseUrl(),
+      secrets.webhookSecret,
+      rulesetInstallationId,
+      {
+        owner: testOrg,
+        repo,
+        tag,
+        releaser,
+      }
+    );
+
+    expect(response.status).toEqual(200);
+
+    const messages = await fetchEmails(emailClient);
+    expect(messages.length).toEqual(1);
+
+    expect(emailSnapshot(messages[0])).toMatchSnapshot();
   });
 });
 
@@ -818,6 +887,15 @@ ${fileContent}
   }
 
   return content;
+}
+
+function emailSnapshot(email: ParsedMail): string {
+  return `\
+TO: ${(Array.isArray(email.to) ? email.to : [email.to]).map((to) => to?.text)}
+SUBJECT: ${email.subject}
+
+${email.text}
+`;
 }
 
 export function mockSecrets(

@@ -40,7 +40,6 @@ export class ReleaseEventHandler {
         process.env.BAZEL_CENTRAL_REGISTRY
       );
 
-      const repoCanonicalName = `${event.payload.repository.owner.login}/${event.payload.repository.name}`;
       let releaser = await this.rulesetRepoGitHubClient.getRepoUser(
         event.payload.sender.login,
         repository
@@ -49,91 +48,104 @@ export class ReleaseEventHandler {
 
       const tag = event.payload.release.tag_name;
 
+      const createRepoResult = await this.validateRulesetRepoOrNotifyFailure(
+        repository,
+        tag,
+        releaser
+      );
+      if (!createRepoResult.successful) {
+        return;
+      }
+
+      const rulesetRepo = createRepoResult.rulesetRepo!;
+      console.log(
+        `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
+      );
+
+      console.log(`Release author: ${releaser.username}`);
+      releaser = await this.overrideReleaser(releaser, rulesetRepo);
+
+      const moduleNames = [];
+      let branch: string;
+      const candidateBcrForks: Repository[] = [];
       try {
-        const createRepoResult = await this.validateRulesetRepoOrNotifyFailure(
-          repository,
+        for (const moduleRoot of rulesetRepo.config.moduleRoots) {
+          console.log(`Creating BCR entry for module root '${moduleRoot}'`);
+
+          const { moduleName } = await this.createEntryService.createEntryFiles(
+            rulesetRepo,
+            bcr,
+            tag,
+            moduleRoot
+          );
+          moduleNames.push(moduleName);
+        }
+
+        branch = await this.createEntryService.commitEntryToNewBranch(
+          rulesetRepo,
+          bcr,
           tag,
           releaser
         );
-        if (!createRepoResult.successful) {
-          return;
-        }
 
-        const rulesetRepo = createRepoResult.rulesetRepo!;
-
-        console.log(`Release author: ${releaser.username}`);
-
-        releaser = await this.overrideReleaser(releaser, rulesetRepo);
-
-        console.log(
-          `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
-        );
-
-        const candidateBcrForks =
-          await this.findRegistryForkService.findCandidateForks(
+        candidateBcrForks.push(
+          ...(await this.findRegistryForkService.findCandidateForks(
             rulesetRepo,
             releaser
-          );
+          ))
+        );
 
         console.log(
           `Found ${candidateBcrForks.length} candidate forks: ${JSON.stringify(
             candidateBcrForks.map((fork) => fork.canonicalName)
           )}.`
         );
-
-        for (let moduleRoot of rulesetRepo.config.moduleRoots) {
-          console.log(`Creating BCR entry for module root '${moduleRoot}'`);
-
-          const attempts: PublishAttempt[] = [];
-
-          for (let bcrFork of candidateBcrForks) {
-            const forkGitHubClient = await GitHubClient.forRepoInstallation(
-              this.appOctokit,
-              bcrFork
-            );
-
-            const attempt = await this.attemptPublish(
-              rulesetRepo,
-              bcrFork,
-              bcr,
-              tag,
-              moduleRoot,
-              releaser,
-              releaseUrl,
-              forkGitHubClient
-            );
-            attempts.push(attempt);
-
-            // No need to try other candidate bcr forks if this was successful
-            if (attempt.successful) {
-              break;
-            }
-          }
-
-          // Send out error notifications if none of the attempts succeeded
-          if (!attempts.some((a) => a.successful)) {
-            await this.notificationsService.notifyError(
-              releaser,
-              rulesetRepo.metadataTemplate(moduleRoot).maintainers,
-              rulesetRepo,
-              tag,
-              attempts.map((a) => a.error!)
-            );
-          }
-        }
       } catch (error) {
-        // Handle any other unexpected errors
         console.log(error);
-
         await this.notificationsService.notifyError(
           releaser,
-          [],
-          Repository.fromCanonicalName(repoCanonicalName),
+          rulesetRepo.getAllMaintainers(),
+          rulesetRepo,
           tag,
           [error]
         );
-
         return;
+      }
+
+      const attempts: PublishAttempt[] = [];
+
+      for (let bcrFork of candidateBcrForks) {
+        const bcrForkGitHubClient = await GitHubClient.forRepoInstallation(
+          this.appOctokit,
+          bcrFork
+        );
+
+        const attempt = await this.attemptPublish(
+          bcrFork,
+          bcr,
+          tag,
+          branch,
+          moduleNames,
+          releaseUrl,
+          bcrForkGitHubClient
+        );
+        attempts.push(attempt);
+
+        // No need to try other candidate bcr forks if this was successful
+        if (attempt.successful) {
+          break;
+        }
+      }
+
+      // Send out error notifications if none of the attempts succeeded
+      if (!attempts.some((a) => a.successful)) {
+        await this.notificationsService.notifyError(
+          releaser,
+          rulesetRepo.getAllMaintainers(),
+          rulesetRepo,
+          tag,
+          attempts.map((a) => a.error!)
+        );
       }
     };
 
@@ -192,31 +204,17 @@ export class ReleaseEventHandler {
   }
 
   private async attemptPublish(
-    rulesetRepo: RulesetRepository,
     bcrFork: Repository,
     bcr: Repository,
     tag: string,
-    moduleRoot: string,
-    releaser: User,
+    branch: string,
+    moduleNames: string[],
     releaseUrl: string,
     bcrForkGitHubClient: GitHubClient
   ): Promise<PublishAttempt> {
     console.log(`Attempting publish to fork ${bcrFork.canonicalName}.`);
 
     try {
-      const { moduleName } = await this.createEntryService.createEntryFiles(
-        rulesetRepo,
-        bcr,
-        tag,
-        moduleRoot
-      );
-
-      const branch = await this.createEntryService.commitEntryToNewBranch(
-        rulesetRepo,
-        bcr,
-        tag,
-        releaser
-      );
       await this.createEntryService.pushEntryToFork(
         bcrFork,
         bcr,
@@ -224,16 +222,24 @@ export class ReleaseEventHandler {
         bcrForkGitHubClient
       );
 
-      console.log(
-        `Pushed bcr entry for module '${moduleRoot}' to fork ${bcrFork.canonicalName} on branch ${branch}`
-      );
+      if (moduleNames.length === 1) {
+        console.log(
+          `Pushed bcr entry for module '${moduleNames[0]}' to fork ${bcrFork.canonicalName} on branch ${branch}`
+        );
+      } else {
+        console.log(
+          `Pushed bcr entry for modules '${moduleNames.join(", ")}' to fork ${
+            bcrFork.canonicalName
+          } on branch ${branch}`
+        );
+      }
 
-      await this.publishEntryService.sendRequest(
+      await this.publishEntryService.publish(
         tag,
         bcrFork,
         bcr,
         branch,
-        moduleName,
+        moduleNames,
         releaseUrl
       );
 

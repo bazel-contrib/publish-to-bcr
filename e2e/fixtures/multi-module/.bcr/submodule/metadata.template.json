@@ -5,6 +5,11 @@
       "name": "Foo McBar",
       "email": "foo@test.org",
       "github": "foobar"
+    },
+    {
+      "name": "Moo Cow",
+      "email": "moo@test.org",
+      "github": "moocow"
     }
   ],
   "repository": ["github:testorg/multi-module"],
