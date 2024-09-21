@@ -13,19 +13,19 @@ beforeEach(() => {
   publishEntryService = new PublishEntryService(mockGithubClient);
 });
 
-describe("sendRequest", () => {
+describe("publish", () => {
   test("creates a pull request from the bcr fork's provided branch to 'main' on the bcr", async () => {
     const bcrFork = new Repository("bazel-central-registry", "bar");
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
 
-    await publishEntryService.sendRequest(
+    await publishEntryService.publish(
       tag,
       bcrFork,
       bcr,
       branch,
-      "rules_foo",
+      ["rules_foo"],
       `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 
@@ -45,12 +45,12 @@ describe("sendRequest", () => {
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
 
-    await publishEntryService.sendRequest(
+    await publishEntryService.publish(
       tag,
       bcrFork,
       bcr,
       branch,
-      "rules_foo",
+      ["rules_foo"],
       `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 
@@ -72,18 +72,59 @@ describe("sendRequest", () => {
     );
   });
 
+  test("includes multiple module names in the PR title", async () => {
+    const bcrFork = new Repository("bazel-central-registry", "bar");
+    const bcr = new Repository("bazel-central-registry", "bazelbuild");
+    const branch = "branch_with_entry";
+    const tag = "v1.0.0";
+
+    await publishEntryService.publish(
+      tag,
+      bcrFork,
+      bcr,
+      branch,
+      ["rules_foo", "rules_bar"],
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
+    );
+
+    expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
+      expect.any(Repository),
+      expect.any(String),
+      expect.any(Repository),
+      expect.any(String),
+      expect.stringContaining("rules_foo"),
+      expect.any(String)
+    );
+    expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
+      expect.any(Repository),
+      expect.any(String),
+      expect.any(Repository),
+      expect.any(String),
+      expect.stringContaining("rules_bar"),
+      expect.any(String)
+    );
+    expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
+      expect.any(Repository),
+      expect.any(String),
+      expect.any(Repository),
+      expect.any(String),
+      expect.stringContaining("1.0.0"),
+      expect.any(String)
+    );
+  });
+
   test("includes the release url in the body", async () => {
     const bcrFork = new Repository("bazel-central-registry", "bar");
     const bcr = new Repository("bazel-central-registry", "bazelbuild");
     const branch = "branch_with_entry";
     const tag = "v1.0.0";
 
-    await publishEntryService.sendRequest(
+    await publishEntryService.publish(
       tag,
       bcrFork,
       bcr,
       branch,
-      "rules_foo",
+      ["rules_foo"],
       `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 
@@ -107,12 +148,12 @@ describe("sendRequest", () => {
 
     mockGithubClient.createPullRequest.mockResolvedValueOnce(4);
 
-    const pr = await publishEntryService.sendRequest(
+    const pr = await publishEntryService.publish(
       tag,
       bcrFork,
       bcr,
       branch,
-      "rules_foo",
+      ["rules_foo"],
       `github.com/aspect-build/rules_foo/releases/tag/${tag}`
     );
 

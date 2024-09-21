@@ -7,12 +7,12 @@ import { RulesetRepository } from "./ruleset-repository.js";
 export class PublishEntryService {
   constructor(@Inject("bcrGitHubClient") private githubClient: GitHubClient) {}
 
-  public async sendRequest(
+  public async publish(
     tag: string,
     bcrForkRepo: Repository,
     bcr: Repository,
     branch: string,
-    moduleName: string,
+    moduleNames: string[],
     releaseUrl: string
   ): Promise<number> {
     const version = RulesetRepository.getVersionFromTag(tag);
@@ -22,7 +22,7 @@ export class PublishEntryService {
       branch,
       bcr,
       "main",
-      `${moduleName}@${version}`,
+      moduleNames.map((moduleName) => `${moduleName}@${version}`).join(", "),
       `\
 Release: ${releaseUrl}
 
