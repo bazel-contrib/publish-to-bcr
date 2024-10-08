@@ -135,6 +135,7 @@ async function download(url: string, dest: string): Promise<void> {
   axiosRetry(axios, {
     retries: 3,
     retryDelay: exponentialDelay,
+    shouldResetTimeout: true,
   });
 
   let response: AxiosResponse;
