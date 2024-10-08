@@ -108,7 +108,7 @@ export class ReleaseArchive {
   }
 }
 
-function exponentialDelay(retryCount: number, error: AxiosError): number {
+function exponentialDelay(retryCount: number, error: AxiosError = undefined): number {
     // Using exponential backoff with 3 retries and a delay factor of 10 seconds
     // gives you at least 70 seconds to publish a release archive.
     const tenSeconds = 10000;

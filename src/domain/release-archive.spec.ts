@@ -70,7 +70,17 @@ describe("fetch", () => {
 
     expect(axiosRetry).toHaveBeenCalledWith(axios, {
       retries: 3,
-      retryDelay: axiosRetry.exponentialDelay,
+      retryDelay: expect.matchesPredicate((retryDelayFn: Function) => {
+        // Make sure the retry delays follow exponential backoff
+        // and the final retry happens after at least 1 minute total.
+        let firstRetryDelay = retryDelayFn(0);
+        let secondRetryDelay = retryDelayFn(1);
+        let thirdRetryDelay = retryDelayFn(2);
+        return 10000 <= firstRetryDelay && firstRetryDelay <= 12000
+          && 20000 <= secondRetryDelay && secondRetryDelay <= 24000
+          && 40000 <= thirdRetryDelay && thirdRetryDelay <= 48000;
+      }),
+      shouldResetTimeout: true,
     });
   });
 
