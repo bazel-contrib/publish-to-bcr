@@ -9,10 +9,10 @@ declare global {
       ): R;
     }
     interface Expect {
-      matchesPredicate(predicate: (actual: any) => boolean): any
+      matchesPredicate(predicate: (actual: any) => boolean): any;
     }
     interface ExpectExtendMap {
-      matchesPredicate: MatcherFunction<[predicate: (actual: any) => boolean]>
+      matchesPredicate: MatcherFunction<[predicate: (actual: any) => boolean]>;
     }
   }
 }
@@ -67,6 +67,7 @@ But instead it was:
       message: () => "Expected function to throw but it did not",
     };
   },
+
   matchesPredicate(actual: any, predicate: (actual: any) => boolean) {
     return {
       pass: predicate(actual),

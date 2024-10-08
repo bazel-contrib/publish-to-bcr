@@ -5,6 +5,7 @@ import fs, { WriteStream } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import tar from "tar";
+import "../../jest.setup";
 import { fakeModuleFile } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
 import {
@@ -66,6 +67,11 @@ describe("fetch", () => {
   });
 
   test("retries the request if it fails", async () => {
+    // Restore the original behavior of exponentialDelay.
+    mocked(axiosRetry.exponentialDelay).mockImplementation(
+      jest.requireActual("axios-retry").exponentialDelay
+    );
+
     await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
 
     expect(axiosRetry).toHaveBeenCalledWith(axios, {
@@ -73,9 +79,10 @@ describe("fetch", () => {
       retryDelay: expect.matchesPredicate((retryDelayFn: Function) => {
         // Make sure the retry delays follow exponential backoff
         // and the final retry happens after at least 1 minute total.
-        let firstRetryDelay = retryDelayFn(0);
-        let secondRetryDelay = retryDelayFn(1);
-        let thirdRetryDelay = retryDelayFn(2);
+        // Axios also randomly adds up to 20% to each delay, so test the upper bounds as well.
+        let firstRetryDelay = retryDelayFn.call(this, 0);
+        let secondRetryDelay = retryDelayFn.call(this, 1);
+        let thirdRetryDelay = retryDelayFn.call(this, 2);
         return 10000 <= firstRetryDelay && firstRetryDelay <= 12000
           && 20000 <= secondRetryDelay && secondRetryDelay <= 24000
           && 40000 <= thirdRetryDelay && thirdRetryDelay <= 48000;
