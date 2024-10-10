@@ -60,9 +60,23 @@ describe("fetch", () => {
   test("downloads the archive", async () => {
     await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
 
-    expect(axios.get).toHaveBeenCalledWith(RELEASE_ARCHIVE_URL, {
-      responseType: "stream",
-    });
+    expect(axios.get).toHaveBeenCalledWith(
+      RELEASE_ARCHIVE_URL,
+      expect.objectContaining({
+        responseType: "stream",
+      })
+    );
+  });
+
+  test("sets a 120s timeout on the download", async () => {
+    await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
+
+    expect(axios.get).toHaveBeenCalledWith(
+      RELEASE_ARCHIVE_URL,
+      expect.objectContaining({
+        timeout: 120000,
+      })
+    );
   });
 
   test("retries the request if it fails", async () => {
@@ -70,7 +84,8 @@ describe("fetch", () => {
 
     expect(axiosRetry).toHaveBeenCalledWith(axios, {
       retries: 3,
-      retryDelay: axiosRetry.exponentialDelay,
+      retryDelay: expect.any(Function),
+      shouldResetTimeout: false,
     });
   });
 

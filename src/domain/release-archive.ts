@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
 import extractZip from "extract-zip";
 import fs from "node:fs";
@@ -127,7 +127,9 @@ async function download(url: string, dest: string): Promise<void> {
   // Retry the request in case the artifact is still being uploaded
   axiosRetry(axios, {
     retries: 3,
-    retryDelay: axiosRetry.exponentialDelay,
+    shouldResetTimeout: false,
+    retryDelay: (retryCount: number, error: AxiosError) =>
+      axiosRetry.exponentialDelay(retryCount, error, 10000),
   });
 
   let response: AxiosResponse;
@@ -135,6 +137,7 @@ async function download(url: string, dest: string): Promise<void> {
   try {
     response = await axios.get(url, {
       responseType: "stream",
+      timeout: 120000,
     });
   } catch (e: any) {
     // https://axios-http.com/docs/handling_errors
