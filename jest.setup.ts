@@ -1,3 +1,5 @@
+import { MatcherFunction } from 'expect'
+
 declare global {
   namespace jest {
     interface Matchers<R> {
@@ -5,6 +7,12 @@ declare global {
         errorType: new (...args: any[]) => T,
         message: string
       ): R;
+    }
+    interface Expect {
+      matchesPredicate(predicate: (actual: any) => boolean): any;
+    }
+    interface ExpectExtendMap {
+      matchesPredicate: MatcherFunction<[predicate: (actual: any) => boolean]>;
     }
   }
 }
@@ -57,6 +65,13 @@ But instead it was:
     return {
       pass: false,
       message: () => "Expected function to throw but it did not",
+    };
+  },
+
+  matchesPredicate(actual: any, predicate: (actual: any) => boolean) {
+    return {
+      pass: predicate(actual),
+      message: () => "Expected object that passes predicate",
     };
   },
 });

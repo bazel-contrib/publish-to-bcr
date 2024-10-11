@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
 import extractZip from "extract-zip";
 import fs from "node:fs";
@@ -108,6 +108,15 @@ export class ReleaseArchive {
   }
 }
 
+function exponentialDelay(
+  retryCount: number,
+  error: AxiosError | undefined
+): number {
+  // Default delay factor is 10 seconds, but can be overridden for testing.
+  const delayFactor = Number(process.env.BACKOFF_DELAY_FACTOR) || 10_000;
+  return axiosRetry.exponentialDelay(retryCount, error, delayFactor);
+}
+
 async function download(url: string, dest: string): Promise<void> {
   if (process.env.INTEGRATION_TESTING) {
     // Point downloads to the standin github server
@@ -124,10 +133,13 @@ async function download(url: string, dest: string): Promise<void> {
 
   const writer = fs.createWriteStream(dest, { flags: "w" });
 
-  // Retry the request in case the artifact is still being uploaded
+  // Retry the request in case the artifact is still being uploaded.
+  // Exponential backoff with 3 retries and a delay factor of 10 seconds
+  // gives you at least 70 seconds to upload a release archive.
   axiosRetry(axios, {
     retries: 3,
-    retryDelay: axiosRetry.exponentialDelay,
+    retryDelay: exponentialDelay,
+    shouldResetTimeout: true,
   });
 
   let response: AxiosResponse;

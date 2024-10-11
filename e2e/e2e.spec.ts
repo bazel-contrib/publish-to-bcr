@@ -35,6 +35,9 @@ import { FakeSecrets } from "./stubs/fake-secrets";
 
 jest.setTimeout(30000);
 
+// Speed up e2e tests by retrying failed requests with 100ms delay factor.
+process.env.BACKOFF_DELAY_FACTOR = "100";
+
 describe("e2e tests", () => {
   let cloudFunctions: CloudFunctions;
   let fakeGitHub: FakeGitHub;
