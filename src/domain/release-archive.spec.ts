@@ -78,8 +78,11 @@ describe("fetch", () => {
       retries: 3,
       retryDelay: expect.matchesPredicate((retryDelayFn: Function) => {
         // Make sure the retry delays follow exponential backoff
-        // and the final retry happens after at least 1 minute total.
-        // Axios also randomly adds up to 20% to each delay, so test the upper bounds as well.
+        // and the final retry happens after at least 1 minute total
+        // (in this case, at least 70 seconds).
+        // Axios randomly adds an extra 0-20% of jitter to each delay.
+        // Test upper bounds as well to ensure the workflow completes reasonably quickly
+        // (in this case, no more than 84 seconds total).
         let firstRetryDelay = retryDelayFn.call(this, 0);
         let secondRetryDelay = retryDelayFn.call(this, 1);
         let thirdRetryDelay = retryDelayFn.call(this, 2);

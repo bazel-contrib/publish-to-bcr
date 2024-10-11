@@ -108,12 +108,13 @@ export class ReleaseArchive {
   }
 }
 
-function tenSecondExponentialDelay(
+function exponentialDelay(
   retryCount: number,
   error: AxiosError | undefined
 ): number {
-  const tenSeconds = 10000;
-  return axiosRetry.exponentialDelay(retryCount, error, tenSeconds);
+  // Default delay factor is 10 seconds, but can be overridden for testing.
+  const delayFactor = Number(process.env.BACKOFF_DELAY_FACTOR) || 10_000;
+  return axiosRetry.exponentialDelay(retryCount, error, delayFactor);
 }
 
 async function download(url: string, dest: string): Promise<void> {
@@ -137,7 +138,7 @@ async function download(url: string, dest: string): Promise<void> {
   // gives you at least 70 seconds to upload a release archive.
   axiosRetry(axios, {
     retries: 3,
-    retryDelay: tenSecondExponentialDelay,
+    retryDelay: exponentialDelay,
     shouldResetTimeout: true,
   });
 
