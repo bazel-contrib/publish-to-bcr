@@ -117,6 +117,14 @@ function exponentialDelay(
   return axiosRetry.exponentialDelay(retryCount, error, delayFactor);
 }
 
+function defaultRetryPlus404(error: AxiosError): boolean {
+  // Publish-to-BCR needs to support retrying when GitHub returns 404
+  // in order to support automated release workflows that upload artifacts
+  // within a minute or so of publishing a release.
+  // Apart from this case, use the default retry condition.
+  return error.response.status === 404 || axiosRetry.isNetworkOrIdempotentRequestError(error);
+}
+
 async function download(url: string, dest: string): Promise<void> {
   if (process.env.INTEGRATION_TESTING) {
     // Point downloads to the standin github server
@@ -140,6 +148,7 @@ async function download(url: string, dest: string): Promise<void> {
     retries: 3,
     retryDelay: exponentialDelay,
     shouldResetTimeout: true,
+    retryCondition: defaultRetryPlus404,
   });
 
   let response: AxiosResponse;

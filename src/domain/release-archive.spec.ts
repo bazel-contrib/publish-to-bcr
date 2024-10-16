@@ -76,6 +76,11 @@ describe("fetch", () => {
 
     expect(axiosRetry).toHaveBeenCalledWith(axios, {
       retries: 3,
+      retryCondition: expect.matchesPredicate((retryConditionFn: Function) => {
+        // Make sure HTTP 404 errors are retried.
+        let notFoundError = { response: { status: 404 } };
+        return retryConditionFn.call(this, notFoundError);
+      }),
       retryDelay: expect.matchesPredicate((retryDelayFn: Function) => {
         // Make sure the retry delays follow exponential backoff
         // and the final retry happens after at least 1 minute total
