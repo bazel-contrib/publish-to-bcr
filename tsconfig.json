@@ -14,5 +14,5 @@
     "types": ["jest", "node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "src/**/*.spec.ts", "src/test"]
+  "exclude": ["node_modules", "src/**/*.spec.ts", "src/test", "src/**/bazel-*"]
 }

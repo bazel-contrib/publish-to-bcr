@@ -7,6 +7,7 @@ import path from "node:path";
 import { parse as parseUrl } from "node:url";
 import tar from "tar";
 import { UserFacingError } from "./error.js";
+import { decompress as decompressXz } from "../infrastructure/xzdec/xzdec.js";
 
 import { ModuleFile } from "./module-file.js";
 
@@ -61,7 +62,7 @@ export class ReleaseArchive {
   public async extractModuleFile(): Promise<ModuleFile> {
     this.extractDir = path.dirname(this._diskPath);
 
-    if (this._diskPath.endsWith(".tar.gz")) {
+    if (this.isSupportedTarball()) {
       await this.extractReleaseTarball(this.extractDir);
     } else if (this._diskPath.endsWith(".zip")) {
       await this.extractReleaseZip(this.extractDir);
@@ -81,7 +82,26 @@ export class ReleaseArchive {
     return new ModuleFile(extractedModulePath);
   }
 
+  private isSupportedTarball(): boolean {
+    if (this._diskPath.endsWith(".tar.gz")) {
+      return true;
+    }
+    if (this._diskPath.endsWith(".tar.xz")) {
+      return true;
+    }
+    return false;
+  }
+
   private async extractReleaseTarball(extractDir: string): Promise<void> {
+    if (this._diskPath.endsWith(".tar.xz")) {
+      let reader = fs.createReadStream(this._diskPath);
+      let writer = tar.x({
+        cwd: extractDir
+      });
+      await decompressXz(reader, writer);
+      return;
+    }
+
     await tar.x({
       cwd: extractDir,
       file: this._diskPath,
