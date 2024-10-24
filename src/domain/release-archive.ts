@@ -94,8 +94,8 @@ export class ReleaseArchive {
 
   private async extractReleaseTarball(extractDir: string): Promise<void> {
     if (this._diskPath.endsWith(".tar.xz")) {
-      let reader = fs.createReadStream(this._diskPath);
-      let writer = tar.x({
+      const reader = fs.createReadStream(this._diskPath);
+      const writer = tar.x({
         cwd: extractDir
       });
       await decompressXz(reader, writer);
