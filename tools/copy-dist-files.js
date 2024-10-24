@@ -9,7 +9,11 @@ async function main() {
 }
 
 function getDistributableFiles() {
-  return globbySync(["package.json", "yarn.lock"], {
+  return globbySync([
+    "package.json",
+    "yarn.lock",
+    "src/infrastructure/xzdec/xzdec.wasm.gz",
+  ], {
     cwd: PROJECT_DIR,
   });
 }
@@ -18,7 +22,8 @@ function copyFilesToDist(files) {
   console.info(`Copying extra files to ${DIST_DIR}`);
   files.forEach((file) => {
     const src = path.join(PROJECT_DIR, file);
-    const dest = path.join(DIST_DIR, "publish-to-bcr", file);
+    const distFile = file.replace(/^src\//, "");
+    const dest = path.join(DIST_DIR, "publish-to-bcr", distFile);
     console.info(`  => ${file}`);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(src, dest);

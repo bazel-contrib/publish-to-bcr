@@ -1,0 +1,33 @@
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_file")
+load(":wasm.bzl", "wasm_binary")
+
+cc_binary(
+    name = "xzdec",
+    srcs = ["xzdec.c"],
+    linkopts = [
+        "-nostdlib",
+        "-lc",
+        "-Wl,--no-entry",
+    ],
+    tags = ["manual"],
+    deps = ["@xz//:lzma"],
+)
+
+wasm_binary(
+    name = "xzdec_wasm",
+    out = "xzdec.wasm",
+    lib = ":xzdec",
+)
+
+genrule(
+    name = "xzdec_wasm_gz",
+    srcs = [":xzdec_wasm"],
+    outs = ["xzdec_wasm_gz/xzdec.wasm.gz"],
+    cmd = "cat $< | gzip -9 -k -n > $@",
+)
+
+write_source_file(
+    name = "write_xzdec_wasm_gz_to_source_tree",
+    in_file = ":xzdec_wasm_gz",
+    out_file = "xzdec.wasm.gz",
+)
