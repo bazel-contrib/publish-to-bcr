@@ -9,6 +9,7 @@ cc_binary(
         "-lc",
         "-Wl,--no-entry",
     ],
+    tags = ["manual"],
     deps = ["@xz//:lzma"],
 )
 
@@ -21,13 +22,12 @@ wasm_binary(
 genrule(
     name = "xzdec_wasm_gz",
     srcs = [":xzdec_wasm"],
-    outs = ["xzdec.wasm.gz"],
+    outs = ["xzdec_wasm_gz/xzdec.wasm.gz"],
     cmd = "cat $< | gzip -9 -k -n > $@",
 )
 
 write_source_file(
     name = "write_xzdec_wasm_gz_to_source_tree",
-    in_file = "xzdec_wasm_gz",
+    in_file = ":xzdec_wasm_gz",
     out_file = "xzdec.wasm.gz",
-    tags = ["manual"],
 )

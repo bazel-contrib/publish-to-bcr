@@ -20,7 +20,11 @@ llvm.toolchain(
         "@libclang_rt-wasm32-wasi//:libclang_rt.builtins-wasm32.a": "wasm32-unknown-unknown/libclang_rt.builtins.a",
     },
     llvm_versions = {
-        "": "19.1.0",
+        # Pin to an older LLVM version due to a stray Homebrew dependency
+        # in the macOS build of v19.1.0.
+        #
+        # https://github.com/llvm/llvm-project/issues/110070
+        "": "18.1.8",
     },
     stdlib = {"wasm32": "libc"},
 )
