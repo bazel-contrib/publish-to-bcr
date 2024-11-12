@@ -35,14 +35,14 @@ export class ModuleFile {
     if (this.version !== undefined) {
       // update the version
       this.moduleContent = this.moduleContent.replace(
-        /(^.*?module\(.*?version\s*=\s*")[\w.]+(".*$)/s,
+        /(^.*?module\(.*?version\s*=\s*")[\w.]*(".*$)/s,
         `$1${version}$2`
       );
     } else {
       // add the version
       this.moduleContent = this.moduleContent.replace(
         /(^.*?module\(.*?),?(\s*)\)/s,
-        `$1,\n  version = "${version}",\n)`
+        `$1,\n    version = "${version}",\n)`
       );
     }
   }
