@@ -316,7 +316,7 @@ modules/unversioned/1.0.0/MODULE.bazel
 ----------------------------------------------------
 module(
     name = \\"unversioned\\",
-  version = \\"1.0.0\\",
+    version = \\"1.0.0\\",
 )
 
 ----------------------------------------------------
@@ -329,7 +329,7 @@ modules/unversioned/1.0.0/patches/module_dot_bazel_version.patch
  module(
 -    name = \\"unversioned\\"
 +    name = \\"unversioned\\",
-+  version = \\"1.0.0\\",
++    version = \\"1.0.0\\",
  )
 
 ----------------------------------------------------
@@ -356,7 +356,7 @@ modules/unversioned/1.0.0/source.json
     \\"strip_prefix\\": \\"unversioned-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz\\",
     \\"patches\\": {
-        \\"module_dot_bazel_version.patch\\": \\"sha256-LGXyh9FLhgIPbe0gHfxAPnEQ7HVR+HUP/IDbPdl3ZkA=\\"
+        \\"module_dot_bazel_version.patch\\": \\"sha256-kZesuygBz9d247Nv0mshe3bXxzIo+Ly4X0wYy8HYVEQ=\\"
     },
     \\"patch_strip\\": 1
 }
@@ -545,7 +545,7 @@ bcr_test_module:
 modules/zip/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-fencLRegfGaNYdAWP/WaXxUWJwzD19XQtpWf2qcmkZw=\\",
+    \\"integrity\\": \\"sha256-Bqu+8wSwNVkplPEHcMNdla+oQRGoyXfx4BohYHCPZFU=\\",
     \\"strip_prefix\\": \\"zip-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/zip/archive/refs/tags/v1.0.0.zip\\"
 }

@@ -72,33 +72,83 @@ describe("stampVersion", () => {
   test("stamps the version when the version field was originally missing", () => {
     mocked(fs.readFileSync).mockReturnValue(`\
 module(
-  name = "rules_foo"
+    name = "rules_foo"
 )`);
     const moduleFile = new ModuleFile("MODULE.bazel");
     moduleFile.stampVersion("4.5.6");
 
     expect(moduleFile.content).toEqual(`\
 module(
-  name = "rules_foo",
-  version = "4.5.6",
+    name = "rules_foo",
+    version = "4.5.6",
 )`);
   });
 
   test("stamps the version when the version field was originally missing and the last field is comma-trailed", () => {
     mocked(fs.readFileSync).mockReturnValue(`\
 module(
-  name = "rules_foo",
-  compatibility_level = 1,
+    name = "rules_foo",
+    compatibility_level = 1,
 )`);
     const moduleFile = new ModuleFile("MODULE.bazel");
     moduleFile.stampVersion("4.5.6");
 
     expect(moduleFile.content).toEqual(`\
 module(
-  name = "rules_foo",
-  compatibility_level = 1,
-  version = "4.5.6",
+    name = "rules_foo",
+    compatibility_level = 1,
+    version = "4.5.6",
 )`);
+  });
+
+  test("stamps the version when the version field was set to the empty string", () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(
+    name = "gazelle",
+    # Updated by the Publish to BCR app.
+    version = "",
+    repo_name = "bazel_gazelle",
+)
+
+bazel_dep(name = "bazel_features", version = "1.9.1")`);
+    const moduleFile = new ModuleFile("MODULE.bazel");
+    moduleFile.stampVersion("4.5.6");
+
+    expect(moduleFile.content).toEqual(`\
+module(
+    name = "gazelle",
+    # Updated by the Publish to BCR app.
+    version = "4.5.6",
+    repo_name = "bazel_gazelle",
+)
+
+bazel_dep(name = "bazel_features", version = "1.9.1")`);
+  });
+
+
+  test("stamps the version when the version field was missing but the module call ends with a comment", () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(
+    name = "gazelle",
+    repo_name = "bazel_gazelle",
+    # version is set by the Publish to BCR app.
+)
+
+bazel_dep(name = "bazel_features", version = "1.9.1")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")`);
+    const moduleFile = new ModuleFile("MODULE.bazel");
+    moduleFile.stampVersion("4.5.6");
+
+    expect(moduleFile.content).toEqual(`\
+module(
+    name = "gazelle",
+    repo_name = "bazel_gazelle",
+    # version is set by the Publish to BCR app.,
+    version = "4.5.6",
+)
+
+bazel_dep(name = "bazel_features", version = "1.9.1")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")`);
   });
 });
 
