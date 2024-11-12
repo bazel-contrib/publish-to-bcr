@@ -110,7 +110,7 @@ module(
     repo_name = "bazel_gazelle",
 )
 
-bazel_dep(name = "bazel_features", version = "1.2.3")`);
+bazel_dep(name = "bazel_features", version = "1.9.1")`);
     const moduleFile = new ModuleFile("MODULE.bazel");
     moduleFile.stampVersion("4.5.6");
 
