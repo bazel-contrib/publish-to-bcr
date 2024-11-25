@@ -99,6 +99,11 @@ export class ReleaseArchive {
         cwd: extractDir
       });
       await decompressXz(reader, writer);
+      await new Promise(resolve => {
+        writer.on('finish', resolve);
+        writer.end();
+      });
+      
       return;
     }
 
