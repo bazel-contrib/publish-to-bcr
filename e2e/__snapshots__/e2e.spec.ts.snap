@@ -545,7 +545,7 @@ bcr_test_module:
 modules/zip/1.0.0/source.json
 ----------------------------------------------------
 {
-    \\"integrity\\": \\"sha256-Bqu+8wSwNVkplPEHcMNdla+oQRGoyXfx4BohYHCPZFU=\\",
+    \\"integrity\\": \\"sha256-fencLRegfGaNYdAWP/WaXxUWJwzD19XQtpWf2qcmkZw=\\",
     \\"strip_prefix\\": \\"zip-1.0.0\\",
     \\"url\\": \\"https://github.com/testorg/zip/archive/refs/tags/v1.0.0.zip\\"
 }
