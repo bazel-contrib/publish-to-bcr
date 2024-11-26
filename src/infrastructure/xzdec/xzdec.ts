@@ -126,7 +126,14 @@ export async function decompress(r: stream.Readable, w: stream.Writable) {
           }
           const outputLen = peekU32(mem, outputLenPtr);
           if (outputLen > 0) {
-            w.write(Buffer.from(mem.buffer, outputPtr, outputLen));
+            await new Promise((resolve) => {
+              if (!w.write(Buffer.from(mem.buffer, outputPtr, outputLen))) {
+                w.once('drain', resolve)
+              }
+              else {
+                resolve(null);
+              }
+            });
           }
         }
       }
