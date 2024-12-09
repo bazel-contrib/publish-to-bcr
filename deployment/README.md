@@ -55,8 +55,8 @@ terraform init
 ### Build the app
 
 ```shell
-yarn install
-yarn build
+pnpm install
+pnpm run build
 ```
 
 ### Deploy the app
@@ -140,8 +140,8 @@ terraform init
 ### Build the app
 
 ```shell
-yarn install
-yarn build
+pnpm install
+pnpm run build
 ```
 
 ### Deploy the app
