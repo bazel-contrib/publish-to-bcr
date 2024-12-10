@@ -3,7 +3,7 @@
 Run with
 
 ```bash
-yarn e2e
+pnpm run e2e
 ```
 
 Requires `gcloud` application default credentials. The e2e tests stub google cloud APIs and

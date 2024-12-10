@@ -9,13 +9,16 @@ async function main() {
 }
 
 function getDistributableFiles() {
-  return globbySync([
-    "package.json",
-    "yarn.lock",
-    "src/infrastructure/xzdec/xzdec.wasm.gz",
-  ], {
-    cwd: PROJECT_DIR,
-  });
+  return globbySync(
+    [
+      "package.json",
+      "pnpm-lock.yaml",
+      "src/infrastructure/xzdec/xzdec.wasm.gz",
+    ],
+    {
+      cwd: PROJECT_DIR,
+    }
+  );
 }
 
 function copyFilesToDist(files) {
