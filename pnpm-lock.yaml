@@ -87,8 +87,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.3
       '@types/diff':
-        specifier: ^5.0.2
-        version: 5.2.3
+        specifier: ^6.0.0
+        version: 6.0.0
       '@types/imapflow':
         specifier: 1.0.17
         version: 1.0.17
@@ -707,8 +707,8 @@ packages:
   '@types/cors@2.8.17':
     resolution: {integrity: sha512-8CGDvrBj1zgo2qE+oS3pOCyYNqCPryMWY2bGfwA0dcfopWGgxs+78df0Rs3rc9THP4JkOhLsAa+15VdpAqkcUA==}
 
-  '@types/diff@5.2.3':
-    resolution: {integrity: sha512-K0Oqlrq3kQMaO2RhfrNQX5trmt+XLyom88zS0u84nnIcLvFnRUMRRHmrGny5GSM+kNO9IZLARsdQHDzkhAgmrQ==}
+  '@types/diff@6.0.0':
+    resolution: {integrity: sha512-dhVCYGv3ZSbzmQaBSagrv1WJ6rXCdkyTcDyoNu1MD8JohI7pR7k8wdZEm+mvdxRKXyHVwckFzWU1vJc+Z29MlA==}
 
   '@types/express-serve-static-core@4.19.6':
     resolution: {integrity: sha512-N4LZ2xG7DatVqhCZzOGb1Yi5lMbXSZcmdLDe9EzSndPV2HpWYWzRbaerl2n27irrm94EPpprqa8KpskPT085+A==}
@@ -3707,7 +3707,7 @@ snapshots:
     dependencies:
       '@types/node': 18.19.67
 
-  '@types/diff@5.2.3': {}
+  '@types/diff@6.0.0': {}
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
