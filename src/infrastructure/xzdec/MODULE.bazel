@@ -10,7 +10,7 @@ bazel_dep(name = "xz", version = "5.4.5.bcr.5")
 # FIXME: Remove when a new `toolchains_llvm` has been released.
 git_override(
     module_name = "toolchains_llvm",
-    commit = "bda1c9fbf232b682c30d039f8e4a5e3cf3025d0f",
+    commit = "361f5abd616a772d614921ee248c208cf7a36ad5",
     remote = "https://github.com/bazel-contrib/toolchains_llvm",
 )
 
