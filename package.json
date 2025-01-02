@@ -9,6 +9,8 @@
   "scripts": {
     "prebuild": "node tools/clean-dist-files.js",
     "build": "tsc && node tools/copy-dist-files.js",
+    "//gcp-build": "Don't run any build steps on cloud run. See https://cloud.google.com/functions/docs/concepts/nodejs-runtime#npm_build_script/",
+    "gcp-build": "",
     "test": "jest src",
     "pree2e": "pnpm run build",
     "e2e": "jest e2e"
