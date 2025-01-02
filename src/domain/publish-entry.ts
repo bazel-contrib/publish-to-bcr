@@ -17,7 +17,7 @@ export class PublishEntryService {
   ): Promise<number> {
     const version = RulesetRepository.getVersionFromTag(tag);
 
-    const pr = await this.githubClient.createPullRequest(
+    const pullNumber = await this.githubClient.createPullRequest(
       bcrForkRepo,
       branch,
       bcr,
@@ -29,6 +29,12 @@ Release: ${releaseUrl}
 _Automated by [Publish to BCR](https://github.com/apps/publish-to-bcr)_`
     );
 
-    return pr;
+    try {
+      await this.githubClient.enableAutoMerge(bcr, pullNumber);
+    } catch (e) {
+      console.error(`Error: Failed to enable auto-merge on pull request github.com/${bcr.canonicalName}/pull/${pullNumber}.`)
+    }
+
+    return pullNumber;
   }
 }

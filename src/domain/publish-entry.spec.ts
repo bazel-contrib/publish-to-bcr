@@ -159,4 +159,44 @@ describe("publish", () => {
 
     expect(pr).toEqual(4);
   });
+
+  test("enables auto-merge on the pull request", async () => {
+    const bcrFork = new Repository("bazel-central-registry", "bar");
+    const bcr = new Repository("bazel-central-registry", "bazelbuild");
+    const branch = "branch_with_entry";
+    const tag = "v1.0.0";
+
+    mockGithubClient.createPullRequest.mockResolvedValueOnce(4);
+    mockGithubClient.enableAutoMerge.mockResolvedValueOnce(undefined);
+
+    const pr = await publishEntryService.publish(
+      tag,
+      bcrFork,
+      bcr,
+      branch,
+      ["rules_foo"],
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
+    );
+
+    expect(mockGithubClient.enableAutoMerge).toHaveBeenCalled();
+  });
+
+  test("does not reject when enabling auto-merge fails", async () => {
+    const bcrFork = new Repository("bazel-central-registry", "bar");
+    const bcr = new Repository("bazel-central-registry", "bazelbuild");
+    const branch = "branch_with_entry";
+    const tag = "v1.0.0";
+
+    mockGithubClient.createPullRequest.mockResolvedValueOnce(4);
+    mockGithubClient.enableAutoMerge.mockRejectedValueOnce("Failed to enable auto-merge!");
+
+    await expect(publishEntryService.publish(
+      tag,
+      bcrFork,
+      bcr,
+      branch,
+      ["rules_foo"],
+      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
+    )).resolves.toBe(4);
+  });
 });
