@@ -1,18 +1,26 @@
 import { mocked, Mocked } from "jest-mock";
-import { GitHubClient } from "../infrastructure/github";
 import { expectThrownError } from "../test/util";
 import {
   CANONICAL_BCR,
   FindRegistryForkService,
   NoCandidateForksError,
 } from "./find-registry-fork";
-import { Repository } from "./repository";
+import { Repository, RepositoryService } from "./repository";
 import { RulesetRepository } from "./ruleset-repository";
 
-jest.mock("../infrastructure/github");
+jest.mock("./repository", () => ({
+  Repository: jest.requireActual("./repository").Repository,
+  RepositoryService: jest.fn().mockImplementation(() => {
+    return {
+      getSourceRepository: jest.fn(),
+      getForkedRepositoriesByOwner: jest.fn(),
+      hasAppInstallation: jest.fn(),
+    };
+  }),
+}));
 
 let findRegistryForkService: FindRegistryForkService;
-let mockGithubClient: Mocked<GitHubClient>;
+let mockRepositoryService: Mocked<RepositoryService>;
 
 // Mock RulesetRepostory.create to avoid network call and necessary file checks
 const mockRulesetRepoCreate = jest
@@ -22,11 +30,11 @@ const mockRulesetRepoCreate = jest
   });
 
 beforeEach(() => {
-  mocked(GitHubClient).mockClear();
+  mocked(RepositoryService).mockClear();
   mockRulesetRepoCreate.mockClear();
 
-  mockGithubClient = mocked(new GitHubClient({} as any));
-  findRegistryForkService = new FindRegistryForkService(mockGithubClient);
+  mockRepositoryService = mocked(new RepositoryService({} as any));
+  findRegistryForkService = new FindRegistryForkService(mockRepositoryService);
 });
 
 describe("findCandidateForks", () => {
@@ -44,7 +52,7 @@ describe("findCandidateForks", () => {
     );
     const ownerBcrFork = new Repository("bazel-central-registry", owner);
 
-    mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
+    mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === owner) {
           return [new Repository("a", owner), ownerBcrFork];
@@ -53,7 +61,7 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.getSourceRepository.mockImplementation(
+    mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
         if (repository.equals(ownerBcrFork)) {
           return CANONICAL_BCR;
@@ -62,8 +70,8 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.hasAppInstallation.mockImplementation(async (repository) =>
-      repository.equals(ownerBcrFork)
+    mockRepositoryService.hasAppInstallation.mockImplementation(
+      async (repository) => repository.equals(ownerBcrFork)
     );
 
     const forks = await findRegistryForkService.findCandidateForks(
@@ -91,7 +99,7 @@ describe("findCandidateForks", () => {
       releaser.username
     );
 
-    mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
+    mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === releaser.username) {
           return [new Repository("a", releaser.username), releaserBcrFork];
@@ -100,7 +108,7 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.getSourceRepository.mockImplementation(
+    mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
         if (repository.equals(releaserBcrFork)) {
           return CANONICAL_BCR;
@@ -109,8 +117,8 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.hasAppInstallation.mockImplementation(async (repository) =>
-      repository.equals(releaserBcrFork)
+    mockRepositoryService.hasAppInstallation.mockImplementation(
+      async (repository) => repository.equals(releaserBcrFork)
     );
 
     const forks = await findRegistryForkService.findCandidateForks(
@@ -139,7 +147,7 @@ describe("findCandidateForks", () => {
       releaser.username
     );
 
-    mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
+    mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === owner) {
           return [new Repository("a", owner), ownerBcrFork];
@@ -150,7 +158,7 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.getSourceRepository.mockImplementation(
+    mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
         if (
           repository.equals(releaserBcrFork) ||
@@ -162,7 +170,7 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.hasAppInstallation.mockImplementation(
+    mockRepositoryService.hasAppInstallation.mockImplementation(
       async (repository) =>
         repository.equals(ownerBcrFork) || repository.equals(releaserBcrFork)
     );
@@ -191,7 +199,7 @@ describe("findCandidateForks", () => {
     );
     const ownerBcrFork = new Repository("bazel-central-registry", owner);
 
-    mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
+    mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === owner) {
           return [new Repository("a", owner), ownerBcrFork];
@@ -200,7 +208,7 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.getSourceRepository.mockImplementation(
+    mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
         if (repository.equals(ownerBcrFork)) {
           return new Repository("bazel-central-registry", "not-google");
@@ -232,7 +240,7 @@ describe("findCandidateForks", () => {
       releaser.username
     );
 
-    mockGithubClient.getForkedRepositoriesByOwner.mockImplementation(
+    mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === releaser.username) {
           return [new Repository("a", releaser.username), releaserBcrFork];
@@ -241,7 +249,7 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.getSourceRepository.mockImplementation(
+    mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
         if (repository.equals(releaserBcrFork)) {
           return CANONICAL_BCR;
@@ -250,7 +258,9 @@ describe("findCandidateForks", () => {
       }
     );
 
-    mockGithubClient.hasAppInstallation.mockReturnValue(Promise.resolve(false));
+    mockRepositoryService.hasAppInstallation.mockReturnValue(
+      Promise.resolve(false)
+    );
 
     await expectThrownError(
       () => findRegistryForkService.findCandidateForks(rulesetRepo, releaser),

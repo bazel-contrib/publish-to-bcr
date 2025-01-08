@@ -17,7 +17,7 @@ import { ReleaseArchive } from "./release-archive.js";
 import { Repository } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
 import { SourceTemplate } from "./source-template.js";
-import { User } from "./user.js";
+import { User, UserService } from "./user.js";
 
 export class VersionAlreadyPublishedError extends UserFacingError {
   public constructor(version: string) {
@@ -44,7 +44,10 @@ export class CreateEntryService {
     tag: string,
     moduleRoot: string
   ): Promise<{ moduleName: string }> {
-    await Promise.all([rulesetRepo.shallowCloneAndCheckout(tag), bcrRepo.shallowCloneAndCheckout("main")]);
+    await Promise.all([
+      rulesetRepo.shallowCloneAndCheckout(tag),
+      bcrRepo.shallowCloneAndCheckout("main"),
+    ]);
 
     const version = RulesetRepository.getVersionFromTag(tag);
 
@@ -123,7 +126,7 @@ export class CreateEntryService {
     const branchName = `${repoAndVersion}-${randomBytes(4).toString("hex")}`;
 
     let commitAuthor: Partial<User> = releaser;
-    if (releaser.username === GitHubClient.GITHUB_ACTIONS_BOT.username) {
+    if (UserService.isGitHubActionsBot(releaser)) {
       const botApp = await this.bcrGitHubClient.getApp();
       const botAppUser = await this.bcrGitHubClient.getBotAppUser(botApp);
 
@@ -157,7 +160,8 @@ export class CreateEntryService {
     githubClient: GitHubClient
   ): Promise<void> {
     const authenticatedRemoteUrl = await githubClient.getAuthenticatedRemoteUrl(
-      bcrForkRepo
+      bcrForkRepo.owner,
+      bcrForkRepo.name
     );
 
     if (!(await this.gitClient.hasRemote(bcr.diskPath, "authed-fork"))) {

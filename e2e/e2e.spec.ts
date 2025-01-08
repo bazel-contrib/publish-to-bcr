@@ -729,7 +729,7 @@ describe("e2e tests", () => {
     });
 
     fakeGitHub.mockUser({
-      login: GitHubClient.GITHUB_ACTIONS_BOT.username,
+      login: GitHubClient.GITHUB_ACTIONS_BOT.login,
       id: GitHubClient.GITHUB_ACTIONS_BOT.id,
     });
     fakeGitHub.mockUser({ login: "publish-to-bcr-bot[bot]", id: 123 });

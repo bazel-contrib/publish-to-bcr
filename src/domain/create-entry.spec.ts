@@ -6,7 +6,11 @@ import fs, { PathLike } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git";
-import { GitHubApp, GitHubClient } from "../infrastructure/github";
+import {
+  GitHubApp,
+  GitHubClient,
+  User as GitHubUser,
+} from "../infrastructure/github";
 import {
   fakeMetadataFile,
   fakeModuleFile,
@@ -26,7 +30,7 @@ import { ModuleFile } from "./module-file";
 import { ReleaseArchive } from "./release-archive";
 import { Repository } from "./repository";
 import { RulesetRepository } from "./ruleset-repository";
-import { User } from "./user";
+import { User, UserService } from "./user";
 
 let createEntryService: CreateEntryService;
 let mockGitClient: Mocked<GitClient>;
@@ -942,16 +946,18 @@ describe("commitEntryToNewBranch", () => {
     const tag = "v1.2.3";
     const rulesetRepo = await RulesetRepository.create("repo", "owner", tag);
     const bcrRepo = CANONICAL_BCR;
-    const releaser = GitHubClient.GITHUB_ACTIONS_BOT;
-    const botUser: User = {
+    const releaser = UserService.fromGitHubUser(
+      GitHubClient.GITHUB_ACTIONS_BOT
+    );
+    const botUser: Partial<GitHubUser> = {
       name: "publish-to-bcr",
-      username: "publish-to-bcr[bot]",
+      login: "publish-to-bcr[bot]",
       email: `12345+"publish-to-bcr[bot]@users.noreply.github.com`,
     };
     const botApp = { slug: "publish-to-bcr" } as GitHubApp;
 
     mockBcrGitHubClient.getApp.mockResolvedValue(botApp);
-    mockBcrGitHubClient.getBotAppUser.mockResolvedValue(botUser);
+    mockBcrGitHubClient.getBotAppUser.mockResolvedValue(botUser as GitHubUser);
 
     await createEntryService.commitEntryToNewBranch(
       rulesetRepo,
@@ -1105,7 +1111,7 @@ describe("pushEntryToFork", () => {
     );
     expect(
       mockBcrForkGitHubClient.getAuthenticatedRemoteUrl
-    ).toHaveBeenCalledWith(bcrForkRepo);
+    ).toHaveBeenCalledWith(bcrForkRepo.owner, bcrForkRepo.name);
   });
 
   test("adds a remote with the authenticated url for the fork to the local bcr repo", async () => {

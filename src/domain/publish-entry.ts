@@ -18,9 +18,10 @@ export class PublishEntryService {
     const version = RulesetRepository.getVersionFromTag(tag);
 
     const pullNumber = await this.githubClient.createPullRequest(
-      bcrForkRepo,
+      bcrForkRepo.owner,
       branch,
-      bcr,
+      bcr.owner,
+      bcr.name,
       "main",
       moduleNames.map((moduleName) => `${moduleName}@${version}`).join(", "),
       `\
@@ -30,9 +31,11 @@ _Automated by [Publish to BCR](https://github.com/apps/publish-to-bcr)_`
     );
 
     try {
-      await this.githubClient.enableAutoMerge(bcr, pullNumber);
+      await this.githubClient.enableAutoMerge(bcr.owner, bcr.name, pullNumber);
     } catch (e) {
-      console.error(`Error: Failed to enable auto-merge on pull request github.com/${bcr.canonicalName}/pull/${pullNumber}.`)
+      console.error(
+        `Error: Failed to enable auto-merge on pull request github.com/${bcr.canonicalName}/pull/${pullNumber}.`
+      );
     }
 
     return pullNumber;
