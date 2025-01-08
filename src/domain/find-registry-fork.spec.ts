@@ -22,7 +22,7 @@ const mockRulesetRepoCreate = jest
   });
 
 beforeEach(() => {
-  mocked(GitHubClient, true).mockClear();
+  mocked(GitHubClient).mockClear();
   mockRulesetRepoCreate.mockClear();
 
   mockGithubClient = mocked(new GitHubClient({} as any));

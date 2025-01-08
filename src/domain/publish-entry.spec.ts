@@ -8,7 +8,7 @@ jest.mock("../infrastructure/github");
 let publishEntryService: PublishEntryService;
 let mockGithubClient: Mocked<GitHubClient>;
 beforeEach(() => {
-  mocked(GitHubClient, true).mockClear();
+  mocked(GitHubClient).mockClear();
   mockGithubClient = mocked(new GitHubClient({} as any));
   publishEntryService = new PublishEntryService(mockGithubClient);
 });
@@ -188,15 +188,19 @@ describe("publish", () => {
     const tag = "v1.0.0";
 
     mockGithubClient.createPullRequest.mockResolvedValueOnce(4);
-    mockGithubClient.enableAutoMerge.mockRejectedValueOnce("Failed to enable auto-merge!");
+    mockGithubClient.enableAutoMerge.mockRejectedValueOnce(
+      "Failed to enable auto-merge!"
+    );
 
-    await expect(publishEntryService.publish(
-      tag,
-      bcrFork,
-      bcr,
-      branch,
-      ["rules_foo"],
-      `github.com/aspect-build/rules_foo/releases/tag/${tag}`
-    )).resolves.toBe(4);
+    await expect(
+      publishEntryService.publish(
+        tag,
+        bcrFork,
+        bcr,
+        branch,
+        ["rules_foo"],
+        `github.com/aspect-build/rules_foo/releases/tag/${tag}`
+      )
+    ).resolves.toBe(4);
   });
 });

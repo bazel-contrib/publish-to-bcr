@@ -5,10 +5,6 @@ import { Repository } from "./repository";
 
 jest.mock("../infrastructure/git");
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 describe("fromCanonicalName", () => {
   test("creates correct repository", () => {
     const repository = Repository.fromCanonicalName("foo/bar");

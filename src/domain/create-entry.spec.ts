@@ -47,8 +47,6 @@ const EXTRACTED_MODULE_PATH = "/fake/path/to/MODULE.bazel";
 let mockReleaseArchive: ReleaseArchive;
 
 beforeEach(() => {
-  jest.clearAllMocks();
-
   mocked(fs.readFileSync).mockImplementation(((
     path: string,
     ...args: any[]

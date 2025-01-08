@@ -142,7 +142,7 @@ export class GitHubClient {
     toRepo: Repository,
     toBranch: string,
     title: string,
-    body: string,
+    body: string
   ): Promise<number> {
     const { data: pull } = await this.octokit.rest.pulls.create({
       owner: toRepo.owner,
@@ -157,10 +157,7 @@ export class GitHubClient {
     return pull.number;
   }
 
-  public async enableAutoMerge(
-    repo: Repository,
-    pullNumber: number,
-  ) {
+  public async enableAutoMerge(repo: Repository, pullNumber: number) {
     await this.octokit.rest.pulls.update({
       owner: repo.owner,
       repo: repo.name,

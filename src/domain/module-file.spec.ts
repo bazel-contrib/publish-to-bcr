@@ -13,8 +13,6 @@ const MODULE_FILE_CONTENT = fakeModuleFile({
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
-
   mocked(fs.readFileSync).mockReturnValue(MODULE_FILE_CONTENT);
 });
 
@@ -124,7 +122,6 @@ module(
 
 bazel_dep(name = "bazel_features", version = "1.9.1")`);
   });
-
 
   test("stamps the version when the version field was missing but the module call ends with a comment", () => {
     mocked(fs.readFileSync).mockReturnValue(`\
