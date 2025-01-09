@@ -4,7 +4,8 @@
   "type": "module",
   "main": "./application/webhook/index.js",
   "engines": {
-    "node": "^18"
+    "node": "^20",
+    "pnpm": ">=9"
   },
   "scripts": {
     "prebuild": "node tools/clean-dist-files.js",

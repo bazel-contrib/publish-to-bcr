@@ -35,7 +35,7 @@ resource "google_storage_bucket_object" "publish_to_bcr_function_bucket_object" 
 resource "google_cloudfunctions_function" "publish_to_bcr_function" {
   name        = "github-webhook"
   description = "Handle incoming github events"
-  runtime     = "nodejs18"
+  runtime     = "nodejs20"
 
   available_memory_mb   = 1024
   source_archive_bucket = google_storage_bucket.source_archive_bucket.name
