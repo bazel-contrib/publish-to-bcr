@@ -468,8 +468,8 @@ describe("e2e tests", () => {
     );
 
     // Pull request was created with the corrects params
-    expect(fakeGitHub.pullRequestHandler).toHaveBeenCalledTimes(1);
-    const request = fakeGitHub.pullRequestHandler.mock
+    expect(fakeGitHub.createPullRequestHandler).toHaveBeenCalledTimes(1);
+    const request = fakeGitHub.createPullRequestHandler.mock
       .calls[0][0] as CompletedRequest;
     expect(request.path).toEqual(
       expect.stringMatching(/bazelbuild\/bazel-central-registry/)
@@ -490,6 +490,22 @@ describe("e2e tests", () => {
       expect.stringContaining(
         `https://github.com/${testOrg}/${repo}/releases/tag/${tag}`
       )
+    );
+
+    // Pull request was updated to enable auto merge
+    expect(fakeGitHub.updatePullRequestHandler).toHaveBeenCalledTimes(1);
+    const updateRequest = fakeGitHub.updatePullRequestHandler.mock
+      .calls[0][0] as CompletedRequest;
+    expect(updateRequest.path).toEqual(
+      expect.stringMatching(
+        /repos\/bazelbuild\/bazel-central-registry\/pulls\/\d+/
+      )
+    );
+    const updateBody = (await updateRequest.body.getJson()) as any;
+    expect(updateBody).toEqual(
+      expect.objectContaining({
+        allow_auto_merge: true,
+      })
     );
   });
 
@@ -536,8 +552,8 @@ describe("e2e tests", () => {
     expect(messages.length).toEqual(0);
 
     // One pull requests was created with the corrects params
-    expect(fakeGitHub.pullRequestHandler).toHaveBeenCalledTimes(1);
-    let request = fakeGitHub.pullRequestHandler.mock
+    expect(fakeGitHub.createPullRequestHandler).toHaveBeenCalledTimes(1);
+    let request = fakeGitHub.createPullRequestHandler.mock
       .calls[0][0] as CompletedRequest;
     expect(request.path).toEqual(
       expect.stringMatching(/bazelbuild\/bazel-central-registry/)
@@ -644,8 +660,8 @@ describe("e2e tests", () => {
     expect(response.status).toEqual(200);
 
     // Pull request points to releaser's BCR fork
-    expect(fakeGitHub.pullRequestHandler).toHaveBeenCalled();
-    const request = fakeGitHub.pullRequestHandler.mock
+    expect(fakeGitHub.createPullRequestHandler).toHaveBeenCalled();
+    const request = fakeGitHub.createPullRequestHandler.mock
       .calls[0][0] as CompletedRequest;
     const body = (await request.body.getJson()) as any;
     expect(body).toEqual(
