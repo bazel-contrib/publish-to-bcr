@@ -1,6 +1,7 @@
 import { User } from "@octokit/webhooks-types";
 import { randomUUID } from "crypto";
 import * as mockttp from "mockttp";
+import { randomInt } from "node:crypto";
 import url from "node:url";
 import { StubbedServer } from "./stubbed-server";
 
@@ -18,7 +19,8 @@ export class FakeGitHub implements StubbedServer {
     { owner: string; repo: string; sourceOwner?: string; sourceRepo?: string }
   >();
 
-  public readonly pullRequestHandler = jest.fn();
+  public readonly createPullRequestHandler = jest.fn();
+  public readonly updatePullRequestHandler = jest.fn();
   public readonly installationTokenHandler = jest.fn();
 
   public constructor() {
@@ -38,6 +40,7 @@ export class FakeGitHub implements StubbedServer {
       this.setupGetOwnedReposHandler(),
       this.setupGetRepoHandler(),
       this.setupCreatePullHandler(),
+      this.setupUpdatePullHandler(),
       this.setupAppHandler(),
     ]);
   }
@@ -45,7 +48,8 @@ export class FakeGitHub implements StubbedServer {
   public async reset(): Promise<void> {
     this.server.reset();
     this.clearMockedData();
-    this.pullRequestHandler.mockReset();
+    this.createPullRequestHandler.mockReset();
+    this.updatePullRequestHandler.mockReset();
     this.installationTokenHandler.mockReset();
     await this.setupHandlers();
   }
@@ -262,16 +266,31 @@ export class FakeGitHub implements StubbedServer {
   }
 
   private async setupCreatePullHandler(): Promise<void> {
-    this.pullRequestHandler.mockImplementation((request) => {
+    this.createPullRequestHandler.mockImplementation((request) => {
       return {
         statusCode: 201,
-        body: "{}",
+        json: {
+          number: randomInt(100),
+        },
       };
     });
 
     await this.server
       .forPost("/repos/bazelbuild/bazel-central-registry/pulls")
-      .thenCallback((request) => this.pullRequestHandler(request));
+      .thenCallback((request) => this.createPullRequestHandler(request));
+  }
+
+  private async setupUpdatePullHandler(): Promise<void> {
+    this.updatePullRequestHandler.mockImplementation((request) => {
+      return {
+        statusCode: 200,
+        json: {},
+      };
+    });
+
+    await this.server
+      .forPatch(/\/repos\/bazelbuild\/bazel-central-registry\/pulls\/\d+$/)
+      .thenCallback((request) => this.updatePullRequestHandler(request));
   }
 
   private async setupAppHandler(): Promise<void> {
