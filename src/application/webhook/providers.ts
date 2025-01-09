@@ -47,7 +47,8 @@ export const RULESET_REPO_GITHUB_CLIENT_PROVIDER: Provider = {
 
     const githubClient = await GitHubClient.forRepoInstallation(
       appOctokit,
-      rulesetRepo,
+      rulesetRepo.owner,
+      rulesetRepo.name,
       installationId
     );
     return githubClient;
@@ -67,7 +68,8 @@ export const BCR_GITHUB_CLIENT_PROVIDER: Provider = {
 
     const githubClient = await GitHubClient.forRepoInstallation(
       bcrAppOctokit,
-      bcr
+      bcr.owner,
+      bcr.name
     );
     return githubClient;
   },

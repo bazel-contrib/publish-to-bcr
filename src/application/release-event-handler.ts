@@ -11,7 +11,7 @@ import {
   RulesetRepoError,
   RulesetRepository,
 } from "../domain/ruleset-repository.js";
-import { User } from "../domain/user.js";
+import { User, UserService } from "../domain/user.js";
 import { GitHubClient } from "../infrastructure/github.js";
 import { NotificationsService } from "./notifications.js";
 
@@ -24,9 +24,8 @@ interface PublishAttempt {
 @Injectable()
 export class ReleaseEventHandler {
   constructor(
-    @Inject("rulesetRepoGitHubClient")
-    private rulesetRepoGitHubClient: GitHubClient,
     @Inject("appOctokit") private appOctokit: Octokit,
+    private readonly userService: UserService,
     private readonly findRegistryForkService: FindRegistryForkService,
     private readonly createEntryService: CreateEntryService,
     private readonly publishEntryService: PublishEntryService,
@@ -40,10 +39,7 @@ export class ReleaseEventHandler {
         process.env.BAZEL_CENTRAL_REGISTRY
       );
 
-      let releaser = await this.rulesetRepoGitHubClient.getRepoUser(
-        event.payload.sender.login,
-        repository
-      );
+      let releaser = await this.userService.getUser(event.payload.sender.login);
       const releaseUrl = event.payload.release.html_url;
 
       const tag = event.payload.release.tag_name;
@@ -117,7 +113,8 @@ export class ReleaseEventHandler {
       for (let bcrFork of candidateBcrForks) {
         const bcrForkGitHubClient = await GitHubClient.forRepoInstallation(
           this.appOctokit,
-          bcrFork
+          bcrFork.owner,
+          bcrFork.name
         );
 
         const attempt = await this.attemptPublish(
@@ -275,9 +272,8 @@ export class ReleaseEventHandler {
       );
 
       // Fetch the releaser to get their name
-      const fixedReleaser = await this.rulesetRepoGitHubClient.getRepoUser(
-        rulesetRepo.config.fixedReleaser.login,
-        rulesetRepo
+      const fixedReleaser = await this.userService.getUser(
+        rulesetRepo.config.fixedReleaser.login
       );
 
       return {

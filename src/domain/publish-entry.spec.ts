@@ -30,9 +30,10 @@ describe("publish", () => {
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
-      bcrFork,
+      bcrFork.owner,
       branch,
-      bcr,
+      bcr.owner,
+      bcr.name,
       "main",
       expect.any(String),
       expect.any(String)
@@ -55,17 +56,19 @@ describe("publish", () => {
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
-      expect.any(Repository),
       expect.any(String),
-      expect.any(Repository),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.stringContaining("rules_foo"),
       expect.any(String)
     );
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
-      expect.any(Repository),
       expect.any(String),
-      expect.any(Repository),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.stringContaining("1.0.0"),
       expect.any(String)
@@ -88,25 +91,28 @@ describe("publish", () => {
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
-      expect.any(Repository),
       expect.any(String),
-      expect.any(Repository),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.stringContaining("rules_foo"),
       expect.any(String)
     );
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
-      expect.any(Repository),
       expect.any(String),
-      expect.any(Repository),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.stringContaining("rules_bar"),
       expect.any(String)
     );
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
-      expect.any(Repository),
       expect.any(String),
-      expect.any(Repository),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.stringContaining("1.0.0"),
       expect.any(String)
@@ -129,9 +135,10 @@ describe("publish", () => {
     );
 
     expect(mockGithubClient.createPullRequest).toHaveBeenCalledWith(
-      expect.any(Repository),
       expect.any(String),
-      expect.any(Repository),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.any(String),
       expect.stringContaining(

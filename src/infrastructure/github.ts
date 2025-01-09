@@ -1,16 +1,17 @@
 import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "@octokit/rest";
 import { Endpoints } from "@octokit/types";
-import { Repository } from "../domain/repository.js";
-import { User } from "../domain/user.js";
 
 export type Installation =
   Endpoints["GET /repos/{owner}/{repo}/installation"]["response"]["data"];
 export type GitHubApp = Endpoints["GET /app"]["response"]["data"];
+export type User = Endpoints["GET /users/{username}"]["response"]["data"];
+export type Repository =
+  Endpoints["GET /repos/{owner}/{repo}"]["response"]["data"];
 
 export class MissingRepositoryInstallationError extends Error {
-  constructor(repository: Repository) {
-    super(`Missing installation for repository ${repository.canonicalName}`);
+  constructor(owner: string, repo: string) {
+    super(`Missing installation for repository ${owner}/${repo}`);
   }
 }
 
@@ -74,22 +75,24 @@ export class GitHubClient {
   // commit. Hardcode the (stable) name and email so that we can also author commits
   // as the GitHub actions bot.
   // See https://github.com/orgs/community/discussions/26560#discussioncomment-3252340.
-  public static readonly GITHUB_ACTIONS_BOT: User = {
+  public static readonly GITHUB_ACTIONS_BOT: Readonly<User> = {
     id: 41898282,
-    username: "github-actions[bot]",
+    login: "github-actions[bot]",
     name: "github-actions[bot]",
     email: "41898282+github-actions[bot]@users.noreply.github.com",
-  };
+  } as User;
 
   public static async forRepoInstallation(
     appOctokit: Octokit,
-    repository: Repository,
+    owner: string,
+    repo: string,
     installationId?: number
   ): Promise<GitHubClient> {
     if (installationId === undefined) {
       const appClient = new GitHubClient(appOctokit);
       const installation = await appClient.getRepositoryInstallation(
-        repository
+        owner,
+        repo
       );
       installationId = installation.id;
     }
@@ -97,7 +100,7 @@ export class GitHubClient {
     const installationOctokit = await getInstallationAuthorizedOctokit(
       appOctokit,
       installationId,
-      repository.name
+      repo
     );
     const client = new GitHubClient(installationOctokit);
 
@@ -106,50 +109,41 @@ export class GitHubClient {
 
   public constructor(private readonly octokit: Octokit) {}
 
-  public async getForkedRepositoriesByOwner(
-    owner: string
-  ): Promise<Repository[]> {
+  public async listRepositoriesForUser(owner: string): Promise<Repository[]> {
     // This endpoint works for org owners as well as user owners
-    const response = await this.octokit.rest.repos.listForUser({
+    const { data: repositories } = await this.octokit.rest.repos.listForUser({
       username: owner,
       type: "owner",
       per_page: 100,
     });
 
-    return response.data
-      .filter((repo) => repo.fork)
-      .map((repo) => new Repository(repo.name, repo.owner.login));
+    return repositories.map((repo) => repo as Repository);
   }
 
-  public async getSourceRepository(
-    repository: Repository
-  ): Promise<Repository | null> {
-    const response = await this.octokit.rest.repos.get({
-      owner: repository.owner,
-      repo: repository.name,
+  public async getRepository(owner: string, repo: string): Promise<Repository> {
+    const { data: repository } = await this.octokit.rest.repos.get({
+      owner,
+      repo,
     });
 
-    const repo = response.data;
-    if (repo.source) {
-      return new Repository(repo.source.name, repo.source.owner.login);
-    }
-    return null;
+    return repository;
   }
 
   public async createPullRequest(
-    fromRepo: Repository,
+    fromOwner: string,
     fromBranch: string,
-    toRepo: Repository,
+    toOwner: string,
+    toRepo: string,
     toBranch: string,
     title: string,
     body: string
   ): Promise<number> {
     const { data: pull } = await this.octokit.rest.pulls.create({
-      owner: toRepo.owner,
-      repo: toRepo.name,
+      owner: toOwner,
+      repo: toRepo,
       title: title,
       body,
-      head: `${fromRepo.owner}:${fromBranch}`,
+      head: `${fromOwner}:${fromBranch}`,
       base: toBranch,
       maintainer_can_modify: false,
     });
@@ -157,29 +151,35 @@ export class GitHubClient {
     return pull.number;
   }
 
-  public async enableAutoMerge(repo: Repository, pullNumber: number) {
+  public async enableAutoMerge(
+    owner: string,
+    repo: string,
+    pullNumber: number
+  ) {
     await this.octokit.rest.pulls.update({
-      owner: repo.owner,
-      repo: repo.name,
+      owner,
+      repo,
       pull_number: pullNumber,
       allow_auto_merge: true,
     });
   }
 
-  public async getRepoUser(
-    username: string,
-    repository: Repository
-  ): Promise<User> {
-    if (username === GitHubClient.GITHUB_ACTIONS_BOT.username) {
+  public async getUserByUsername(username: string): Promise<User> {
+    if (username === GitHubClient.GITHUB_ACTIONS_BOT.login) {
       return GitHubClient.GITHUB_ACTIONS_BOT;
     }
-    const { data } = await this.octokit.rest.users.getByUsername({ username });
-    return { name: data.name, username, email: data.email };
+    const { data: user } = await this.octokit.rest.users.getByUsername({
+      username,
+    });
+    return user;
   }
 
-  public async hasAppInstallation(repository: Repository): Promise<boolean> {
+  public async hasAppInstallation(
+    owner: string,
+    repo: string
+  ): Promise<boolean> {
     try {
-      await this.getRepositoryInstallation(repository);
+      await this.getRepositoryInstallation(owner, repo);
       return true;
     } catch (error) {
       if (error instanceof MissingRepositoryInstallationError) {
@@ -190,43 +190,48 @@ export class GitHubClient {
   }
 
   public async getRepositoryInstallation(
-    repository: Repository
+    owner: string,
+    repo: string
   ): Promise<Installation> {
     try {
       const { data: installation } =
         await this.octokit.rest.apps.getRepoInstallation({
-          owner: repository.owner,
-          repo: repository.name,
+          owner,
+          repo,
         });
       return installation;
     } catch (error) {
       if (error.status === 404) {
-        throw new MissingRepositoryInstallationError(repository);
+        throw new MissingRepositoryInstallationError(owner, repo);
       }
       throw new Error(
-        `Could not access app installation for repo ${repository.canonicalName}; returned status ${status}`
+        `Could not access app installation for repo ${owner}/${repo}; returned status ${status}`
       );
     }
   }
 
-  public async getInstallationToken(repository: Repository): Promise<string> {
-    const installationId = (await this.getRepositoryInstallation(repository))
+  public async getInstallationToken(
+    owner: string,
+    repo: string
+  ): Promise<string> {
+    const installationId = (await this.getRepositoryInstallation(owner, repo))
       .id;
 
     const auth = (await this.octokit.auth({
       type: "installation",
       installationId: installationId,
-      repositoryNames: [repository.name],
+      repositoryNames: [repo],
     })) as any;
 
     return auth.token;
   }
 
   public async getAuthenticatedRemoteUrl(
-    repository: Repository
+    owner: string,
+    repo: string
   ): Promise<string> {
-    const token = await this.getInstallationToken(repository);
-    return `https://x-access-token:${token}@github.com/${repository.canonicalName}.git`;
+    const token = await this.getInstallationToken(owner, repo);
+    return `https://x-access-token:${token}@github.com/${owner}/${repo}.git`;
   }
 
   public async getApp(): Promise<GitHubApp> {
@@ -248,8 +253,9 @@ export class GitHubClient {
     });
 
     return {
+      ...user,
       name: botApp.slug,
-      username: botUsername,
+      login: botUsername,
       email: `${user.id}+${botUsername}@users.noreply.github.com`,
     };
   }

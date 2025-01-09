@@ -1,10 +1,9 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { UserFacingError } from "../domain/error.js";
 import { Maintainer } from "../domain/metadata-file.js";
 import { Repository } from "../domain/repository.js";
-import { User } from "../domain/user.js";
+import { User, UserService } from "../domain/user.js";
 import { Authentication, EmailClient } from "../infrastructure/email.js";
-import { GitHubClient } from "../infrastructure/github.js";
 import { SecretsClient } from "../infrastructure/secrets.js";
 
 @Injectable()
@@ -16,7 +15,7 @@ export class NotificationsService {
   constructor(
     private readonly emailClient: EmailClient,
     private readonly secretsClient: SecretsClient,
-    @Inject("rulesetRepoGitHubClient") private githubClient: GitHubClient
+    private readonly userService: UserService
   ) {
     if (process.env.NOTIFICATIONS_EMAIL === undefined) {
       throw new Error("Missing NOTIFICATIONS_EMAIL environment variable.");
@@ -70,7 +69,7 @@ export class NotificationsService {
     const fetchedEmails = (
       await Promise.all(
         maintainersWithOnlyGithubHandle.map((m) =>
-          this.githubClient.getRepoUser(m.github, rulesetRepo)
+          this.userService.getUser(m.github)
         )
       )
     )

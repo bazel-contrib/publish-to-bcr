@@ -1,7 +1,6 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { GitHubClient } from "../infrastructure/github.js";
+import { Injectable } from "@nestjs/common";
 import { UserFacingError } from "./error.js";
-import { Repository } from "./repository.js";
+import { Repository, RepositoryService } from "./repository.js";
 import { RulesetRepository } from "./ruleset-repository.js";
 import { User } from "./user.js";
 
@@ -23,9 +22,7 @@ Install the app here: https://github.com/apps/publish-to-bcr.`);
 
 @Injectable()
 export class FindRegistryForkService {
-  constructor(
-    @Inject("rulesetRepoGitHubClient") private githubClient: GitHubClient
-  ) {}
+  constructor(private repositoryService: RepositoryService) {}
 
   // Find potential bcr forks that can be pushed to. Will return a fork
   // owned by the ruleset owner, followed by a fork owned by the releaser,
@@ -41,7 +38,7 @@ export class FindRegistryForkService {
     const allForks = (
       await Promise.all(
         Array.from(potentialForkOwners.values()).map((owner) =>
-          this.githubClient.getForkedRepositoriesByOwner(owner)
+          this.repositoryService.getForkedRepositoriesByOwner(owner)
         )
       )
     ).reduce((acc, curr) => acc.concat(curr), []);
@@ -52,7 +49,9 @@ export class FindRegistryForkService {
 
     // Only consider forks named `bazel-central-registry`
     const sourceRepos = await Promise.all(
-      candidateForks.map((fork) => this.githubClient.getSourceRepository(fork))
+      candidateForks.map((fork) =>
+        this.repositoryService.getSourceRepository(fork)
+      )
     );
     candidateForks = candidateForks.filter((_, index) =>
       sourceRepos[index].equals(CANONICAL_BCR)
@@ -60,7 +59,9 @@ export class FindRegistryForkService {
 
     // Filter out BCR forks that don't have the app installed
     const appInstalledToFork = await Promise.all(
-      candidateForks.map((fork) => this.githubClient.hasAppInstallation(fork))
+      candidateForks.map((fork) =>
+        this.repositoryService.hasAppInstallation(fork)
+      )
     );
     candidateForks = candidateForks.filter(
       (_, index) => appInstalledToFork[index]

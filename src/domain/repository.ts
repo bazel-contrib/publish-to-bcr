@@ -1,7 +1,9 @@
+import { Inject, Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { GitClient } from "../infrastructure/git.js";
+import { GitHubClient } from "../infrastructure/github.js";
 
 export class Repository {
   private _diskPath: string | null = null;
@@ -48,5 +50,42 @@ export class Repository {
 
   public equals(other: Repository): boolean {
     return this.name == other.name && this.owner === other.owner;
+  }
+}
+
+@Injectable()
+export class RepositoryService {
+  constructor(
+    @Inject("rulesetRepoGitHubClient") private githubClient: GitHubClient
+  ) {}
+
+  public async getSourceRepository(
+    repository: Repository
+  ): Promise<Repository | null> {
+    const repo = await this.githubClient.getRepository(
+      repository.owner,
+      repository.name
+    );
+    if (repo.source) {
+      return new Repository(repo.source.name, repo.source.owner.login);
+    }
+    return null;
+  }
+
+  public async getForkedRepositoriesByOwner(
+    owner: string
+  ): Promise<Repository[]> {
+    const repositories = await this.githubClient.listRepositoriesForUser(owner);
+
+    return repositories
+      .filter((repo) => repo.fork)
+      .map((repo) => new Repository(repo.name, repo.owner.login));
+  }
+
+  public async hasAppInstallation(repository: Repository): Promise<boolean> {
+    return this.githubClient.hasAppInstallation(
+      repository.owner,
+      repository.name
+    );
   }
 }
