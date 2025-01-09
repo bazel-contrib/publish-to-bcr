@@ -12,7 +12,6 @@ jest.mock("node:fs");
 let sourceTemplateContent: string;
 
 beforeEach(() => {
-  jest.clearAllMocks();
   mockSourceFile();
 });
 

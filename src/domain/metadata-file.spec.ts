@@ -5,10 +5,6 @@ import { MetadataFile, MetadataFileError } from "./metadata-file";
 
 jest.mock("node:fs");
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 function mockMetadataFile(content: string) {
   mocked(fs.readFileSync).mockReturnValue(content);
 }
@@ -48,9 +44,9 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "versions"
+      /versions/
     );
   });
 
@@ -72,9 +68,9 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "versions"
+      /versions/
     );
   });
 
@@ -96,9 +92,9 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "versions"
+      /versions/
     );
   });
 
@@ -119,9 +115,9 @@ describe("constructor", () => {
     "versions": []
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "yanked_versions"
+      /yanked_versions/
     );
   });
 
@@ -143,9 +139,9 @@ describe("constructor", () => {
     "yanked_versions": []
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "yanked_versions"
+      /yanked_versions/
     );
   });
 
@@ -169,9 +165,9 @@ describe("constructor", () => {
     }
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "yanked_versions"
+      /yanked_versions/
     );
   });
 
@@ -218,9 +214,9 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "maintainers"
+      /maintainers/
     );
   });
 
@@ -236,9 +232,9 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowErrorContaining(
+    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
       MetadataFileError,
-      "maintainers"
+      /maintainers/
     );
   });
 

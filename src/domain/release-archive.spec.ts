@@ -28,8 +28,6 @@ const TEMP_DIR = "/tmp";
 const EXTRACT_DIR = `${TEMP_DIR}/archive-1234`;
 
 beforeEach(() => {
-  jest.clearAllMocks();
-
   mocked(axios.get).mockReturnValue(
     Promise.resolve({
       data: {
@@ -91,9 +89,14 @@ describe("fetch", () => {
         let firstRetryDelay = retryDelayFn.call(this, 0);
         let secondRetryDelay = retryDelayFn.call(this, 1);
         let thirdRetryDelay = retryDelayFn.call(this, 2);
-        return 10000 <= firstRetryDelay && firstRetryDelay <= 12000
-          && 20000 <= secondRetryDelay && secondRetryDelay <= 24000
-          && 40000 <= thirdRetryDelay && thirdRetryDelay <= 48000;
+        return (
+          10000 <= firstRetryDelay &&
+          firstRetryDelay <= 12000 &&
+          20000 <= secondRetryDelay &&
+          secondRetryDelay <= 24000 &&
+          40000 <= thirdRetryDelay &&
+          thirdRetryDelay <= 48000
+        );
       }),
       shouldResetTimeout: true,
     });

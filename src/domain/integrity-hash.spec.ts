@@ -11,8 +11,6 @@ const TEST_FILE_CONTENT = "ABCDEFGH";
 const TEST_FILE_BASE64_DIGEST = "msIZfZJYJXsa6EY+QhTkzQpXi8FRfyQVkouRvkKD/Eg=";
 
 beforeEach(() => {
-  jest.clearAllMocks();
-
   mocked(fs.readFileSync).mockReturnValue(TEST_FILE_CONTENT);
 
   mocked(crypto.createHash).mockImplementation((algorithm: string) => {
