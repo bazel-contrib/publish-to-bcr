@@ -30,7 +30,7 @@ export class CloudFunctions implements StubbedServer {
       ],
       {
         stdio: "inherit",
-        cwd: path.join(__dirname, "..", "..", "dist", "publish-to-bcr"),
+        cwd: path.join(__dirname, "..", "..", "..", "dist", "publish-to-bcr"),
         env: {
           ...process.env,
           INTEGRATION_TESTING: "1",

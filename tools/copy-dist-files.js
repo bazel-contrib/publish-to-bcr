@@ -14,6 +14,8 @@ function getDistributableFiles() {
       "package.json",
       "pnpm-lock.yaml",
       "src/infrastructure/xzdec/xzdec.wasm.gz",
+      "build/src/**/*.js",
+      "!build/src/test",
     ],
     {
       cwd: PROJECT_DIR,
@@ -22,12 +24,13 @@ function getDistributableFiles() {
 }
 
 function copyFilesToDist(files) {
-  console.info(`Copying extra files to ${DIST_DIR}`);
+  console.info(`Copying distributable files to ${DIST_DIR}`);
   files.forEach((file) => {
     const src = path.join(PROJECT_DIR, file);
-    const distFile = file.replace(/^src\//, "");
+    const distFile = file.replace(/^build\/src\//, "").replace(/^src\//, "");
+
     const dest = path.join(DIST_DIR, "publish-to-bcr", distFile);
-    console.info(`  => ${file}`);
+    console.info(`  => ${file} -> ${distFile}`);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(src, dest);
   });

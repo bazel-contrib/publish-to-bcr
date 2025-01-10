@@ -3,7 +3,7 @@
     "noImplicitAny": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "outDir": "dist/publish-to-bcr",
+    "outDir": "build",
     "module": "es2020",
     "target": "es2020",
     "moduleResolution": "node",
@@ -13,6 +13,6 @@
     "allowJs": true,
     "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "src/**/*.spec.ts", "src/test", "src/**/bazel-*"]
+  "include": ["src/**/*.ts", "e2e/**/*.ts", "*.js"],
+  "exclude": ["node_modules", "src/**/bazel-*"]
 }
