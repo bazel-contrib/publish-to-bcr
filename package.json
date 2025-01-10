@@ -16,8 +16,6 @@
     "e2e": "jest e2e"
   },
   "dependencies": {
-    "@google-cloud/functions-framework": "^3.1.2",
-    "@google-cloud/secret-manager": "^5.0.1",
     "@nestjs/common": "^10.3.9",
     "@nestjs/core": "^10.3.9",
     "@octokit/auth-app": "^4.0.4",
@@ -32,7 +30,6 @@
     "diff": "^5.1.0",
     "exponential-backoff": "3.1.1",
     "extract-zip": "^2.0.1",
-    "gcp-metadata": "^6.0.0",
     "nodemailer": "^6.7.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "7.8.1",
@@ -65,14 +62,5 @@
     "ts-jest": "^28.0.7",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.0"
-  },
-  "pnpm": {
-    "packageExtensions": {
-      "@google-cloud/secret-manager": {
-        "dependencies": {
-          "long": "5.2.3"
-        }
-      }
-    }
   }
 }

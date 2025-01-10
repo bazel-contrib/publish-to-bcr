@@ -1,15 +1,13 @@
-import { HttpFunction } from "@google-cloud/functions-framework";
 import { ContextIdFactory, NestFactory } from "@nestjs/core";
 import { Webhooks } from "@octokit/webhooks";
 import { SecretsClient } from "../../infrastructure/secrets.js";
 import { ReleaseEventHandler } from "../release-event-handler.js";
 import { AppModule } from "./app.module.js";
 
-// Handle incoming GitHub webhook messages. This is the entrypoint for
-// the webhook cloud function.
-export const handleGithubWebhookEvent: HttpFunction = async (
-  request,
-  response
+
+const handleGithubWebhookEvent = async (
+  request: any,
+  response: any
 ) => {
   const app = await NestFactory.createApplicationContext(AppModule);
 
@@ -41,3 +39,5 @@ export const handleGithubWebhookEvent: HttpFunction = async (
   await app.close();
   response.status(200).send();
 };
+
+export default handleGithubWebhookEvent;

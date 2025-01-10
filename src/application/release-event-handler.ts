@@ -4,7 +4,6 @@ import { ReleasePublishedEvent } from "@octokit/webhooks-types";
 import { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import { CreateEntryService } from "../domain/create-entry.js";
 import { FindRegistryForkService } from "../domain/find-registry-fork.js";
-import { Maintainer, MetadataFile } from "../domain/metadata-file.js";
 import { PublishEntryService } from "../domain/publish-entry.js";
 import { Repository } from "../domain/repository.js";
 import {
@@ -13,7 +12,6 @@ import {
 } from "../domain/ruleset-repository.js";
 import { User } from "../domain/user.js";
 import { GitHubClient } from "../infrastructure/github.js";
-import { NotificationsService } from "./notifications.js";
 
 interface PublishAttempt {
   readonly successful: boolean;
@@ -30,7 +28,6 @@ export class ReleaseEventHandler {
     private readonly findRegistryForkService: FindRegistryForkService,
     private readonly createEntryService: CreateEntryService,
     private readonly publishEntryService: PublishEntryService,
-    private readonly notificationsService: NotificationsService
   ) {}
 
   public readonly handle: HandlerFunction<"release.published", unknown> =
@@ -67,7 +64,11 @@ export class ReleaseEventHandler {
 
       const moduleNames = [];
       let branch: string;
-      const candidateBcrForks: Repository[] = [];
+      const candidateBcrForks: Repository[] = [
+        Repository.fromCanonicalName(
+          process.env.BAZEL_CENTRAL_REGISTRY_FORK
+        )
+      ];
       try {
         for (const moduleRoot of rulesetRepo.config.moduleRoots) {
           console.log(`Creating BCR entry for module root '${moduleRoot}'`);
@@ -88,13 +89,6 @@ export class ReleaseEventHandler {
           releaser
         );
 
-        candidateBcrForks.push(
-          ...(await this.findRegistryForkService.findCandidateForks(
-            rulesetRepo,
-            releaser
-          ))
-        );
-
         console.log(
           `Found ${candidateBcrForks.length} candidate forks: ${JSON.stringify(
             candidateBcrForks.map((fork) => fork.canonicalName)
@@ -102,13 +96,6 @@ export class ReleaseEventHandler {
         );
       } catch (error) {
         console.log(error);
-        await this.notificationsService.notifyError(
-          releaser,
-          rulesetRepo.getAllMaintainers(),
-          rulesetRepo,
-          tag,
-          [error]
-        );
         return;
       }
 
@@ -135,17 +122,6 @@ export class ReleaseEventHandler {
         if (attempt.successful) {
           break;
         }
-      }
-
-      // Send out error notifications if none of the attempts succeeded
-      if (!attempts.some((a) => a.successful)) {
-        await this.notificationsService.notifyError(
-          releaser,
-          rulesetRepo.getAllMaintainers(),
-          rulesetRepo,
-          tag,
-          attempts.map((a) => a.error!)
-        );
       }
     };
 
@@ -177,24 +153,6 @@ export class ReleaseEventHandler {
           email: error.repository.config.fixedReleaser.email,
         };
       }
-
-      // Similarly, if there were validation issues with the ruleset repo, we may not have been able
-      // to properly parse the maintainers. Do a last-ditch attempt to try to find maintainers so that
-      // we can notify them.
-      let maintainers: Maintainer[] = [];
-      if (error instanceof RulesetRepoError && !!error.moduleRoot) {
-        maintainers = MetadataFile.emergencyParseMaintainers(
-          error.repository.metadataTemplatePath(error.moduleRoot)
-        );
-      }
-
-      await this.notificationsService.notifyError(
-        releaser,
-        maintainers,
-        repository,
-        tag,
-        [error]
-      );
 
       return {
         rulesetRepo: error.repository,
