@@ -1,19 +1,11 @@
 import { User } from "@octokit/webhooks-types";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import simpleGit, { SimpleGit } from "simple-git";
 
-export const FIXTURES_PATH = path.join(
-  __dirname,
-  "..",
-  "..",
-  "..",
-  "e2e",
-  "fixtures"
-);
+export const FIXTURES_PATH = path.join("e2e", "fixtures");
 export const PREPARED_FIXTURES_PATH = fs.mkdtempSync(
-  os.tmpdir() + path.sep + "fixtures-"
+  process.env.TEST_TMPDIR + path.sep + "fixtures-"
 );
 
 export enum Fixture {

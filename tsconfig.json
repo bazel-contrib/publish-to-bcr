@@ -3,7 +3,6 @@
     "noImplicitAny": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "outDir": "build",
     "module": "es2020",
     "target": "es2020",
     "moduleResolution": "node",
@@ -11,7 +10,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowJs": true,
-    "types": ["jest", "node"]
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "e2e/**/*.ts", "*.js"],
   "exclude": ["node_modules", "src/**/bazel-*"]

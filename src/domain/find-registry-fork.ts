@@ -36,12 +36,12 @@ export class FindRegistryForkService {
     potentialForkOwners.add(releaser.username);
 
     const allForks = (
-      await Promise.all(
+      (await Promise.all(
         Array.from(potentialForkOwners.values()).map((owner) =>
           this.repositoryService.getForkedRepositoriesByOwner(owner)
         )
       )
-    ).reduce((acc, curr) => acc.concat(curr), []);
+    ).reduce((acc, curr) => acc.concat(curr), [])).map(r => new Repository(r.name, r.owner));
 
     let candidateForks = allForks.filter(
       (repo) => repo.name === "bazel-central-registry"

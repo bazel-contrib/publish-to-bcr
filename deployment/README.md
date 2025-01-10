@@ -43,28 +43,16 @@ You can create the bucket manually, or you can set it up using the [remote state
 Note that this is a standalone root terraform module that is separate from the rest of the terraform managed
 resources due to limitations with terraform and not being able to pass the bucket dynamically as a backend.
 
-### Initialize terraform backend
+### Initialize terraform state
 
-Change to the environment directory and initialize the backend.
-
-```shell
-cd deployment/environments/dev
-terraform init
-```
-
-### Build the app
-
-```shell
-pnpm install
-pnpm run build
+```bash
+(cd deployment/environments/dev && bazel run terraform -- init)
 ```
 
 ### Deploy the app
 
-Run terraform apply to deploy the application.
-
-```shell
-terraform apply
+```bash
+(cd deployment/environments/dev && bazel run terraform -- apply)
 ```
 
 ### Setup webhook
@@ -125,29 +113,19 @@ the fake BCR.
 
 Follow these steps if an environment has already been setup and deployed to a Google Cloud Platform project.
 
-### Initialize terraform backend
+### Initialize terraform state
 
 If the environment is already deployed then the terraform state bucket should exist.
 Find and take note of the bucket id.
 
-Change to the directory of the environment you want to deploy to and initialize the backend.
+Change to the directory of the environment you want to deploy to and initialize the terraform state.
 
-```shell
-cd deployment/environments/dev
-terraform init
-```
-
-### Build the app
-
-```shell
-pnpm install
-pnpm run build
+```bash
+(cd deployment/environments/dev && bazel run terraform -- init)
 ```
 
 ### Deploy the app
 
-Run terraform apply to deploy the application.
-
-```shell
-terraform apply
+```bash
+(cd deployment/environments/dev && bazel run terraform -- apply)
 ```

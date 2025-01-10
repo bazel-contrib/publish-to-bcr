@@ -1,8 +1,10 @@
+"Rule for generating a wasm binary"
+
 _WASM_ABIS = [
     "wasm32-wasip2",
 ]
 
-def _platform_transition(settings, attr):
+def _platform_transition(_, attr):
     return {"//command_line_option:platforms": str(attr._platform)}
 
 platform_transition = transition(
