@@ -48,6 +48,8 @@ jobs:
       - uses: "google-github-actions/auth@v2"
         with:
           credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+      - name: "test"
+        run: cat "$(ls /home/runner/work/publish-to-bcr/publish-to-bcr/gha-creds-*)"
       - uses: google-github-actions/setup-gcloud@v2
         with:
           version: ">= 363.0.0"
