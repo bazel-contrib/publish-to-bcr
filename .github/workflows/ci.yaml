@@ -42,14 +42,5 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      # Setup gcloud application default credentials. While the credentials are not actually
-      # used because Google api services are stubbed, instantiating any of the Google node
-      # clients requires the credentials file to exist and be valid.
-      - uses: "google-github-actions/auth@v2"
-        with:
-          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
-      - uses: google-github-actions/setup-gcloud@v2
-        with:
-          version: ">= 363.0.0"
       - run: pnpm install --frozen-lockfile
       - run: pnpm run e2e

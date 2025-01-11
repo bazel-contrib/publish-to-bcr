@@ -1,6 +1,7 @@
 import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import { Injectable } from "@nestjs/common";
 import gcpMetadata from "gcp-metadata";
+import type { JSONClient } from "google-auth-library/build/src/auth/googleauth";
 
 @Injectable()
 export class SecretsClient {
@@ -15,6 +16,14 @@ export class SecretsClient {
         fallback: "rest",
         protocol: "http",
         port: Number(process.env.SECRET_MANAGER_PORT),
+        // Create a fake auth client to bypass checking for default credentials
+        authClient: {
+          getRequestHeaders(
+            url?: string
+          ): Promise<{ [index: string]: string }> {
+            return Promise.resolve({});
+          },
+        } as JSONClient,
       });
     } else {
       this.googleSecretsClient = new SecretManagerServiceClient();
