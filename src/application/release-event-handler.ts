@@ -33,6 +33,9 @@ export class ReleaseEventHandler {
   public readonly handle: HandlerFunction<"release.published", unknown> =
     async (event) => {
       const repository = repositoryFromPayload(event.payload);
+
+      console.log('registory is ', repository.name)
+
       const bcr = Repository.fromCanonicalName(
         process.env.BAZEL_CENTRAL_REGISTRY
       );
@@ -51,6 +54,7 @@ export class ReleaseEventHandler {
         releaser
       );
       if (!createRepoResult.successful) {
+        console.log("Failed to validate ruleset repo");
         return;
       }
 
@@ -131,6 +135,7 @@ export class ReleaseEventHandler {
     releaser: User
   ): Promise<{ rulesetRepo?: RulesetRepository; successful: boolean }> {
     try {
+      console.log("validate ruleset repo", repository.name, repository.owner, tag)
       const rulesetRepo = await RulesetRepository.create(
         repository.name,
         repository.owner,
@@ -142,6 +147,8 @@ export class ReleaseEventHandler {
         successful: true,
       };
     } catch (error) {
+
+      console.log("validate ruleset repo error", error)
       // If the ruleset repo was invalid, then we didn't get the chance to set the fixed releaser.
       // See see if we can scrounge a fixedReleaser from the configuration to send that user an email.
       if (

@@ -29,6 +29,8 @@ const handleGithubWebhookEvent = async (
     await releaseEventHandler.handle(event);
   });
 
+  console.log("request body", request.body);
+
   await webhooks.verifyAndReceive({
     id: request.headers["x-github-delivery"] as string,
     name: request.headers["x-github-event"] as any,
