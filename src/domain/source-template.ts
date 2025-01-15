@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import fs from 'node:fs';
 
 export class InvalidSourceTemplateError extends Error {
   constructor(reason: string) {
@@ -15,25 +15,25 @@ export class SourceTemplate {
 
   private parseAndValidate(filePath: string) {
     try {
-      const sourceContent = fs.readFileSync(filePath, "utf8");
+      const sourceContent = fs.readFileSync(filePath, 'utf8');
       this.sourceJson = JSON.parse(sourceContent);
     } catch (error) {
-      throw new InvalidSourceTemplateError("cannot parse file as json");
+      throw new InvalidSourceTemplateError('cannot parse file as json');
     }
 
     if (
-      "strip_prefix" in this.sourceJson &&
-      typeof this.sourceJson.strip_prefix !== "string"
+      'strip_prefix' in this.sourceJson &&
+      typeof this.sourceJson.strip_prefix !== 'string'
     ) {
-      throw new InvalidSourceTemplateError("invalid strip_prefix field");
+      throw new InvalidSourceTemplateError('invalid strip_prefix field');
     }
 
     if (!this.sourceJson.url) {
-      throw new InvalidSourceTemplateError("missing url field");
+      throw new InvalidSourceTemplateError('missing url field');
     }
 
-    if (typeof this.sourceJson.url !== "string") {
-      throw new InvalidSourceTemplateError("invalid url field");
+    if (typeof this.sourceJson.url !== 'string') {
+      throw new InvalidSourceTemplateError('invalid url field');
     }
   }
 
@@ -44,7 +44,7 @@ export class SourceTemplate {
     tag: string,
     version: string
   ) {
-    for (let prop of ["url", "strip_prefix"].filter(
+    for (let prop of ['url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
       this.sourceJson[prop] = this.replaceVariables(
@@ -97,6 +97,6 @@ export class SourceTemplate {
   }
 
   public get stripPrefix(): string {
-    return (this.sourceJson.strip_prefix as string) || "";
+    return (this.sourceJson.strip_prefix as string) || '';
   }
 }

@@ -3,7 +3,7 @@
  * https://jestjs.io/docs/configuration
  */
 
-import path from "path";
+import path from 'path';
 
 export default {
   // Automatically clear mock calls, instances, contexts and results before every test
@@ -20,7 +20,7 @@ export default {
     path.join(
       process.env.TEST_SRCDIR,
       process.env.TEST_WORKSPACE,
-      "jest.setup.js"
+      'jest.setup.js'
     ),
   ],
 
@@ -29,6 +29,6 @@ export default {
 
   // A map from regular expressions to paths to transformers
   transform: {
-    "\\.js$": "babel-jest",
+    '\\.js$': 'babel-jest',
   },
 };

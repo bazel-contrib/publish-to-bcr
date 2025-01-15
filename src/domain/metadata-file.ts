@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import { compareVersions } from "./version.js";
+import fs from 'node:fs';
+import { compareVersions } from './version.js';
 
 export class MetadataFileError extends Error {
   constructor(path: string, message: string) {
@@ -26,25 +26,25 @@ export class MetadataFile {
     let json: any;
 
     try {
-      json = JSON.parse(fs.readFileSync(filepath, "utf8"));
+      json = JSON.parse(fs.readFileSync(filepath, 'utf8'));
     } catch (e) {
       throw new MetadataFileError(filepath, e.message);
     }
 
     if (
-      !("versions" in json) ||
+      !('versions' in json) ||
       !Array.isArray(json.versions) ||
-      !json.versions.every((v: any) => typeof v === "string")
+      !json.versions.every((v: any) => typeof v === 'string')
     ) {
       throw new MetadataFileError(filepath, "could not parse 'versions'");
     }
 
     if (
-      !("yanked_versions" in json) ||
-      typeof json.yanked_versions !== "object" ||
+      !('yanked_versions' in json) ||
+      typeof json.yanked_versions !== 'object' ||
       Array.isArray(json.yanked_versions) ||
       !Object.entries(json.yanked_versions).every(
-        ([k, v]) => typeof k === "string" && typeof v === "string"
+        ([k, v]) => typeof k === 'string' && typeof v === 'string'
       )
     ) {
       throw new MetadataFileError(
@@ -54,9 +54,9 @@ export class MetadataFile {
     }
 
     if (
-      "maintainers" in json &&
+      'maintainers' in json &&
       (!Array.isArray(json.maintainers) ||
-        !json.maintainers.every((m: any) => typeof m === "object"))
+        !json.maintainers.every((m: any) => typeof m === 'object'))
     ) {
       throw new MetadataFileError(filepath, "could not parse 'maintainers'");
     }
@@ -114,17 +114,17 @@ export class MetadataFile {
   // as we can from a metadata.json file, ignoring most of the usual validation.
   public static emergencyParseMaintainers(filepath: string): Maintainer[] {
     try {
-      const content = fs.readFileSync(filepath, "utf8");
+      const content = fs.readFileSync(filepath, 'utf8');
       const json = JSON.parse(content);
 
       const maintainers: Maintainer[] = [];
-      if ("maintainers" in json) {
+      if ('maintainers' in json) {
         if (!Array.isArray(json.maintainers)) {
           return [];
         }
 
         for (const maintainer of json.maintainers) {
-          if (typeof maintainer.name === "string") {
+          if (typeof maintainer.name === 'string') {
             maintainers.push(maintainer as Maintainer);
           }
         }

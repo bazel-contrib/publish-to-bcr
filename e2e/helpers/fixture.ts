@@ -1,23 +1,23 @@
-import { User } from "@octokit/webhooks-types";
-import fs from "node:fs";
-import path from "node:path";
-import simpleGit, { SimpleGit } from "simple-git";
+import { User } from '@octokit/webhooks-types';
+import fs from 'node:fs';
+import path from 'node:path';
+import simpleGit, { SimpleGit } from 'simple-git';
 
-export const FIXTURES_PATH = path.join("e2e", "fixtures");
+export const FIXTURES_PATH = path.join('e2e', 'fixtures');
 export const PREPARED_FIXTURES_PATH = fs.mkdtempSync(
-  process.env.TEST_TMPDIR + path.sep + "fixtures-"
+  process.env.TEST_TMPDIR + path.sep + 'fixtures-'
 );
 
 export enum Fixture {
-  EmptyPrefix = "empty-prefix",
-  FixedReleaser = "fixed-releaser",
-  MultiModule = "multi-module",
-  NoPrefix = "no-prefix",
-  Tarball = "tarball",
-  Unversioned = "unversioned",
-  ZeroVersioned = "zero-versioned",
-  Versioned = "versioned",
-  Zip = "zip",
+  EmptyPrefix = 'empty-prefix',
+  FixedReleaser = 'fixed-releaser',
+  MultiModule = 'multi-module',
+  NoPrefix = 'no-prefix',
+  Tarball = 'tarball',
+  Unversioned = 'unversioned',
+  ZeroVersioned = 'zero-versioned',
+  Versioned = 'versioned',
+  Zip = 'zip',
 }
 
 /**
@@ -43,10 +43,10 @@ export async function setupLocalRemoteRulesetRepo(
 
     git = simpleGit(gitRepoPath);
     await git.init();
-    await git.add("./*");
-    await git.addConfig("user.name", commitAuthor.login!);
-    await git.addConfig("user.email", commitAuthor.email!);
-    await git.commit("first commit");
+    await git.add('./*');
+    await git.addConfig('user.name', commitAuthor.login!);
+    await git.addConfig('user.email', commitAuthor.email!);
+    await git.commit('first commit');
   } else {
     git = simpleGit(gitRepoPath);
   }
@@ -67,18 +67,18 @@ export async function setupLocalRemoteRulesetRepo(
  */
 export async function setupLocalRemoteBcr(): Promise<void> {
   await simpleGit().clone(
-    "https://github.com/bazelbuild/bazel-central-registry",
-    path.join(PREPARED_FIXTURES_PATH, "bazel-central-registry")
+    'https://github.com/bazelbuild/bazel-central-registry',
+    path.join(PREPARED_FIXTURES_PATH, 'bazel-central-registry')
   );
 }
 
 export async function getLatestBranch(git: SimpleGit): Promise<string> {
-  const branches = await git.branch(["--sort=-committerdate"]);
+  const branches = await git.branch(['--sort=-committerdate']);
   return branches.all[0];
 }
 
 export function getBcr(): SimpleGit {
-  return simpleGit(path.join(PREPARED_FIXTURES_PATH, "bazel-central-registry"));
+  return simpleGit(path.join(PREPARED_FIXTURES_PATH, 'bazel-central-registry'));
 }
 
 /**

@@ -7,9 +7,7 @@
       "github": "foobar"
     }
   ],
-  "repository": [
-    "github:testorg/zero-versioned"
-  ],
+  "repository": ["github:testorg/zero-versioned"],
   "versions": [],
   "yanked_versions": {}
 }

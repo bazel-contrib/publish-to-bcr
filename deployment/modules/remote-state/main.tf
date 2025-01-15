@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     google = {
-      source = "hashicorp/google"
+      source  = "hashicorp/google"
       version = "4.84.0"
     }
   }
@@ -17,7 +17,7 @@ resource "random_id" "instance_id" {
 }
 
 resource "google_storage_bucket" "remote_state_bucket" {
-  name = "bucket-tfstate-${random_id.instance_id.hex}"
+  name          = "bucket-tfstate-${random_id.instance_id.hex}"
   force_destroy = false
   location      = var.region
   storage_class = "STANDARD"

@@ -1,19 +1,19 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { Octokit } from "@octokit/rest";
-import { ReleasePublishedEvent } from "@octokit/webhooks-types";
-import { HandlerFunction } from "@octokit/webhooks/dist-types/types";
-import { CreateEntryService } from "../domain/create-entry.js";
-import { FindRegistryForkService } from "../domain/find-registry-fork.js";
-import { Maintainer, MetadataFile } from "../domain/metadata-file.js";
-import { PublishEntryService } from "../domain/publish-entry.js";
-import { Repository } from "../domain/repository.js";
+import { Inject, Injectable } from '@nestjs/common';
+import { Octokit } from '@octokit/rest';
+import { ReleasePublishedEvent } from '@octokit/webhooks-types';
+import { HandlerFunction } from '@octokit/webhooks/dist-types/types';
+import { CreateEntryService } from '../domain/create-entry.js';
+import { FindRegistryForkService } from '../domain/find-registry-fork.js';
+import { Maintainer, MetadataFile } from '../domain/metadata-file.js';
+import { PublishEntryService } from '../domain/publish-entry.js';
+import { Repository } from '../domain/repository.js';
 import {
   RulesetRepoError,
   RulesetRepository,
-} from "../domain/ruleset-repository.js";
-import { User, UserService } from "../domain/user.js";
-import { GitHubClient } from "../infrastructure/github.js";
-import { NotificationsService } from "./notifications.js";
+} from '../domain/ruleset-repository.js';
+import { User, UserService } from '../domain/user.js';
+import { GitHubClient } from '../infrastructure/github.js';
+import { NotificationsService } from './notifications.js';
 
 interface PublishAttempt {
   readonly successful: boolean;
@@ -24,7 +24,7 @@ interface PublishAttempt {
 @Injectable()
 export class ReleaseEventHandler {
   constructor(
-    @Inject("appOctokit") private appOctokit: Octokit,
+    @Inject('appOctokit') private appOctokit: Octokit,
     private readonly userService: UserService,
     private readonly findRegistryForkService: FindRegistryForkService,
     private readonly createEntryService: CreateEntryService,
@@ -32,7 +32,7 @@ export class ReleaseEventHandler {
     private readonly notificationsService: NotificationsService
   ) {}
 
-  public readonly handle: HandlerFunction<"release.published", unknown> =
+  public readonly handle: HandlerFunction<'release.published', unknown> =
     async (event) => {
       const repository = repositoryFromPayload(event.payload);
       const bcr = Repository.fromCanonicalName(
@@ -225,7 +225,7 @@ export class ReleaseEventHandler {
         );
       } else {
         console.log(
-          `Pushed bcr entry for modules '${moduleNames.join(", ")}' to fork ${
+          `Pushed bcr entry for modules '${moduleNames.join(', ')}' to fork ${
             bcrFork.canonicalName
           } on branch ${branch}`
         );

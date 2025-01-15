@@ -1,9 +1,9 @@
-import { ParsedDiff, applyPatch } from "diff";
-import fs from "node:fs";
+import { ParsedDiff, applyPatch } from 'diff';
+import fs from 'node:fs';
 
 export class PatchModuleError extends Error {
   public constructor() {
-    super("Failed to apply patch to MODULE.bazel file");
+    super('Failed to apply patch to MODULE.bazel file');
   }
 }
 
@@ -11,7 +11,7 @@ export class ModuleFile {
   private moduleContent: string;
 
   constructor(filePath: string) {
-    this.moduleContent = fs.readFileSync(filePath, "utf8");
+    this.moduleContent = fs.readFileSync(filePath, 'utf8');
   }
 
   public get moduleName(): string {
