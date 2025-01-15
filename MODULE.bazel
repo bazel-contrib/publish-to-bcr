@@ -1,7 +1,7 @@
 bazel_dep(name = "aspect_bazel_lib", version = "2.11.0")
 bazel_dep(name = "aspect_rules_jest", version = "0.22.0")
 bazel_dep(name = "aspect_rules_js", version = "2.1.2")
-bazel_dep(name = "aspect_rules_lint", version = "1.0.7")
+bazel_dep(name = "aspect_rules_lint", version = "1.0.8")
 bazel_dep(name = "aspect_rules_ts", version = "3.3.2")
 bazel_dep(
     name = "buildifier_prebuilt",
