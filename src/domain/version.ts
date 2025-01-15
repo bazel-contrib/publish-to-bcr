@@ -58,21 +58,21 @@ class Version {
   }
 
   private convertToIdentifiers(version: string): Identifier[] {
-    return (version && version.split(".").map((i) => new Identifier(i))) || [];
+    return (version && version.split('.').map((i) => new Identifier(i))) || [];
   }
 }
 
 class Identifier {
   public static compare(a: Identifier, b: Identifier): number {
     if (typeof a.value !== typeof b.value) {
-      if (typeof a.value === "number") {
+      if (typeof a.value === 'number') {
         return -1;
       } else {
         return 1;
       }
     }
 
-    if (typeof a.value === "string") {
+    if (typeof a.value === 'string') {
       if (a.value < b.value) {
         return -1;
       } else if (a.value === b.value) {

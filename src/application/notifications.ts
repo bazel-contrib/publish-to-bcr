@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { UserFacingError } from "../domain/error.js";
-import { Maintainer } from "../domain/metadata-file.js";
-import { Repository } from "../domain/repository.js";
-import { User, UserService } from "../domain/user.js";
-import { Authentication, EmailClient } from "../infrastructure/email.js";
-import { SecretsClient } from "../infrastructure/secrets.js";
+import { Injectable } from '@nestjs/common';
+import { UserFacingError } from '../domain/error.js';
+import { Maintainer } from '../domain/metadata-file.js';
+import { Repository } from '../domain/repository.js';
+import { User, UserService } from '../domain/user.js';
+import { Authentication, EmailClient } from '../infrastructure/email.js';
+import { SecretsClient } from '../infrastructure/secrets.js';
 
 @Injectable()
 export class NotificationsService {
@@ -18,7 +18,7 @@ export class NotificationsService {
     private readonly userService: UserService
   ) {
     if (process.env.NOTIFICATIONS_EMAIL === undefined) {
-      throw new Error("Missing NOTIFICATIONS_EMAIL environment variable.");
+      throw new Error('Missing NOTIFICATIONS_EMAIL environment variable.');
     }
     this.sender = process.env.NOTIFICATIONS_EMAIL;
 
@@ -30,8 +30,8 @@ export class NotificationsService {
   private async setAuth() {
     if (!this.emailAuth) {
       const [user, pass] = await Promise.all([
-        this.secretsClient.accessSecret("notifications-email-user"),
-        this.secretsClient.accessSecret("notifications-email-password"),
+        this.secretsClient.accessSecret('notifications-email-user'),
+        this.secretsClient.accessSecret('notifications-email-password'),
       ]);
 
       this.emailAuth = {
@@ -117,10 +117,10 @@ Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Reg
 
     if (!friendlyErrors.length) {
       content +=
-        "An unknown error occurred. Please report an issue here: https://github.com/bazel-contrib/publish-to-bcr/issues.";
+        'An unknown error occurred. Please report an issue here: https://github.com/bazel-contrib/publish-to-bcr/issues.';
     }
 
-    console.log(`Sending error email to ${recipients.join(", ")}`);
+    console.log(`Sending error email to ${recipients.join(', ')}`);
     console.log(`Subject: ${subject}`);
     console.log(`Content:`);
     console.log(content);

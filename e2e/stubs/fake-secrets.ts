@@ -1,7 +1,7 @@
-import { generateKeyPairSync } from "crypto";
-import * as mockttp from "mockttp";
-import url from "node:url";
-import { StubbedServer } from "./stubbed-server";
+import { generateKeyPairSync } from 'crypto';
+import * as mockttp from 'mockttp';
+import url from 'node:url';
+import { StubbedServer } from './stubbed-server';
 
 /**
  * Standin GCP Secret Manager API.
@@ -11,12 +11,12 @@ export class FakeSecrets implements StubbedServer {
   private readonly secrets = new Map<string, string>();
 
   public static generateRsaPrivateKey(): string {
-    const { privateKey } = generateKeyPairSync("rsa", {
+    const { privateKey } = generateKeyPairSync('rsa', {
       modulusLength: 2048,
     });
     return privateKey.export({
-      format: "pem",
-      type: "pkcs1",
+      format: 'pem',
+      type: 'pkcs1',
     }) as string;
   }
 
@@ -36,7 +36,7 @@ export class FakeSecrets implements StubbedServer {
             statusCode: 200,
             json: {
               payload: {
-                data: Buffer.from(secretValue).toString("base64"),
+                data: Buffer.from(secretValue).toString('base64'),
               },
             },
           };

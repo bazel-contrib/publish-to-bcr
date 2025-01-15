@@ -1,24 +1,24 @@
-import { ReturnTypeOf } from "@octokit/core/dist-types/types";
-import { User } from "@octokit/webhooks-types";
-import { ImapFlow } from "imapflow";
-import { ParsedMail } from "mailparser";
-import { CompletedRequest } from "mockttp";
-import { randomBytes } from "node:crypto";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { TestAccount } from "nodemailer";
-import { simpleGit } from "simple-git";
-import { GitHubClient } from "../src/infrastructure/github";
+import { ReturnTypeOf } from '@octokit/core/dist-types/types';
+import { User } from '@octokit/webhooks-types';
+import { ImapFlow } from 'imapflow';
+import { ParsedMail } from 'mailparser';
+import { CompletedRequest } from 'mockttp';
+import { randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { TestAccount } from 'nodemailer';
+import { simpleGit } from 'simple-git';
+import { GitHubClient } from '../src/infrastructure/github';
 import {
   makeReleaseTarball as _makeReleaseTarball,
   makeReleaseZip as _makeReleaseZip,
-} from "./helpers/archive";
+} from './helpers/archive';
 import {
   connectToEmail,
   createTestEmailAccount,
   fetchEmails,
-} from "./helpers/email";
+} from './helpers/email';
 import {
   Fixture,
   PREPARED_FIXTURES_PATH,
@@ -27,29 +27,29 @@ import {
   getLatestBranch,
   setupLocalRemoteBcr,
   setupLocalRemoteRulesetRepo,
-} from "./helpers/fixture";
-import { publishReleaseEvent } from "./helpers/webhook";
-import { CloudFunctions } from "./stubs/cloud-functions";
-import { FakeGitHub } from "./stubs/fake-github";
-import { FakeSecrets } from "./stubs/fake-secrets";
+} from './helpers/fixture';
+import { publishReleaseEvent } from './helpers/webhook';
+import { CloudFunctions } from './stubs/cloud-functions';
+import { FakeGitHub } from './stubs/fake-github';
+import { FakeSecrets } from './stubs/fake-secrets';
 
 jest.setTimeout(30000);
 
 // Speed up e2e tests by retrying failed requests with 100ms delay factor.
-process.env.BACKOFF_DELAY_FACTOR = "100";
+process.env.BACKOFF_DELAY_FACTOR = '100';
 
-describe("e2e tests", () => {
+describe('e2e tests', () => {
   let cloudFunctions: CloudFunctions;
   let fakeGitHub: FakeGitHub;
   let fakeSecrets: FakeSecrets;
   let emailAccount: TestAccount;
   let emailClient: ImapFlow;
   let secrets: ReturnTypeOf<typeof mockSecrets>;
-  const testOrg = "testorg";
+  const testOrg = 'testorg';
   const releaser: Partial<User> = {
-    login: "releaser",
-    email: "releaser@test.org",
-    name: "Releaser",
+    login: 'releaser',
+    email: 'releaser@test.org',
+    name: 'Releaser',
   };
 
   beforeAll(async () => {
@@ -87,7 +87,7 @@ describe("e2e tests", () => {
 
   beforeEach(async () => {
     secrets = mockSecrets(fakeSecrets, emailAccount);
-    fakeGitHub.mockBotAppInstallation("bazelbuild", "bazel-central-registry");
+    fakeGitHub.mockBotAppInstallation('bazelbuild', 'bazel-central-registry');
   });
 
   afterEach(async () => {
@@ -98,23 +98,23 @@ describe("e2e tests", () => {
     testReleaseArchives.forEach((file) => fs.rmSync(file, { force: true }));
   });
 
-  test("[snapshot] ruleset with unversioned module in source", async () => {
+  test('[snapshot] ruleset with unversioned module in source', async () => {
     const repo = Fixture.Unversioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "unversioned-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'unversioned-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -137,25 +137,25 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("[snapshot] ruleset with zero-versioned module in source", async () => {
+  test('[snapshot] ruleset with zero-versioned module in source', async () => {
     const repo = Fixture.ZeroVersioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     const releaseArchive = await makeReleaseTarball(
       repo,
-      "zero-versioned-1.0.0"
+      'zero-versioned-1.0.0'
     );
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
@@ -179,23 +179,23 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("[snapshot] ruleset with versioned module in source", async () => {
+  test('[snapshot] ruleset with versioned module in source', async () => {
     const repo = Fixture.Versioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'versioned-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -219,23 +219,23 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("[snapshot] ruleset with tarball release archive", async () => {
+  test('[snapshot] ruleset with tarball release archive', async () => {
     const repo = Fixture.Tarball;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "tarball-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'tarball-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -259,23 +259,23 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("[snapshot] ruleset with zip release archive", async () => {
+  test('[snapshot] ruleset with zip release archive', async () => {
     const repo = Fixture.Zip;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseZip(repo, "zip-1.0.0");
+    const releaseArchive = await makeReleaseZip(repo, 'zip-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.zip`,
       releaseArchive
@@ -299,21 +299,21 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("[snapshot] empty strip prefix", async () => {
+  test('[snapshot] empty strip prefix', async () => {
     const repo = Fixture.NoPrefix;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     const releaseArchive = await makeReleaseTarball(repo);
     await fakeGitHub.mockReleaseArchive(
@@ -339,21 +339,21 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("[snapshot] missing strip prefix", async () => {
+  test('[snapshot] missing strip prefix', async () => {
     const repo = Fixture.EmptyPrefix;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     const releaseArchive = await makeReleaseTarball(repo);
     await fakeGitHub.mockReleaseArchive(
@@ -379,23 +379,23 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("[snapshot] multiple modules", async () => {
+  test('[snapshot] multiple modules', async () => {
     const repo = Fixture.MultiModule;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "multi-module-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'multi-module-1.0.0');
 
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/releases/download/${tag}.tar.gz`,
@@ -419,23 +419,23 @@ describe("e2e tests", () => {
     expect(snapshot).toMatchSnapshot();
   });
 
-  test("happy path", async () => {
+  test('happy path', async () => {
     const repo = Fixture.Versioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const rulesetInstallationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'versioned-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -477,7 +477,7 @@ describe("e2e tests", () => {
     const body = (await request.body.getJson()) as any;
     expect(body).toEqual(
       expect.objectContaining({
-        base: "main",
+        base: 'main',
         head: expect.stringMatching(
           new RegExp(`${testOrg}\\:${testOrg}\\/${repo}@${tag}-.+`)
         ),
@@ -509,23 +509,23 @@ describe("e2e tests", () => {
     );
   });
 
-  test("happy path with multiple modules", async () => {
+  test('happy path with multiple modules', async () => {
     const repo = Fixture.MultiModule;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "multi-module-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'multi-module-1.0.0');
 
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/releases/download/${tag}.tar.gz`,
@@ -561,22 +561,22 @@ describe("e2e tests", () => {
     let body = (await request.body.getJson()) as any;
     expect(body).toEqual(
       expect.objectContaining({
-        base: "main",
+        base: 'main',
         head: expect.stringMatching(
           new RegExp(`${testOrg}\\:${testOrg}\\/${repo}@${tag}-.+`)
         ),
-        title: "module@1.0.0, submodule@1.0.0",
+        title: 'module@1.0.0, submodule@1.0.0',
       })
     );
   });
 
-  test("setting a fixed releaser sets the commit author", async () => {
+  test('setting a fixed releaser sets the commit author', async () => {
     const repo = Fixture.FixedReleaser;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     const fixedReleaser = {
-      login: "fixedReleaser",
-      email: "fixed-releaser@test.org",
-      name: "Fixed Releaser",
+      login: 'fixedReleaser',
+      email: 'fixed-releaser@test.org',
+      name: 'Fixed Releaser',
     };
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
@@ -585,16 +585,16 @@ describe("e2e tests", () => {
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     const releaseArchive = await makeReleaseTarball(
       repo,
-      "fixed-releaser-1.0.0"
+      'fixed-releaser-1.0.0'
     );
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
@@ -625,21 +625,21 @@ describe("e2e tests", () => {
 
   test("falls back to the release author's bcr fork when one doesn't exist in the ruleset's org", async () => {
     const repo = Fixture.Versioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       releaser.login!,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(releaser.login!, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(releaser.login!, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'versioned-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -673,24 +673,24 @@ describe("e2e tests", () => {
     );
   });
 
-  test("send error email when app not installed to BCR fork", async () => {
+  test('send error email when app not installed to BCR fork', async () => {
     const repo = Fixture.Versioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     // App not installed to fork
     // fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
-    const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'versioned-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -718,32 +718,32 @@ describe("e2e tests", () => {
     expect(messages[0].subject).toEqual(`Publish to BCR`);
   });
 
-  test("commits are attributed to the publish-to-bcr bot user when the github-actions[bot] is the releaser", async () => {
+  test('commits are attributed to the publish-to-bcr bot user when the github-actions[bot] is the releaser', async () => {
     // https://github.com/bazel-contrib/publish-to-bcr/issues/120
 
     const repo = Fixture.Versioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, {
-      login: "committer",
-      email: "committer@test.org",
+      login: 'committer',
+      email: 'committer@test.org',
     });
 
     fakeGitHub.mockUser({
       login: GitHubClient.GITHUB_ACTIONS_BOT.login,
       id: GitHubClient.GITHUB_ACTIONS_BOT.id,
     });
-    fakeGitHub.mockUser({ login: "publish-to-bcr-bot[bot]", id: 123 });
+    fakeGitHub.mockUser({ login: 'publish-to-bcr-bot[bot]', id: 123 });
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = await makeReleaseTarball(repo, "versioned-1.0.0");
+    const releaseArchive = await makeReleaseTarball(repo, 'versioned-1.0.0');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -757,7 +757,7 @@ describe("e2e tests", () => {
         owner: testOrg,
         repo,
         tag,
-        releaser: { login: "github-actions[bot]" },
+        releaser: { login: 'github-actions[bot]' },
       }
     );
 
@@ -768,29 +768,29 @@ describe("e2e tests", () => {
     const logs = await git.log({ maxCount: 1, from: entryBranch });
 
     expect(logs.latest?.author_email).toEqual(
-      "123+publish-to-bcr-bot[bot]@users.noreply.github.com"
+      '123+publish-to-bcr-bot[bot]@users.noreply.github.com'
     );
-    expect(logs.latest?.author_name).toEqual("publish-to-bcr-bot");
+    expect(logs.latest?.author_name).toEqual('publish-to-bcr-bot');
   });
 
-  test("[snapshot] error email for incorrect strip prefix", async () => {
+  test('[snapshot] error email for incorrect strip prefix', async () => {
     const repo = Fixture.Versioned;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const rulesetInstallationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     // Strip prefix in release archive doesn't match source.template.json
-    const releaseArchive = await makeReleaseTarball(repo, "invalid-prefix");
+    const releaseArchive = await makeReleaseTarball(repo, 'invalid-prefix');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -816,24 +816,24 @@ describe("e2e tests", () => {
     expect(emailSnapshot(messages[0])).toMatchSnapshot();
   });
 
-  test("[snapshot] error email for incorrect strip prefix in multi module repo", async () => {
+  test('[snapshot] error email for incorrect strip prefix in multi module repo', async () => {
     const repo = Fixture.MultiModule;
-    const tag = "v1.0.0";
+    const tag = 'v1.0.0';
     await setupLocalRemoteRulesetRepo(repo, tag, releaser);
 
     fakeGitHub.mockUser(releaser);
     fakeGitHub.mockRepository(testOrg, repo);
     fakeGitHub.mockRepository(
       testOrg,
-      "bazel-central-registry",
-      "bazelbuild",
-      "bazel-central-registry"
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
     );
     const rulesetInstallationId = fakeGitHub.mockAppInstallation(testOrg, repo);
-    fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     // Strip prefix in release archive doesn't match source.template.json
-    const releaseArchive = await makeReleaseTarball(repo, "invalid-prefix");
+    const releaseArchive = await makeReleaseTarball(repo, 'invalid-prefix');
     await fakeGitHub.mockReleaseArchive(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -885,15 +885,15 @@ async function makeReleaseZip(
  */
 async function rollupEntryFiles(): Promise<string> {
   const git = simpleGit(
-    path.join(PREPARED_FIXTURES_PATH, "bazel-central-registry")
+    path.join(PREPARED_FIXTURES_PATH, 'bazel-central-registry')
   );
-  const branches = await git.branch(["--sort=-committerdate"]);
+  const branches = await git.branch(['--sort=-committerdate']);
   const entryBranch = branches.all[0];
-  const diff = (await git.diff(["--name-only", entryBranch, "HEAD"])).trim();
+  const diff = (await git.diff(['--name-only', entryBranch, 'HEAD'])).trim();
 
   const changedFiles = diff.split(os.EOL);
 
-  let content = "";
+  let content = '';
 
   for (const filepath of changedFiles) {
     const fileContent = await git.show([`${entryBranch}:${filepath}`]);
@@ -921,24 +921,24 @@ export function mockSecrets(
   fakeSecrets: FakeSecrets,
   emailAccount: TestAccount
 ) {
-  const webhookSecret = randomBytes(4).toString("hex");
+  const webhookSecret = randomBytes(4).toString('hex');
   const appPrivateKey = FakeSecrets.generateRsaPrivateKey();
-  const appClientId = randomBytes(8).toString("hex");
-  const appClientSecret = randomBytes(10).toString("hex");
+  const appClientId = randomBytes(8).toString('hex');
+  const appClientSecret = randomBytes(10).toString('hex');
   const botAppPrivateKey = FakeSecrets.generateRsaPrivateKey();
-  const botAppClientId = randomBytes(8).toString("hex");
-  const botAppClientSecret = randomBytes(10).toString("hex");
+  const botAppClientId = randomBytes(8).toString('hex');
+  const botAppClientSecret = randomBytes(10).toString('hex');
 
-  fakeSecrets.mockSecret("github-app-webhook-secret", webhookSecret);
-  fakeSecrets.mockSecret("github-app-private-key", appPrivateKey);
-  fakeSecrets.mockSecret("github-app-client-id", appClientId);
-  fakeSecrets.mockSecret("github-app-client-secret", appClientSecret);
-  fakeSecrets.mockSecret("github-bot-app-private-key", botAppPrivateKey);
-  fakeSecrets.mockSecret("github-bot-app-client-id", botAppClientId);
-  fakeSecrets.mockSecret("github-bot-app-client-secret", botAppClientSecret);
+  fakeSecrets.mockSecret('github-app-webhook-secret', webhookSecret);
+  fakeSecrets.mockSecret('github-app-private-key', appPrivateKey);
+  fakeSecrets.mockSecret('github-app-client-id', appClientId);
+  fakeSecrets.mockSecret('github-app-client-secret', appClientSecret);
+  fakeSecrets.mockSecret('github-bot-app-private-key', botAppPrivateKey);
+  fakeSecrets.mockSecret('github-bot-app-client-id', botAppClientId);
+  fakeSecrets.mockSecret('github-bot-app-client-secret', botAppClientSecret);
 
-  fakeSecrets.mockSecret("notifications-email-user", emailAccount.user);
-  fakeSecrets.mockSecret("notifications-email-password", emailAccount.pass);
+  fakeSecrets.mockSecret('notifications-email-user', emailAccount.user);
+  fakeSecrets.mockSecret('notifications-email-password', emailAccount.pass);
 
   return {
     webhookSecret,

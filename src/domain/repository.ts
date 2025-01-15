@@ -1,20 +1,23 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { randomUUID } from "node:crypto";
-import os from "node:os";
-import path from "node:path";
-import { GitClient } from "../infrastructure/git.js";
-import { GitHubClient } from "../infrastructure/github.js";
+import { Inject, Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import os from 'node:os';
+import path from 'node:path';
+import { GitClient } from '../infrastructure/git.js';
+import { GitHubClient } from '../infrastructure/github.js';
 
 export class Repository {
   private _diskPath: string | null = null;
 
   public static fromCanonicalName(canonicalName: string) {
-    const [owner, name] = canonicalName.split("/");
+    const [owner, name] = canonicalName.split('/');
     const repository = new Repository(name, owner);
     return repository;
   }
 
-  constructor(public readonly name: string, public readonly owner: string) {}
+  constructor(
+    public readonly name: string,
+    public readonly owner: string
+  ) {}
 
   public get canonicalName(): string {
     return `${this.owner}/${this.name}`;
@@ -56,7 +59,7 @@ export class Repository {
 @Injectable()
 export class RepositoryService {
   constructor(
-    @Inject("rulesetRepoGitHubClient") private githubClient: GitHubClient
+    @Inject('rulesetRepoGitHubClient') private githubClient: GitHubClient
   ) {}
 
   public async getSourceRepository(

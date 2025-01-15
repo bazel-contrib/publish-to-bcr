@@ -1,23 +1,23 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { createTwoFilesPatch, parsePatch } from "diff";
-import { backOff } from "exponential-backoff";
-import { randomBytes } from "node:crypto";
-import fs, { readFileSync } from "node:fs";
-import path from "node:path";
-import { GitClient } from "../infrastructure/git.js";
-import { GitHubClient } from "../infrastructure/github.js";
-import { UserFacingError } from "./error.js";
-import { computeIntegrityHash } from "./integrity-hash.js";
-import { MetadataFile } from "./metadata-file.js";
+import { Inject, Injectable } from '@nestjs/common';
+import { createTwoFilesPatch, parsePatch } from 'diff';
+import { backOff } from 'exponential-backoff';
+import { randomBytes } from 'node:crypto';
+import fs, { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { GitClient } from '../infrastructure/git.js';
+import { GitHubClient } from '../infrastructure/github.js';
+import { UserFacingError } from './error.js';
+import { computeIntegrityHash } from './integrity-hash.js';
+import { MetadataFile } from './metadata-file.js';
 import {
   ModuleFile,
   PatchModuleError as _PatchModuleError,
-} from "./module-file.js";
-import { ReleaseArchive } from "./release-archive.js";
-import { Repository } from "./repository.js";
-import { RulesetRepository } from "./ruleset-repository.js";
-import { SourceTemplate } from "./source-template.js";
-import { User, UserService } from "./user.js";
+} from './module-file.js';
+import { ReleaseArchive } from './release-archive.js';
+import { Repository } from './repository.js';
+import { RulesetRepository } from './ruleset-repository.js';
+import { SourceTemplate } from './source-template.js';
+import { User, UserService } from './user.js';
 
 export class VersionAlreadyPublishedError extends UserFacingError {
   public constructor(version: string) {
@@ -35,7 +35,7 @@ export class PatchModuleError extends UserFacingError {
 export class CreateEntryService {
   constructor(
     private readonly gitClient: GitClient,
-    @Inject("bcrGitHubClient") private bcrGitHubClient: GitHubClient
+    @Inject('bcrGitHubClient') private bcrGitHubClient: GitHubClient
   ) {}
 
   public async createEntryFiles(
@@ -46,7 +46,7 @@ export class CreateEntryService {
   ): Promise<{ moduleName: string }> {
     await Promise.all([
       rulesetRepo.shallowCloneAndCheckout(tag),
-      bcrRepo.shallowCloneAndCheckout("main"),
+      bcrRepo.shallowCloneAndCheckout('main'),
     ]);
 
     const version = RulesetRepository.getVersionFromTag(tag);
@@ -72,7 +72,7 @@ export class CreateEntryService {
 
       const bcrEntryPath = path.resolve(
         bcrRepo.diskPath,
-        "modules",
+        'modules',
         moduleFile.moduleName
       );
       const bcrVersionEntryPath = path.join(bcrEntryPath, version);
@@ -102,12 +102,12 @@ export class CreateEntryService {
         bcrVersionEntryPath
       );
 
-      sourceTemplate.save(path.join(bcrVersionEntryPath, "source.json"));
-      moduleFile.save(path.join(bcrVersionEntryPath, "MODULE.bazel"));
+      sourceTemplate.save(path.join(bcrVersionEntryPath, 'source.json'));
+      moduleFile.save(path.join(bcrVersionEntryPath, 'MODULE.bazel'));
 
       fs.copyFileSync(
         rulesetRepo.presubmitPath(moduleRoot),
-        path.join(bcrVersionEntryPath, "presubmit.yml")
+        path.join(bcrVersionEntryPath, 'presubmit.yml')
       );
 
       return { moduleName: moduleFile.moduleName };
@@ -123,7 +123,7 @@ export class CreateEntryService {
     releaser: User
   ): Promise<string> {
     const repoAndVersion = `${rulesetRepo.canonicalName}@${tag}`;
-    const branchName = `${repoAndVersion}-${randomBytes(4).toString("hex")}`;
+    const branchName = `${repoAndVersion}-${randomBytes(4).toString('hex')}`;
 
     let commitAuthor: Partial<User> = releaser;
     if (UserService.isGitHubActionsBot(releaser)) {
@@ -164,10 +164,10 @@ export class CreateEntryService {
       bcrForkRepo.name
     );
 
-    if (!(await this.gitClient.hasRemote(bcr.diskPath, "authed-fork"))) {
+    if (!(await this.gitClient.hasRemote(bcr.diskPath, 'authed-fork'))) {
       await this.gitClient.addRemote(
         bcr.diskPath,
-        "authed-fork",
+        'authed-fork',
         authenticatedRemoteUrl
       );
     }
@@ -177,12 +177,12 @@ export class CreateEntryService {
       // not using a real git server. Just push to the original remote,
       // which, during testing, is just a local repo on disk, so that
       // we can examine the result.
-      await this.gitClient.push(bcr.diskPath, "origin", branch);
+      await this.gitClient.push(bcr.diskPath, 'origin', branch);
       return;
     }
 
     await backOff(
-      () => this.gitClient.push(bcr.diskPath, "authed-fork", branch),
+      () => this.gitClient.push(bcr.diskPath, 'authed-fork', branch),
       {
         numOfAttempts: 5,
       }
@@ -202,18 +202,18 @@ export class CreateEntryService {
     }
     const patches = fs
       .readdirSync(patchesPath)
-      .filter((f) => f.endsWith(".patch"));
+      .filter((f) => f.endsWith('.patch'));
 
     if (
       patches.length &&
-      !fs.existsSync(path.join(bcrVersionEntryPath, "patches"))
+      !fs.existsSync(path.join(bcrVersionEntryPath, 'patches'))
     ) {
-      fs.mkdirSync(path.join(bcrVersionEntryPath, "patches"));
+      fs.mkdirSync(path.join(bcrVersionEntryPath, 'patches'));
     }
 
     for (const patch of patches) {
       const patchSrc = path.join(patchesPath, patch);
-      const patchDest = path.join(bcrVersionEntryPath, "patches", patch);
+      const patchDest = path.join(bcrVersionEntryPath, 'patches', patch);
       fs.mkdirSync;
       fs.copyFileSync(patchSrc, patchDest);
       sourceTemplate.addPatch(patch, computeIntegrityHash(patchDest), 1);
@@ -221,11 +221,11 @@ export class CreateEntryService {
       // If the user-provided patch patches MODULE.bazel, also apply it to
       // the copy in the entry since it needs to be identical to the archived
       // MODULE.bazel with any patches.
-      const diffs = parsePatch(readFileSync(patchSrc, "utf8"));
+      const diffs = parsePatch(readFileSync(patchSrc, 'utf8'));
       for (const diff of diffs) {
         if (
-          diff.oldFileName === "a/MODULE.bazel" &&
-          diff.newFileName === "b/MODULE.bazel"
+          diff.oldFileName === 'a/MODULE.bazel' &&
+          diff.newFileName === 'b/MODULE.bazel'
         ) {
           try {
             moduleFile.patchContent(diff);
@@ -253,23 +253,23 @@ export class CreateEntryService {
     if (moduleFile.version !== version) {
       console.log(
         `Archived MODULE.bazel version ${moduleFile.version} does not match release version ${version}.`,
-        "Creating a version patch."
+        'Creating a version patch.'
       );
-      const patchFileName = "module_dot_bazel_version.patch";
+      const patchFileName = 'module_dot_bazel_version.patch';
       const existingContent = moduleFile.content;
       moduleFile.stampVersion(version);
       const stampedContent = moduleFile.content;
 
       const patch = createTwoFilesPatch(
-        "a/MODULE.bazel",
-        "b/MODULE.bazel",
+        'a/MODULE.bazel',
+        'b/MODULE.bazel',
         existingContent,
         stampedContent
       );
 
-      const patchesDir = path.join(bcrVersionEntryPath, "patches");
-      if (!fs.existsSync(path.join(bcrVersionEntryPath, "patches"))) {
-        fs.mkdirSync(path.join(bcrVersionEntryPath, "patches"));
+      const patchesDir = path.join(bcrVersionEntryPath, 'patches');
+      if (!fs.existsSync(path.join(bcrVersionEntryPath, 'patches'))) {
+        fs.mkdirSync(path.join(bcrVersionEntryPath, 'patches'));
       }
       const patchFilePath = path.join(patchesDir, patchFileName);
       fs.writeFileSync(patchFilePath, patch);
@@ -294,7 +294,7 @@ function updateMetadataFile(
   metadataTemplate.clearVersions();
   metadataTemplate.clearYankedVersions();
 
-  const destPath = path.join(bcrEntryPath, "metadata.json");
+  const destPath = path.join(bcrEntryPath, 'metadata.json');
   if (fs.existsSync(destPath)) {
     const bcrMetadata = new MetadataFile(destPath);
 

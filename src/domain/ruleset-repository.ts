@@ -1,18 +1,18 @@
-import fs from "node:fs";
-import path from "node:path";
-import yaml from "yaml";
-import { Configuration } from "./config.js";
-import { UserFacingError } from "./error.js";
+import fs from 'node:fs';
+import path from 'node:path';
+import yaml from 'yaml';
+import { Configuration } from './config.js';
+import { UserFacingError } from './error.js';
 import {
   Maintainer,
   MetadataFile,
   MetadataFileError,
-} from "./metadata-file.js";
-import { Repository } from "./repository.js";
+} from './metadata-file.js';
+import { Repository } from './repository.js';
 import {
   SourceTemplate,
   InvalidSourceTemplateError as _InvalidSourceTemplateError,
-} from "./source-template.js";
+} from './source-template.js';
 
 export class RulesetRepoError extends UserFacingError {
   constructor(
@@ -35,7 +35,7 @@ export class MissingFilesError extends RulesetRepoError {
       moduleRoot,
       `\
 Could not locate the following required files in ${repository.canonicalName}:
-${missingFiles.map((missingFile) => `  ${missingFile}`).join("\n")}
+${missingFiles.map((missingFile) => `  ${missingFile}`).join('\n')}
 Did you forget to add them to your ruleset repository? See instructions here: https://github.com/bazel-contrib/publish-to-bcr/blob/main/templates`
     );
   }
@@ -69,7 +69,7 @@ export class InvalidPresubmitFileError extends RulesetRepoError {
       `Invalid presubmit file ${path.join(
         RulesetRepository.BCR_TEMPLATE_DIR,
         moduleRoot,
-        "presubmit.yml"
+        'presubmit.yml'
       )}: ${reason}`
     );
   }
@@ -102,7 +102,7 @@ export class InvalidSourceTemplateError extends RulesetRepoError {
 }
 
 export class RulesetRepository extends Repository {
-  public static readonly BCR_TEMPLATE_DIR = ".bcr";
+  public static readonly BCR_TEMPLATE_DIR = '.bcr';
 
   private _sourceTemplate: Record<string, SourceTemplate> = {};
   private _metadataTemplate: Record<string, MetadataFile> = {};
@@ -125,13 +125,13 @@ export class RulesetRepository extends Repository {
           path.join(
             RulesetRepository.BCR_TEMPLATE_DIR,
             root,
-            "metadata.template.json"
+            'metadata.template.json'
           ),
-          path.join(RulesetRepository.BCR_TEMPLATE_DIR, root, "presubmit.yml"),
+          path.join(RulesetRepository.BCR_TEMPLATE_DIR, root, 'presubmit.yml'),
           path.join(
             RulesetRepository.BCR_TEMPLATE_DIR,
             root,
-            "source.template.json"
+            'source.template.json'
           ),
         ]
       );
@@ -179,13 +179,16 @@ export class RulesetRepository extends Repository {
   }
 
   public static getVersionFromTag(tag: string): string {
-    if (tag.startsWith("v")) {
+    if (tag.startsWith('v')) {
       return tag.substring(1);
     }
     return tag;
   }
 
-  private constructor(readonly name: string, readonly owner: string) {
+  private constructor(
+    readonly name: string,
+    readonly owner: string
+  ) {
     super(name, owner);
   }
 
@@ -194,7 +197,7 @@ export class RulesetRepository extends Repository {
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
       moduleRoot,
-      "metadata.template.json"
+      'metadata.template.json'
     );
   }
 
@@ -203,7 +206,7 @@ export class RulesetRepository extends Repository {
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
       moduleRoot,
-      "presubmit.yml"
+      'presubmit.yml'
     );
   }
 
@@ -212,7 +215,7 @@ export class RulesetRepository extends Repository {
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
       moduleRoot,
-      "source.template.json"
+      'source.template.json'
     );
   }
 
@@ -221,7 +224,7 @@ export class RulesetRepository extends Repository {
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
       moduleRoot,
-      "patches"
+      'patches'
     );
   }
 
@@ -237,14 +240,14 @@ export class RulesetRepository extends Repository {
     let configPath = path.resolve(
       this.diskPath,
       RulesetRepository.BCR_TEMPLATE_DIR,
-      "config.yaml"
+      'config.yaml'
     );
 
     if (!fs.existsSync(configPath)) {
       configPath = path.resolve(
         this.diskPath,
         RulesetRepository.BCR_TEMPLATE_DIR,
-        "config.yml"
+        'config.yml'
       );
     }
 
@@ -272,18 +275,18 @@ function validatePresubmitFile(
   moduleRoot: string
 ) {
   try {
-    yaml.parse(fs.readFileSync(rulesetRepo.presubmitPath(moduleRoot), "utf-8"));
+    yaml.parse(fs.readFileSync(rulesetRepo.presubmitPath(moduleRoot), 'utf-8'));
   } catch (error) {
     throw new InvalidPresubmitFileError(
       rulesetRepo,
       moduleRoot,
-      "cannot parse file as yaml"
+      'cannot parse file as yaml'
     );
   }
 }
 
 function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
-  const DEFAULT_MODULE_ROOTS = ["."];
+  const DEFAULT_MODULE_ROOTS = ['.'];
 
   if (!fs.existsSync(rulesetRepo.configFilePath)) {
     return { moduleRoots: DEFAULT_MODULE_ROOTS };
@@ -292,16 +295,16 @@ function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
   let config: Record<string, any>;
   try {
     config =
-      yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, "utf-8")) || {};
+      yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, 'utf-8')) || {};
   } catch (error) {
-    throw new InvalidConfigFileError(rulesetRepo, "cannot parse file as yaml");
+    throw new InvalidConfigFileError(rulesetRepo, 'cannot parse file as yaml');
   }
 
   if (
     config.fixedReleaser &&
-    (typeof config.fixedReleaser !== "object" ||
-      typeof config.fixedReleaser.login !== "string" ||
-      typeof config.fixedReleaser.email !== "string")
+    (typeof config.fixedReleaser !== 'object' ||
+      typeof config.fixedReleaser.login !== 'string' ||
+      typeof config.fixedReleaser.email !== 'string')
   ) {
     throw new InvalidConfigFileError(
       rulesetRepo,
@@ -312,7 +315,7 @@ function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
   if (
     config.moduleRoots !== undefined &&
     (!Array.isArray(config.moduleRoots) ||
-      !config.moduleRoots.every((value) => typeof value === "string"))
+      !config.moduleRoots.every((value) => typeof value === 'string'))
   ) {
     throw new InvalidConfigFileError(
       rulesetRepo,

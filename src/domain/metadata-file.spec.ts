@@ -1,30 +1,30 @@
-import "jest-extended";
-import { mocked } from "jest-mock";
-import fs from "node:fs";
-import { MetadataFile, MetadataFileError } from "./metadata-file";
+import 'jest-extended';
+import { mocked } from 'jest-mock';
+import fs from 'node:fs';
+import { MetadataFile, MetadataFileError } from './metadata-file';
 
-jest.mock("node:fs");
+jest.mock('node:fs');
 
 function mockMetadataFile(content: string) {
   mocked(fs.readFileSync).mockReturnValue(content);
 }
 
-describe("constructor", () => {
-  test("complains if the metadata file does not exist", () => {
+describe('constructor', () => {
+  test('complains if the metadata file does not exist', () => {
     mocked(fs.readFileSync).mockImplementation(() => {
-      throw new Error("Error: ENOENT: no such file or directory");
+      throw new Error('Error: ENOENT: no such file or directory');
     });
 
-    expect(() => new MetadataFile("metadata.json")).toThrow(MetadataFileError);
+    expect(() => new MetadataFile('metadata.json')).toThrow(MetadataFileError);
   });
 
-  test("complains if the metadata file has invalid json", () => {
+  test('complains if the metadata file has invalid json', () => {
     mockMetadataFile(`\
 {
     "homepage: "https://foo.bar"
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrow(MetadataFileError);
+    expect(() => new MetadataFile('metadata.json')).toThrow(MetadataFileError);
   });
 
   test("complains if the 'versions' field is missing'", () => {
@@ -44,7 +44,7 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /versions/
     );
@@ -68,7 +68,7 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /versions/
     );
@@ -92,7 +92,7 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /versions/
     );
@@ -115,7 +115,7 @@ describe("constructor", () => {
     "versions": []
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /yanked_versions/
     );
@@ -139,7 +139,7 @@ describe("constructor", () => {
     "yanked_versions": []
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /yanked_versions/
     );
@@ -165,7 +165,7 @@ describe("constructor", () => {
     }
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /yanked_versions/
     );
@@ -182,7 +182,7 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
     expect(metadata.maintainers.length).toEqual(0);
   });
 
@@ -198,7 +198,7 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
     expect(metadata.maintainers.length).toEqual(0);
   });
 
@@ -214,7 +214,7 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /maintainers/
     );
@@ -232,7 +232,7 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    expect(() => new MetadataFile("metadata.json")).toThrowWithMessage(
+    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
       MetadataFileError,
       /maintainers/
     );
@@ -253,9 +253,9 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
-    expect(metadata.maintainers[0].name).toEqual("Json Bearded");
-    expect(metadata.maintainers[0].github).toEqual("jbedard");
+    const metadata = new MetadataFile('metadata.json');
+    expect(metadata.maintainers[0].name).toEqual('Json Bearded');
+    expect(metadata.maintainers[0].github).toEqual('jbedard');
     expect(metadata.maintainers[0].email).toBeUndefined();
   });
 
@@ -274,13 +274,13 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
-    expect(metadata.maintainers[0].name).toEqual("Json Bearded");
-    expect(metadata.maintainers[0].email).toEqual("json@bearded.ca");
+    const metadata = new MetadataFile('metadata.json');
+    expect(metadata.maintainers[0].name).toEqual('Json Bearded');
+    expect(metadata.maintainers[0].email).toEqual('json@bearded.ca');
     expect(metadata.maintainers[0].github).toBeUndefined();
   });
 
-  test("sorts semver versions", () => {
+  test('sorts semver versions', () => {
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -297,12 +297,12 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
 
-    expect(metadata.versions).toEqual(["0.5.0", "1.2.1", "1.2.3", "5.2.3"]);
+    expect(metadata.versions).toEqual(['0.5.0', '1.2.1', '1.2.3', '5.2.3']);
   });
 
-  test("sorts release candidate versions", () => {
+  test('sorts release candidate versions', () => {
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -319,17 +319,17 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
 
     expect(metadata.versions).toEqual([
-      "0.0.1",
-      "1.0.0-rc0",
-      "1.0.0-rc1",
-      "2.0.0-rc5",
+      '0.0.1',
+      '1.0.0-rc0',
+      '1.0.0-rc1',
+      '2.0.0-rc5',
     ]);
   });
 
-  test("sorts versions with a different number of identifiers", () => {
+  test('sorts versions with a different number of identifiers', () => {
     // See: https://bazel.build/external/module#version_format
     mockMetadataFile(`\
 {
@@ -346,12 +346,12 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
 
-    expect(metadata.versions).toEqual(["1.0.0", "2.0.0", "20210324.2"]);
+    expect(metadata.versions).toEqual(['1.0.0', '2.0.0', '20210324.2']);
   });
 
-  test("sorts non-numeric versions lexicographically", () => {
+  test('sorts non-numeric versions lexicographically', () => {
     // See: https://bazel.build/external/module#version_format
     mockMetadataFile(`\
 {
@@ -368,13 +368,13 @@ describe("constructor", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
 
-    expect(metadata.versions).toEqual(["abc.d", "abc.e", "xyz"]);
+    expect(metadata.versions).toEqual(['abc.d', 'abc.e', 'xyz']);
   });
 });
 
-describe("save", () => {
+describe('save', () => {
   test("preserves fields that the app doesn't care about", () => {
     mockMetadataFile(`\
         {
@@ -391,11 +391,11 @@ describe("save", () => {
         }
         `);
 
-    const metadata = new MetadataFile("metadata.json");
-    metadata.save("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
+    metadata.save('metadata.json');
 
     const written = mocked(fs.writeFileSync).mock.calls[0][1] as string;
-    expect(JSON.parse(written).homepage).toEqual("https://foo.bar");
+    expect(JSON.parse(written).homepage).toEqual('https://foo.bar');
   });
 
   test("preserves maintainer fields that the app doesn't know about", () => {
@@ -415,14 +415,14 @@ describe("save", () => {
         }
         `);
 
-    const metadata = new MetadataFile("metadata.json");
-    metadata.save("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
+    metadata.save('metadata.json');
 
     const written = mocked(fs.writeFileSync).mock.calls[0][1] as string;
-    expect(JSON.parse(written).maintainers[0].disposition).toEqual("bearded");
+    expect(JSON.parse(written).maintainers[0].disposition).toEqual('bearded');
   });
 
-  test("saves versions sorted by semver", () => {
+  test('saves versions sorted by semver', () => {
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -437,25 +437,25 @@ describe("save", () => {
     "yanked_versions": {}
 }
 `);
-    const metadata = new MetadataFile("metadata.json");
+    const metadata = new MetadataFile('metadata.json');
 
-    metadata.addVersions("0.5.0", "1.2.3", "5.3.1");
+    metadata.addVersions('0.5.0', '1.2.3', '5.3.1');
 
-    metadata.save("metadata.json");
+    metadata.save('metadata.json');
 
     const written = mocked(fs.writeFileSync).mock.calls[0][1] as string;
     expect(JSON.parse(written).versions).toEqual([
-      "0.5.0",
-      "1.0.0",
-      "1.2.3",
-      "2.0.0",
-      "5.3.1",
+      '0.5.0',
+      '1.0.0',
+      '1.2.3',
+      '2.0.0',
+      '5.3.1',
     ]);
   });
 });
 
-describe("emergencyParseMaintainers", () => {
-  test("parses maintainers from a valid metadata file", () => {
+describe('emergencyParseMaintainers', () => {
+  test('parses maintainers from a valid metadata file', () => {
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -484,29 +484,29 @@ describe("emergencyParseMaintainers", () => {
     "yanked_versions": {}
 }
 `);
-    const maintainers = MetadataFile.emergencyParseMaintainers("metadata.json");
+    const maintainers = MetadataFile.emergencyParseMaintainers('metadata.json');
 
     expect(maintainers).toEqual([
       {
-        name: "M1",
-        email: "m1@foo-maintainer.ca",
+        name: 'M1',
+        email: 'm1@foo-maintainer.ca',
       },
       {
-        name: "M2",
+        name: 'M2',
       },
       {
-        name: "M3",
-        github: "m3",
+        name: 'M3',
+        github: 'm3',
       },
       {
-        name: "M4",
-        email: "m4@foo-maintainer.ca",
-        github: "m4",
+        name: 'M4',
+        email: 'm4@foo-maintainer.ca',
+        github: 'm4',
       },
     ]);
   });
 
-  test("parses valid maintainers from an invalid metadata file", () => {
+  test('parses valid maintainers from an invalid metadata file', () => {
     mockMetadataFile(`\
 {
     "versions": 42,
@@ -521,20 +521,20 @@ describe("emergencyParseMaintainers", () => {
     ]
 }
 `);
-    const maintainers = MetadataFile.emergencyParseMaintainers("metadata.json");
+    const maintainers = MetadataFile.emergencyParseMaintainers('metadata.json');
 
     expect(maintainers).toEqual([
       {
-        name: "M1",
-        email: "m1@foo-maintainer.ca",
+        name: 'M1',
+        email: 'm1@foo-maintainer.ca',
       },
       {
-        name: "M2",
+        name: 'M2',
       },
     ]);
   });
 
-  test("ignores invalid maintainers", () => {
+  test('ignores invalid maintainers', () => {
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -561,16 +561,16 @@ describe("emergencyParseMaintainers", () => {
     "yanked_versions": {}
 }
 `);
-    const maintainers = MetadataFile.emergencyParseMaintainers("metadata.json");
+    const maintainers = MetadataFile.emergencyParseMaintainers('metadata.json');
 
     expect(maintainers).toEqual([
       {
-        name: "M1",
-        email: "m1@foo-maintainer.ca",
+        name: 'M1',
+        email: 'm1@foo-maintainer.ca',
       },
       {
-        name: "M3",
-        github: "m3",
+        name: 'M3',
+        github: 'm3',
       },
     ]);
   });

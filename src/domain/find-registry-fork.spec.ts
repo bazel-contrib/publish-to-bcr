@@ -1,15 +1,15 @@
-import { mocked, Mocked } from "jest-mock";
-import { expectThrownError } from "../test/util";
+import { mocked, Mocked } from 'jest-mock';
+import { expectThrownError } from '../test/util';
 import {
   CANONICAL_BCR,
   FindRegistryForkService,
   NoCandidateForksError,
-} from "./find-registry-fork";
-import { Repository, RepositoryService } from "./repository";
-import { RulesetRepository } from "./ruleset-repository";
+} from './find-registry-fork';
+import { Repository, RepositoryService } from './repository';
+import { RulesetRepository } from './ruleset-repository';
 
-jest.mock("./repository", () => ({
-  Repository: jest.requireActual("./repository").Repository,
+jest.mock('./repository', () => ({
+  Repository: jest.requireActual('./repository').Repository,
   RepositoryService: jest.fn().mockImplementation(() => {
     return {
       getSourceRepository: jest.fn(),
@@ -24,7 +24,7 @@ let mockRepositoryService: Mocked<RepositoryService>;
 
 // Mock RulesetRepostory.create to avoid network call and necessary file checks
 const mockRulesetRepoCreate = jest
-  .spyOn(RulesetRepository, "create")
+  .spyOn(RulesetRepository, 'create')
   .mockImplementation((name, owner) => {
     return new (RulesetRepository as any)(name, owner);
   });
@@ -37,25 +37,25 @@ beforeEach(() => {
   findRegistryForkService = new FindRegistryForkService(mockRepositoryService);
 });
 
-describe("findCandidateForks", () => {
-  test("finds fork in same account as ruleset repo", async () => {
-    const owner = "foo-company";
+describe('findCandidateForks', () => {
+  test('finds fork in same account as ruleset repo', async () => {
+    const owner = 'foo-company';
     const releaser = {
-      name: "Json Bearded",
-      username: "json",
-      email: "jason@foo.org",
+      name: 'Json Bearded',
+      username: 'json',
+      email: 'jason@foo.org',
     };
     const rulesetRepo = await RulesetRepository.create(
-      "ruleset",
+      'ruleset',
       owner,
-      "main"
+      'main'
     );
-    const ownerBcrFork = new Repository("bazel-central-registry", owner);
+    const ownerBcrFork = new Repository('bazel-central-registry', owner);
 
     mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === owner) {
-          return [new Repository("a", owner), ownerBcrFork];
+          return [new Repository('a', owner), ownerBcrFork];
         }
         return [];
       }
@@ -63,7 +63,10 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name) {
+        if (
+          repository.owner === ownerBcrFork.owner &&
+          repository.name === ownerBcrFork.name
+        ) {
           return CANONICAL_BCR;
         }
         return repository;
@@ -83,26 +86,26 @@ describe("findCandidateForks", () => {
   });
 
   test("finds fork in releaser's account", async () => {
-    const owner = "foo-company";
+    const owner = 'foo-company';
     const releaser = {
-      name: "Json Bearded",
-      username: "json",
-      email: "jason@foo.org",
+      name: 'Json Bearded',
+      username: 'json',
+      email: 'jason@foo.org',
     };
     const rulesetRepo = await RulesetRepository.create(
-      "ruleset",
+      'ruleset',
       owner,
-      "main"
+      'main'
     );
     const releaserBcrFork = new Repository(
-      "bazel-central-registry",
+      'bazel-central-registry',
       releaser.username
     );
 
     mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === releaser.username) {
-          return [new Repository("a", releaser.username), releaserBcrFork];
+          return [new Repository('a', releaser.username), releaserBcrFork];
         }
         return [];
       }
@@ -110,7 +113,10 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) {
+        if (
+          repository.owner === releaserBcrFork.owner &&
+          repository.name === releaserBcrFork.name
+        ) {
           return CANONICAL_BCR;
         }
         return repository;
@@ -130,30 +136,30 @@ describe("findCandidateForks", () => {
   });
 
   test("prioritizes fork in ruleset account before releaser's account", async () => {
-    const owner = "foo-company";
+    const owner = 'foo-company';
     const releaser = {
-      name: "Json Bearded",
-      username: "json",
-      email: "jason@foo.org",
+      name: 'Json Bearded',
+      username: 'json',
+      email: 'jason@foo.org',
     };
     const rulesetRepo = await RulesetRepository.create(
-      "ruleset",
+      'ruleset',
       owner,
-      "main"
+      'main'
     );
-    const ownerBcrFork = new Repository("bazel-central-registry", owner);
+    const ownerBcrFork = new Repository('bazel-central-registry', owner);
     const releaserBcrFork = new Repository(
-      "bazel-central-registry",
+      'bazel-central-registry',
       releaser.username
     );
 
     mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === owner) {
-          return [new Repository("a", owner), ownerBcrFork];
+          return [new Repository('a', owner), ownerBcrFork];
         } else {
           // repoOwner === releaser
-          return [new Repository("b", releaser.username), releaserBcrFork];
+          return [new Repository('b', releaser.username), releaserBcrFork];
         }
       }
     );
@@ -161,8 +167,10 @@ describe("findCandidateForks", () => {
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
         if (
-          (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) ||
-          (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name)
+          (repository.owner === releaserBcrFork.owner &&
+            repository.name === releaserBcrFork.name) ||
+          (repository.owner === ownerBcrFork.owner &&
+            repository.name === ownerBcrFork.name)
         ) {
           return CANONICAL_BCR;
         }
@@ -172,8 +180,10 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.hasAppInstallation.mockImplementation(
       async (repository) =>
-        (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) ||
-          (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name)
+        (repository.owner === releaserBcrFork.owner &&
+          repository.name === releaserBcrFork.name) ||
+        (repository.owner === ownerBcrFork.owner &&
+          repository.name === ownerBcrFork.name)
     );
 
     const forks = await findRegistryForkService.findCandidateForks(
@@ -186,24 +196,24 @@ describe("findCandidateForks", () => {
     expect(forks[1].equals(releaserBcrFork)).toEqual(true);
   });
 
-  test("does not return a fork named bazel-central-registry that is not sourced from the canonical BCR", async () => {
-    const owner = "foo-company";
+  test('does not return a fork named bazel-central-registry that is not sourced from the canonical BCR', async () => {
+    const owner = 'foo-company';
     const releaser = {
-      name: "Json Bearded",
-      username: "json",
-      email: "jason@foo.org",
+      name: 'Json Bearded',
+      username: 'json',
+      email: 'jason@foo.org',
     };
     const rulesetRepo = await RulesetRepository.create(
-      "ruleset",
+      'ruleset',
       owner,
-      "main"
+      'main'
     );
-    const ownerBcrFork = new Repository("bazel-central-registry", owner);
+    const ownerBcrFork = new Repository('bazel-central-registry', owner);
 
     mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === owner) {
-          return [new Repository("a", owner), ownerBcrFork];
+          return [new Repository('a', owner), ownerBcrFork];
         }
         return [];
       }
@@ -211,8 +221,11 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name) {
-          return new Repository("bazel-central-registry", "not-google");
+        if (
+          repository.owner === ownerBcrFork.owner &&
+          repository.name === ownerBcrFork.name
+        ) {
+          return new Repository('bazel-central-registry', 'not-google');
         }
         return repository;
       }
@@ -224,27 +237,27 @@ describe("findCandidateForks", () => {
     );
   });
 
-  test("complains when no bcr forks are found with the app installed", async () => {
-    const owner = "foo-company";
+  test('complains when no bcr forks are found with the app installed', async () => {
+    const owner = 'foo-company';
     const releaser = {
-      name: "Json Bearded",
-      username: "json",
-      email: "json@bearded.org",
+      name: 'Json Bearded',
+      username: 'json',
+      email: 'json@bearded.org',
     };
     const rulesetRepo = await RulesetRepository.create(
-      "ruleset",
+      'ruleset',
       owner,
-      "main"
+      'main'
     );
     const releaserBcrFork = new Repository(
-      "bazel-central-registry",
+      'bazel-central-registry',
       releaser.username
     );
 
     mockRepositoryService.getForkedRepositoriesByOwner.mockImplementation(
       async (repoOwner) => {
         if (repoOwner === releaser.username) {
-          return [new Repository("a", releaser.username), releaserBcrFork];
+          return [new Repository('a', releaser.username), releaserBcrFork];
         }
         return [];
       }
@@ -252,7 +265,10 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) {
+        if (
+          repository.owner === releaserBcrFork.owner &&
+          repository.name === releaserBcrFork.name
+        ) {
           return CANONICAL_BCR;
         }
         return repository;

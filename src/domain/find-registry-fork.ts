@@ -1,12 +1,12 @@
-import { Injectable } from "@nestjs/common";
-import { UserFacingError } from "./error.js";
-import { Repository, RepositoryService } from "./repository.js";
-import { RulesetRepository } from "./ruleset-repository.js";
-import { User } from "./user.js";
+import { Injectable } from '@nestjs/common';
+import { UserFacingError } from './error.js';
+import { Repository, RepositoryService } from './repository.js';
+import { RulesetRepository } from './ruleset-repository.js';
+import { User } from './user.js';
 
 export const CANONICAL_BCR = new Repository(
-  "bazel-central-registry",
-  "bazelbuild"
+  'bazel-central-registry',
+  'bazelbuild'
 );
 
 export class NoCandidateForksError extends UserFacingError {
@@ -36,15 +36,17 @@ export class FindRegistryForkService {
     potentialForkOwners.add(releaser.username);
 
     const allForks = (
-      (await Promise.all(
+      await Promise.all(
         Array.from(potentialForkOwners.values()).map((owner) =>
           this.repositoryService.getForkedRepositoriesByOwner(owner)
         )
       )
-    ).reduce((acc, curr) => acc.concat(curr), [])).map(r => new Repository(r.name, r.owner));
+    )
+      .reduce((acc, curr) => acc.concat(curr), [])
+      .map((r) => new Repository(r.name, r.owner));
 
     let candidateForks = allForks.filter(
-      (repo) => repo.name === "bazel-central-registry"
+      (repo) => repo.name === 'bazel-central-registry'
     );
 
     // Only consider forks named `bazel-central-registry`

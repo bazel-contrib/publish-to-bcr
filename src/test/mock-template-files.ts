@@ -1,5 +1,5 @@
-import { randomUUID } from "crypto";
-import { FixedReleaser } from "../domain/config";
+import { randomUUID } from 'crypto';
+import { FixedReleaser } from '../domain/config';
 
 export function fakeModuleFile(
   overrides: {
@@ -17,11 +17,11 @@ export function fakeModuleFile(
 module(
   ${
     overrides.missingName
-      ? ""
-      : `name = "${overrides.moduleName || "fake_ruleset"}",`
+      ? ''
+      : `name = "${overrides.moduleName || 'fake_ruleset'}",`
   }
   compatibility_level = 1,
-  version = "${overrides.version || "0.0.0"}",
+  version = "${overrides.version || '0.0.0'}",
 )
 `;
   if (overrides.deps) {
@@ -51,19 +51,19 @@ export function fakeSourceFile(overrides: FakeSourceFileOptions = {}): string {
     "integrity": "**leave this alone**",
     ${
       overrides.missingStripPrefix
-        ? ""
+        ? ''
         : `"strip_prefix": "${
             overrides.stripPrefix !== undefined
               ? overrides.stripPrefix
-              : "{REPO}-{VERSION}"
+              : '{REPO}-{VERSION}'
           }",`
     }
     ${
       overrides.missingUrl
-        ? ""
+        ? ''
         : `"url": "${
             overrides.url ||
-            "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
+            'https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz'
           }"`
     }
   }
@@ -116,7 +116,7 @@ export function fakeMetadataFile(
   }
   return `\
     {
-      "homepage": "${options.homepage || "https://docs.aspect.dev/bazel-lib"}",
+      "homepage": "${options.homepage || 'https://docs.aspect.dev/bazel-lib'}",
       "maintainers": [
         {
           "email": "json@bearded.ca",
@@ -126,7 +126,7 @@ export function fakeMetadataFile(
       ],
       ${
         options.missingVersions
-          ? ""
+          ? ''
           : `"versions": ${JSON.stringify(options.versions || [])},`
       }
       "yanked_versions": ${JSON.stringify(options.yankedVersions || {})}
@@ -153,7 +153,7 @@ fixedReleaser: foobar
 ${
   options.fixedReleaser
     ? `fixedReleaser: ${JSON.stringify(options.fixedReleaser)}`
-    : ""
+    : ''
 }
 `;
 }

@@ -1,13 +1,13 @@
-import { expect } from "@jest/globals";
+import { expect } from '@jest/globals';
 
-import { toThrowWithMessage } from "jest-extended";
+import { toThrowWithMessage } from 'jest-extended';
 expect.extend({ toThrowWithMessage });
 
 expect.extend({
   matchesPredicate(actual: any, predicate: (actual: any) => boolean) {
     return {
       pass: predicate(actual),
-      message: () => "Expected object that passes predicate",
+      message: () => 'Expected object that passes predicate',
     };
   },
 });
