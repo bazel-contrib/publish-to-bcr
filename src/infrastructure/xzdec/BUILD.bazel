@@ -1,8 +1,8 @@
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_file")
+load("//bazel/ts:defs.bzl", "ts_project")
 load(":wasm.bzl", "wasm_binary")
 
 cc_binary(
-    name = "xzdec",
+    name = "xzdec_cc",
     srcs = ["xzdec.c"],
     linkopts = [
         "-nostdlib",
@@ -16,18 +16,24 @@ cc_binary(
 wasm_binary(
     name = "xzdec_wasm",
     out = "xzdec.wasm",
-    lib = ":xzdec",
+    lib = ":xzdec_cc",
 )
 
 genrule(
     name = "xzdec_wasm_gz",
     srcs = [":xzdec_wasm"],
-    outs = ["xzdec_wasm_gz/xzdec.wasm.gz"],
+    outs = ["xzdec.wasm.gz"],
     cmd = "cat $< | gzip -9 -k -n > $@",
+    visibility = ["//src:__pkg__"],
 )
 
-write_source_file(
-    name = "write_xzdec_wasm_gz_to_source_tree",
-    in_file = ":xzdec_wasm_gz",
-    out_file = "xzdec.wasm.gz",
+ts_project(
+    name = "xzdec",
+    srcs = ["xzdec.ts"],
+    data = [":xzdec_wasm_gz"],
+    visibility = [
+        "//src:__pkg__",
+        "//src/domain:__subpackages__",
+    ],
+    deps = ["//:node_modules/@types/node"],
 )

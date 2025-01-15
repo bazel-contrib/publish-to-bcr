@@ -1,0 +1,8 @@
+load("//tools:terraform.bzl", "terraform")
+
+terraform(
+    name = "terraform",
+    data = [
+        "//src:cloudfunction",
+    ],
+)

@@ -1,5 +1,5 @@
-build
-dist
+bazel-*
+MODULE.bazel.lock
 node_modules
 .DS_Store
 .terraform

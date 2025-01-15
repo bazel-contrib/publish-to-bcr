@@ -1,0 +1,13 @@
+# Import Aspect bazelrc presets
+import %workspace%/.aspect/bazelrc/bazel8.bazelrc
+import %workspace%/.aspect/bazelrc/convenience.bazelrc
+import %workspace%/.aspect/bazelrc/correctness.bazelrc
+import %workspace%/.aspect/bazelrc/debug.bazelrc
+import %workspace%/.aspect/bazelrc/javascript.bazelrc
+import %workspace%/.aspect/bazelrc/performance.bazelrc
+
+# honor the setting of `skipLibCheck` in the tsconfig.json file
+common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+
+# Use "tsc" as the transpiler when ts_project has no `transpiler` set.
+common --@aspect_rules_ts//ts:default_to_tsc_transpiler

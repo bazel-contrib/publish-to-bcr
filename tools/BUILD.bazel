@@ -1,0 +1,18 @@
+load(":terraform.bzl", "terraform")
+
+package(default_visibility = ["//visibility:public"])
+
+terraform(name = "terraform")
+
+sh_library(
+    name = "shell",
+    srcs = [
+        "tool.sh",
+    ],
+)
+
+exports_files(
+    [
+        "tool.sh",
+    ],
+)

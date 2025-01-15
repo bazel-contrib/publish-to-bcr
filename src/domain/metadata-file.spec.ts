@@ -1,6 +1,6 @@
+import "jest-extended";
 import { mocked } from "jest-mock";
 import fs from "node:fs";
-import "../../jest.setup";
 import { MetadataFile, MetadataFileError } from "./metadata-file";
 
 jest.mock("node:fs");

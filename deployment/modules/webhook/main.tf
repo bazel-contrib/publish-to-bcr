@@ -20,16 +20,10 @@ resource "google_storage_bucket" "source_archive_bucket" {
   location = local.region
 }
 
-data "archive_file" "publish_to_bcr_function_archive" {
-  type        = "zip"
-  source_dir = "../../../dist/publish-to-bcr"
-  output_path = "../../../dist/publish-to-bcr.zip"
-}
-
 resource "google_storage_bucket_object" "publish_to_bcr_function_bucket_object" {
-  name   = "source.${data.archive_file.publish_to_bcr_function_archive.output_md5}"
+  name   = "source.${filemd5("${path.module}/../../../bazel-bin/src/cloudfunction.zip")}"
   bucket = google_storage_bucket.source_archive_bucket.name
-  source = data.archive_file.publish_to_bcr_function_archive.output_path
+  source = "${path.module}/../../../bazel-bin/src/cloudfunction.zip"
 }
 
 resource "google_cloudfunctions_function" "publish_to_bcr_function" {

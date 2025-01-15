@@ -1,0 +1,30 @@
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "helpers",
+    srcs = [
+        "archive.ts",
+        "email.ts",
+        "fixture.ts",
+        "types.ts",
+        "webhook.ts",
+    ],
+    visibility = ["//e2e:__subpackages__"],
+    deps = [
+        "//:node_modules/@octokit/webhooks-methods",
+        "//:node_modules/@octokit/webhooks-types",
+        "//:node_modules/@types/archiver",
+        "//:node_modules/@types/imapflow",
+        "//:node_modules/@types/mailparser",
+        "//:node_modules/@types/node",
+        "//:node_modules/@types/nodemailer",
+        "//:node_modules/@types/tar",
+        "//:node_modules/archiver",
+        "//:node_modules/axios",
+        "//:node_modules/imapflow",
+        "//:node_modules/mailparser",
+        "//:node_modules/nodemailer",
+        "//:node_modules/simple-git",
+        "//:node_modules/tar",
+    ],
+)

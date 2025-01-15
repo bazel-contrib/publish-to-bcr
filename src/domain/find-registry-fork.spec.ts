@@ -63,7 +63,7 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.equals(ownerBcrFork)) {
+        if (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name) {
           return CANONICAL_BCR;
         }
         return repository;
@@ -110,7 +110,7 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.equals(releaserBcrFork)) {
+        if (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) {
           return CANONICAL_BCR;
         }
         return repository;
@@ -161,8 +161,8 @@ describe("findCandidateForks", () => {
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
         if (
-          repository.equals(releaserBcrFork) ||
-          repository.equals(ownerBcrFork)
+          (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) ||
+          (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name)
         ) {
           return CANONICAL_BCR;
         }
@@ -172,7 +172,8 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.hasAppInstallation.mockImplementation(
       async (repository) =>
-        repository.equals(ownerBcrFork) || repository.equals(releaserBcrFork)
+        (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) ||
+          (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name)
     );
 
     const forks = await findRegistryForkService.findCandidateForks(
@@ -210,7 +211,7 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.equals(ownerBcrFork)) {
+        if (repository.owner === ownerBcrFork.owner && repository.name === ownerBcrFork.name) {
           return new Repository("bazel-central-registry", "not-google");
         }
         return repository;
@@ -251,7 +252,7 @@ describe("findCandidateForks", () => {
 
     mockRepositoryService.getSourceRepository.mockImplementation(
       async (repository) => {
-        if (repository.equals(releaserBcrFork)) {
+        if (repository.owner === releaserBcrFork.owner && repository.name === releaserBcrFork.name) {
           return CANONICAL_BCR;
         }
         return repository;

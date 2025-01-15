@@ -1,0 +1,15 @@
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "test",
+    srcs = [
+        "mock-template-files.ts",
+        "util.ts",
+    ],
+    visibility = ["//src/domain:__pkg__"],
+    deps = [
+        "//:node_modules/@types/jest",  # keep
+        "//:node_modules/@types/node",
+        "//src/domain",
+    ],
+)

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/theoremlp/rules_multitool/main/lockfile.schema.json",
+  "multitool": {
+    "binaries": [
+      {
+        "kind": "archive",
+        "url": "https://github.com/theoremlp/multitool/releases/download/v0.7.0/multitool-aarch64-apple-darwin.tar.xz",
+        "file": "multitool-aarch64-apple-darwin/multitool",
+        "sha256": "691a57ac398fb9d185f4d2e76a406cc8e15d05e900aaaa047ba8d582cc16e7bd",
+        "os": "macos",
+        "cpu": "arm64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://github.com/theoremlp/multitool/releases/download/v0.7.0/multitool-x86_64-unknown-linux-gnu.tar.xz",
+        "file": "multitool-x86_64-unknown-linux-gnu/multitool",
+        "sha256": "b4c979723e26ed2d2f27f11b06fe35b8ab325b69dbdda53bae1e19e2e98c4f46",
+        "os": "linux",
+        "cpu": "x86_64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://github.com/theoremlp/multitool/releases/download/v0.7.0/multitool-aarch64-unknown-linux-gnu.tar.xz",
+        "file": "multitool-aarch64-unknown-linux-gnu/multitool",
+        "sha256": "dfd76e47788cccd17ff48f70d612d24293037ed33a0abb6e8d8317c64e3a184c",
+        "os": "linux",
+        "cpu": "arm64"
+      }
+    ]
+  },
+  "terraform": {
+    "binaries": [
+      {
+        "kind": "archive",
+        "url": "https://releases.hashicorp.com/terraform/1.9.3/terraform_1.9.3_darwin_arm64.zip",
+        "file": "terraform",
+        "sha256": "168cfeb339dbbfea6be651573ec168e6ca08bab79a4fc0474681eee1e9a95de9",
+        "os": "macos",
+        "cpu": "arm64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://releases.hashicorp.com/terraform/1.9.3/terraform_1.9.3_linux_amd64.zip",
+        "file": "terraform",
+        "sha256": "e52520cf6d677155e69a8fcfe64054891f4d991802b0d36d4c8b670d60a7e899",
+        "os": "linux",
+        "cpu": "x86_64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://releases.hashicorp.com/terraform/1.9.3/terraform_1.9.3_linux_arm64.zip",
+        "file": "terraform",
+        "sha256": "193ce269aafd5c44f359cd73a75c5cc7aaab924eb5c3601784c1873575828ec7",
+        "os": "linux",
+        "cpu": "arm64"
+      }
+    ]
+  }
+}

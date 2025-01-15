@@ -1,0 +1,24 @@
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "stubs",
+    srcs = [
+        "cloud-functions.ts",
+        "fake-github.ts",
+        "fake-secrets.ts",
+        "stubbed-server.ts",
+    ],
+    visibility = ["//e2e:__subpackages__"],
+    deps = [
+        "//:node_modules/@google-cloud/functions-framework",  # keep
+        "//:node_modules/@octokit/webhooks-types",
+        "//:node_modules/@types/jest",  # keep
+        "//:node_modules/@types/node",
+        "//:node_modules/@types/nodemailer",
+        "//:node_modules/mockttp",
+        "//:node_modules/nodemailer",
+        "//:node_modules/portfinder",
+        "//e2e/helpers",
+        "//src:dist",  # keep
+    ],
+)

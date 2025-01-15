@@ -1,0 +1,79 @@
+load("//bazel/jest:defs.bzl", "jest_test")
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "domain",
+    srcs = [
+        "config.ts",
+        "create-entry.ts",
+        "error.ts",
+        "find-registry-fork.ts",
+        "integrity-hash.ts",
+        "metadata-file.ts",
+        "module-file.ts",
+        "publish-entry.ts",
+        "release-archive.ts",
+        "repository.ts",
+        "ruleset-repository.ts",
+        "source-template.ts",
+        "user.ts",
+        "version.ts",
+    ],
+    visibility = ["//src:__subpackages__"],
+    deps = [
+        "//:node_modules/@nestjs/common",
+        "//:node_modules/@types/diff",
+        "//:node_modules/@types/node",
+        "//:node_modules/@types/tar",
+        "//:node_modules/axios",
+        "//:node_modules/axios-retry",
+        "//:node_modules/diff",
+        "//:node_modules/exponential-backoff",
+        "//:node_modules/extract-zip",
+        "//:node_modules/tar",
+        "//:node_modules/yaml",
+        "//src/infrastructure",
+        "//src/infrastructure/xzdec",
+    ],
+)
+
+ts_project(
+    name = "domain_tests",
+    testonly = True,
+    srcs = [
+        "create-entry.spec.ts",
+        "find-registry-fork.spec.ts",
+        "integrity-hash.spec.ts",
+        "metadata-file.spec.ts",
+        "module-file.spec.ts",
+        "publish-entry.spec.ts",
+        "release-archive.spec.ts",
+        "repository.spec.ts",
+        "ruleset-repository.spec.ts",
+        "source-template.spec.ts",
+        "version.spec.ts",
+    ],
+    deps = [
+        ":domain",
+        "//:node_modules/@types/diff",
+        "//:node_modules/@types/jest",  # keep
+        "//:node_modules/@types/node",
+        "//:node_modules/@types/tar",
+        "//:node_modules/axios",
+        "//:node_modules/axios-retry",
+        "//:node_modules/diff",
+        "//:node_modules/exponential-backoff",
+        "//:node_modules/jest-extended",  # keep
+        "//:node_modules/jest-mock",
+        "//:node_modules/tar",
+        "//src/infrastructure",
+        "//src/test",
+    ],
+)
+
+jest_test(
+    name = "test",
+    data = [
+        ":domain_tests",
+    ],
+)

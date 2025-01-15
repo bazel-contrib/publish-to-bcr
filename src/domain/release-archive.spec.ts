@@ -5,7 +5,6 @@ import fs, { WriteStream } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import tar from "tar";
-import "../../jest.setup";
 import { fakeModuleFile } from "../test/mock-template-files";
 import { expectThrownError } from "../test/util";
 import {

@@ -1,0 +1,22 @@
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "application",
+    srcs = [
+        "notifications.ts",
+        "octokit.ts",
+        "release-event-handler.ts",
+    ],
+    visibility = [
+        "//src:__pkg__",
+        "//src/application:__subpackages__",
+    ],
+    deps = [
+        "//:node_modules/@nestjs/common",
+        "//:node_modules/@octokit/rest",
+        "//:node_modules/@octokit/webhooks",
+        "//:node_modules/@octokit/webhooks-types",
+        "//src/domain",
+        "//src/infrastructure",
+    ],
+)

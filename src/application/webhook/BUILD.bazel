@@ -1,0 +1,24 @@
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "webhook",
+    srcs = [
+        "app.module.ts",
+        "index.ts",
+        "main.ts",
+        "providers.ts",
+    ],
+    visibility = ["//src:__pkg__"],
+    deps = [
+        "//:node_modules/@google-cloud/functions-framework",
+        "//:node_modules/@nestjs/common",
+        "//:node_modules/@nestjs/core",
+        "//:node_modules/@octokit/rest",
+        "//:node_modules/@octokit/webhooks",
+        "//:node_modules/@types/source-map-support",
+        "//:node_modules/source-map-support",
+        "//src/application",
+        "//src/domain",
+        "//src/infrastructure",
+    ],
+)
