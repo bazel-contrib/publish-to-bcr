@@ -1,6 +1,6 @@
-import { ImapFlow } from "imapflow";
-import mailparser from "mailparser";
-import nodeMailer, { TestAccount } from "nodemailer";
+import { ImapFlow } from 'imapflow';
+import mailparser from 'mailparser';
+import nodeMailer, { TestAccount } from 'nodemailer';
 
 export async function createTestEmailAccount(): Promise<TestAccount> {
   return await nodeMailer.createTestAccount();
@@ -30,10 +30,10 @@ export async function fetchEmails(
 ): Promise<mailparser.ParsedMail[]> {
   const messages: mailparser.ParsedMail[] = [];
   try {
-    await emailClient.mailboxOpen("INBOX", { readOnly: true });
+    await emailClient.mailboxOpen('INBOX', { readOnly: true });
 
     for await (let message of emailClient.fetch(
-      { seq: "1:*", seen: false },
+      { seq: '1:*', seen: false },
       {
         envelope: true,
         source: true,
@@ -41,7 +41,7 @@ export async function fetchEmails(
     )) {
       messages.push(await mailparser.simpleParser(message.source, {}));
     }
-    await emailClient.messageFlagsAdd({ seq: "1:*", seen: false }, ["\\Seen"]);
+    await emailClient.messageFlagsAdd({ seq: '1:*', seen: false }, ['\\Seen']);
   } finally {
     await emailClient.mailboxClose();
   }

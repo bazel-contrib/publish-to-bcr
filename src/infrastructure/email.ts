@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import nodemailer from "nodemailer";
-import { AuthenticationTypeLogin } from "nodemailer/lib/smtp-connection";
+import { Injectable } from '@nestjs/common';
+import nodemailer from 'nodemailer';
+import { AuthenticationTypeLogin } from 'nodemailer/lib/smtp-connection';
 
 export type Authentication = AuthenticationTypeLogin;
 
@@ -13,12 +13,12 @@ export class EmailClient {
 
   constructor() {
     if (process.env.SMTP_HOST === undefined) {
-      throw new Error("Missing SMTP_HOST environment variable.");
+      throw new Error('Missing SMTP_HOST environment variable.');
     }
     this.host = process.env.SMTP_HOST;
 
     if (!process.env.SMPT_PORT === undefined) {
-      throw new Error("Missing SMTP_PORT environment variable.");
+      throw new Error('Missing SMTP_PORT environment variable.');
     }
     this.port = Number(process.env.SMTP_PORT);
   }
@@ -45,7 +45,7 @@ export class EmailClient {
     });
 
     await transporter.sendMail({
-      to: to.join(","),
+      to: to.join(','),
       from,
       subject,
       text,

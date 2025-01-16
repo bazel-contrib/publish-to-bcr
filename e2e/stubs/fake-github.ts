@@ -1,9 +1,9 @@
-import { User } from "@octokit/webhooks-types";
-import { randomUUID } from "crypto";
-import * as mockttp from "mockttp";
-import { randomInt } from "node:crypto";
-import url from "node:url";
-import { StubbedServer } from "./stubbed-server";
+import { User } from '@octokit/webhooks-types';
+import { randomUUID } from 'crypto';
+import * as mockttp from 'mockttp';
+import { randomInt } from 'node:crypto';
+import url from 'node:url';
+import { StubbedServer } from './stubbed-server';
 
 /**
  * Standin GitHub API and server for release archive downloads.
@@ -276,7 +276,7 @@ export class FakeGitHub implements StubbedServer {
     });
 
     await this.server
-      .forPost("/repos/bazelbuild/bazel-central-registry/pulls")
+      .forPost('/repos/bazelbuild/bazel-central-registry/pulls')
       .thenCallback((request) => this.createPullRequestHandler(request));
   }
 
@@ -294,10 +294,10 @@ export class FakeGitHub implements StubbedServer {
   }
 
   private async setupAppHandler(): Promise<void> {
-    await this.server.forGet("/app").thenCallback((request) => {
+    await this.server.forGet('/app').thenCallback((request) => {
       return {
         json: {
-          slug: "publish-to-bcr-bot",
+          slug: 'publish-to-bcr-bot',
         },
         statusCode: 200,
       };

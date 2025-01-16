@@ -1,8 +1,8 @@
-import { sign } from "@octokit/webhooks-methods";
-import { ReleasePublishedEvent, User } from "@octokit/webhooks-types";
-import axios, { AxiosResponse } from "axios";
-import { randomUUID } from "crypto";
-import type { DeepPartial } from "./types";
+import { sign } from '@octokit/webhooks-methods';
+import { ReleasePublishedEvent, User } from '@octokit/webhooks-types';
+import axios, { AxiosResponse } from 'axios';
+import { randomUUID } from 'crypto';
+import type { DeepPartial } from './types';
 
 export async function publishReleaseEvent(
   webhookUrl: string,
@@ -11,7 +11,7 @@ export async function publishReleaseEvent(
   release: { owner: string; repo: string; tag: string; releaser: Partial<User> }
 ): Promise<AxiosResponse> {
   const body: DeepPartial<ReleasePublishedEvent> = {
-    action: "published",
+    action: 'published',
     repository: {
       name: release.repo,
       owner: {
@@ -32,9 +32,9 @@ export async function publishReleaseEvent(
   const response = await axios.get(webhookUrl, {
     data: body,
     headers: {
-      "x-github-delivery": randomUUID(),
-      "x-github-event": "release",
-      "x-hub-signature-256": signature,
+      'x-github-delivery': randomUUID(),
+      'x-github-event': 'release',
+      'x-hub-signature-256': signature,
     },
     validateStatus: () => true, // Always return the status without throwing
   });

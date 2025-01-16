@@ -1,5 +1,5 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { GitHubClient, User as GitHubUser } from "../infrastructure/github.js";
+import { Inject, Injectable } from '@nestjs/common';
+import { GitHubClient, User as GitHubUser } from '../infrastructure/github.js';
 
 export interface User {
   readonly id?: number;
@@ -11,7 +11,7 @@ export interface User {
 @Injectable()
 export class UserService {
   constructor(
-    @Inject("rulesetRepoGitHubClient") private githubClient: GitHubClient
+    @Inject('rulesetRepoGitHubClient') private githubClient: GitHubClient
   ) {}
 
   public static isGitHubActionsBot(user: User): boolean {

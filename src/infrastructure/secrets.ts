@@ -1,7 +1,7 @@
-import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
-import { Injectable } from "@nestjs/common";
-import gcpMetadata from "gcp-metadata";
-import type { JSONClient } from "google-auth-library/build/src/auth/googleauth";
+import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+import { Injectable } from '@nestjs/common';
+import gcpMetadata from 'gcp-metadata';
+import type { JSONClient } from 'google-auth-library/build/src/auth/googleauth';
 
 @Injectable()
 export class SecretsClient {
@@ -13,8 +13,8 @@ export class SecretsClient {
       // See docs: https://cloud.google.com/nodejs/docs/reference/secret-manager/latest/secret-manager/v1.secretmanagerserviceclient#_google_cloud_secret_manager_v1_SecretManagerServiceClient_constructor_1_
       this.googleSecretsClient = new SecretManagerServiceClient({
         apiEndpoint: process.env.SECRET_MANAGER_HOST,
-        fallback: "rest",
-        protocol: "http",
+        fallback: 'rest',
+        protocol: 'http',
         port: Number(process.env.SECRET_MANAGER_PORT),
         // Create a fake auth client to bypass checking for default credentials
         authClient: {
@@ -45,7 +45,7 @@ export class SecretsClient {
 
 async function getProjectIdOfExecutingCloudFunction(): Promise<string> {
   if (process.env.INTEGRATION_TESTING) {
-    return "test-project";
+    return 'test-project';
   }
-  return await gcpMetadata.project("numeric-project-id");
+  return await gcpMetadata.project('numeric-project-id');
 }

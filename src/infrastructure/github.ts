@@ -1,13 +1,13 @@
-import { createAppAuth } from "@octokit/auth-app";
-import { Octokit } from "@octokit/rest";
-import { Endpoints } from "@octokit/types";
+import { createAppAuth } from '@octokit/auth-app';
+import { Octokit } from '@octokit/rest';
+import { Endpoints } from '@octokit/types';
 
 export type Installation =
-  Endpoints["GET /repos/{owner}/{repo}/installation"]["response"]["data"];
-export type GitHubApp = Endpoints["GET /app"]["response"]["data"];
-export type User = Endpoints["GET /users/{username}"]["response"]["data"];
+  Endpoints['GET /repos/{owner}/{repo}/installation']['response']['data'];
+export type GitHubApp = Endpoints['GET /app']['response']['data'];
+export type User = Endpoints['GET /users/{username}']['response']['data'];
 export type Repository =
-  Endpoints["GET /repos/{owner}/{repo}"]["response"]["data"];
+  Endpoints['GET /repos/{owner}/{repo}']['response']['data'];
 
 export class MissingRepositoryInstallationError extends Error {
   constructor(owner: string, repo: string) {
@@ -51,7 +51,7 @@ export async function getInstallationAuthorizedOctokit(
   repository: string
 ): Promise<Octokit> {
   const octokit = await appOctokit.auth({
-    type: "installation",
+    type: 'installation',
     installationId,
     repositoryNames: [repository],
     factory: (auth: any) =>
@@ -77,9 +77,9 @@ export class GitHubClient {
   // See https://github.com/orgs/community/discussions/26560#discussioncomment-3252340.
   public static readonly GITHUB_ACTIONS_BOT: Readonly<User> = {
     id: 41898282,
-    login: "github-actions[bot]",
-    name: "github-actions[bot]",
-    email: "41898282+github-actions[bot]@users.noreply.github.com",
+    login: 'github-actions[bot]',
+    name: 'github-actions[bot]',
+    email: '41898282+github-actions[bot]@users.noreply.github.com',
   } as User;
 
   public static async forRepoInstallation(
@@ -113,7 +113,7 @@ export class GitHubClient {
     // This endpoint works for org owners as well as user owners
     const { data: repositories } = await this.octokit.rest.repos.listForUser({
       username: owner,
-      type: "owner",
+      type: 'owner',
       per_page: 100,
     });
 
@@ -218,7 +218,7 @@ export class GitHubClient {
       .id;
 
     const auth = (await this.octokit.auth({
-      type: "installation",
+      type: 'installation',
       installationId: installationId,
       repositoryNames: [repo],
     })) as any;

@@ -489,7 +489,7 @@ bcr_test_module:
 modules/zero-versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-OHSXEuWyo2djYr8CjWMT9dq38TDS9P/vIzNBfLQ5E+Q=",
+    "integrity": "sha256-CjfqJ9mn11skB/0SHmvr2BhiQuMZ3gZl9DnZKvC8ECI=",
     "strip_prefix": "zero-versioned-1.0.0",
     "url": "https://github.com/testorg/zero-versioned/archive/refs/tags/v1.0.0.tar.gz",
     "patches": {

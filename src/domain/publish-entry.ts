@@ -1,11 +1,11 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { GitHubClient } from "../infrastructure/github.js";
-import { Repository } from "./repository.js";
-import { RulesetRepository } from "./ruleset-repository.js";
+import { Inject, Injectable } from '@nestjs/common';
+import { GitHubClient } from '../infrastructure/github.js';
+import { Repository } from './repository.js';
+import { RulesetRepository } from './ruleset-repository.js';
 
 @Injectable()
 export class PublishEntryService {
-  constructor(@Inject("bcrGitHubClient") private githubClient: GitHubClient) {}
+  constructor(@Inject('bcrGitHubClient') private githubClient: GitHubClient) {}
 
   public async publish(
     tag: string,
@@ -22,8 +22,8 @@ export class PublishEntryService {
       branch,
       bcr.owner,
       bcr.name,
-      "main",
-      moduleNames.map((moduleName) => `${moduleName}@${version}`).join(", "),
+      'main',
+      moduleNames.map((moduleName) => `${moduleName}@${version}`).join(', '),
       `\
 Release: ${releaseUrl}
 
