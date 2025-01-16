@@ -8,14 +8,11 @@
     "pnpm": "^8"
   },
   "scripts": {
-    "prebuild": "node tools/clean.js",
-    "build": "tsc && cp babel.config.json build/ && node tools/copy-dist-files.js",
+    "build": "bazel build //...",
+    "test": "bazel test //src/...",
+    "e2e": "bazel test //e2e:test",
     "//gcp-build": "Don't run any build steps on cloud run. See https://cloud.google.com/functions/docs/concepts/nodejs-runtime#npm_build_script/",
-    "gcp-build": "",
-    "pretest": "pnpm run build",
-    "test": "jest src",
-    "pree2e": "pnpm run build",
-    "e2e": "jest e2e"
+    "gcp-build": ""
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.1.2",
