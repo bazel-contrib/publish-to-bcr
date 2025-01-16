@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+
 import { GitHubClient } from '../infrastructure/github.js';
 import { Repository } from './repository.js';
 import { RulesetRepository } from './ruleset-repository.js';
@@ -32,7 +33,7 @@ _Automated by [Publish to BCR](https://github.com/apps/publish-to-bcr)_`
 
     try {
       await this.githubClient.enableAutoMerge(bcr.owner, bcr.name, pullNumber);
-    } catch (e) {
+    } catch {
       console.error(
         `Error: Failed to enable auto-merge on pull request github.com/${bcr.canonicalName}/pull/${pullNumber}.`
       );

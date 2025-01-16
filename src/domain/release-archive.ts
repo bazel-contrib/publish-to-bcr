@@ -1,14 +1,15 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
-import axiosRetry from 'axios-retry';
-import extractZip from 'extract-zip';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { parse as parseUrl } from 'node:url';
-import tar from 'tar';
-import { UserFacingError } from './error.js';
-import { decompress as decompressXz } from '../infrastructure/xzdec/xzdec.js';
 
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import axiosRetry from 'axios-retry';
+import extractZip from 'extract-zip';
+import tar from 'tar';
+
+import { decompress as decompressXz } from '../infrastructure/xzdec/xzdec.js';
+import { UserFacingError } from './error.js';
 import { ModuleFile } from './module-file.js';
 
 export class UnsupportedArchiveFormat extends UserFacingError {

@@ -17,7 +17,7 @@ export class EmailClient {
     }
     this.host = process.env.SMTP_HOST;
 
-    if (!process.env.SMPT_PORT === undefined) {
+    if (process.env.SMTP_PORT === undefined) {
       throw new Error('Missing SMTP_PORT environment variable.');
     }
     this.port = Number(process.env.SMTP_PORT);

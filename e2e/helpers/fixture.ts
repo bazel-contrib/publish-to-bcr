@@ -1,6 +1,7 @@
-import { User } from '@octokit/webhooks-types';
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { User } from '@octokit/webhooks-types';
 import simpleGit, { SimpleGit } from 'simple-git';
 
 export const FIXTURES_PATH = path.join('e2e', 'fixtures');

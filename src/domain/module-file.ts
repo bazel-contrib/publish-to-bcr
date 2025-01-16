@@ -1,5 +1,6 @@
-import { ParsedDiff, applyPatch } from 'diff';
 import fs from 'node:fs';
+
+import { applyPatch, ParsedDiff } from 'diff';
 
 export class PatchModuleError extends Error {
   public constructor() {

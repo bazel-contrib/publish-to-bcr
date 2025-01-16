@@ -1,3 +1,6 @@
 configure:
   languages:
     javascript: true
+lint:
+  aspects:
+    - //tools/lint:linters.bzl%eslint

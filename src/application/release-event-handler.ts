@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Octokit } from '@octokit/rest';
-import { ReleasePublishedEvent } from '@octokit/webhooks-types';
 import { HandlerFunction } from '@octokit/webhooks/dist-types/types';
+import { ReleasePublishedEvent } from '@octokit/webhooks-types';
+
 import { CreateEntryService } from '../domain/create-entry.js';
 import { FindRegistryForkService } from '../domain/find-registry-fork.js';
 import { Maintainer, MetadataFile } from '../domain/metadata-file.js';
@@ -110,7 +111,7 @@ export class ReleaseEventHandler {
 
       const attempts: PublishAttempt[] = [];
 
-      for (let bcrFork of candidateBcrForks) {
+      for (const bcrFork of candidateBcrForks) {
         const bcrForkGitHubClient = await GitHubClient.forRepoInstallation(
           this.appOctokit,
           bcrFork.owner,

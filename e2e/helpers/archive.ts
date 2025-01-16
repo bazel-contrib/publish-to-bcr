@@ -1,8 +1,9 @@
-import archiver from 'archiver';
 import { randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
+import archiver from 'archiver';
 import tar from 'tar';
 
 export async function makeReleaseTarball(

@@ -18,9 +18,7 @@ export class SecretsClient {
         port: Number(process.env.SECRET_MANAGER_PORT),
         // Create a fake auth client to bypass checking for default credentials
         authClient: {
-          getRequestHeaders(
-            url?: string
-          ): Promise<{ [index: string]: string }> {
+          getRequestHeaders(_url?: string): Promise<Record<string, string>> {
             return Promise.resolve({});
           },
         } as JSONClient,

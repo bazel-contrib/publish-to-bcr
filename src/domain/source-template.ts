@@ -17,7 +17,7 @@ export class SourceTemplate {
     try {
       const sourceContent = fs.readFileSync(filePath, 'utf8');
       this.sourceJson = JSON.parse(sourceContent);
-    } catch (error) {
+    } catch {
       throw new InvalidSourceTemplateError('cannot parse file as json');
     }
 
@@ -44,7 +44,7 @@ export class SourceTemplate {
     tag: string,
     version: string
   ) {
-    for (let prop of ['url', 'strip_prefix'].filter(
+    for (const prop of ['url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
       this.sourceJson[prop] = this.replaceVariables(

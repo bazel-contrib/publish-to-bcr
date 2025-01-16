@@ -1,8 +1,10 @@
+import { randomInt } from 'node:crypto';
+import url from 'node:url';
+
 import { User } from '@octokit/webhooks-types';
 import { randomUUID } from 'crypto';
 import * as mockttp from 'mockttp';
-import { randomInt } from 'node:crypto';
-import url from 'node:url';
+
 import { StubbedServer } from './stubbed-server';
 
 /**
@@ -266,7 +268,7 @@ export class FakeGitHub implements StubbedServer {
   }
 
   private async setupCreatePullHandler(): Promise<void> {
-    this.createPullRequestHandler.mockImplementation((request) => {
+    this.createPullRequestHandler.mockImplementation((_request) => {
       return {
         statusCode: 201,
         json: {
@@ -281,7 +283,7 @@ export class FakeGitHub implements StubbedServer {
   }
 
   private async setupUpdatePullHandler(): Promise<void> {
-    this.updatePullRequestHandler.mockImplementation((request) => {
+    this.updatePullRequestHandler.mockImplementation((_request) => {
       return {
         statusCode: 200,
         json: {},
@@ -294,7 +296,7 @@ export class FakeGitHub implements StubbedServer {
   }
 
   private async setupAppHandler(): Promise<void> {
-    await this.server.forGet('/app').thenCallback((request) => {
+    await this.server.forGet('/app').thenCallback((_request) => {
       return {
         json: {
           slug: 'publish-to-bcr-bot',

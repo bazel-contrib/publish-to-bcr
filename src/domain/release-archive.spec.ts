@@ -1,10 +1,12 @@
-import axios from 'axios';
-import axiosRetry from 'axios-retry';
-import { mocked } from 'jest-mock';
 import fs, { WriteStream } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
+import axios from 'axios';
+import axiosRetry from 'axios-retry';
+import { mocked } from 'jest-mock';
 import tar from 'tar';
+
 import { fakeModuleFile } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
 import {
@@ -37,7 +39,7 @@ beforeEach(() => {
   );
 
   mocked(fs.createWriteStream).mockReturnValue({
-    on: jest.fn((event: string, func: (...args: any[]) => {}) => {
+    on: jest.fn((event: string, func: (...args: any[]) => unknown) => {
       if (event === 'finish') {
         func();
       }
@@ -73,11 +75,13 @@ describe('fetch', () => {
 
     expect(axiosRetry).toHaveBeenCalledWith(axios, {
       retries: 3,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
       retryCondition: expect.matchesPredicate((retryConditionFn: Function) => {
         // Make sure HTTP 404 errors are retried.
-        let notFoundError = { response: { status: 404 } };
+        const notFoundError = { response: { status: 404 } };
         return retryConditionFn.call(this, notFoundError);
       }),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
       retryDelay: expect.matchesPredicate((retryDelayFn: Function) => {
         // Make sure the retry delays follow exponential backoff
         // and the final retry happens after at least 1 minute total
@@ -85,9 +89,9 @@ describe('fetch', () => {
         // Axios randomly adds an extra 0-20% of jitter to each delay.
         // Test upper bounds as well to ensure the workflow completes reasonably quickly
         // (in this case, no more than 84 seconds total).
-        let firstRetryDelay = retryDelayFn.call(this, 0);
-        let secondRetryDelay = retryDelayFn.call(this, 1);
-        let thirdRetryDelay = retryDelayFn.call(this, 2);
+        const firstRetryDelay = retryDelayFn.call(this, 0);
+        const secondRetryDelay = retryDelayFn.call(this, 1);
+        const thirdRetryDelay = retryDelayFn.call(this, 2);
         return (
           10000 <= firstRetryDelay &&
           firstRetryDelay <= 12000 &&
@@ -110,7 +114,7 @@ describe('fetch', () => {
     });
 
     const mockedAxiosResponse = await (mocked(axios.get).mock.results[0]
-      .value as Promise<{ data: { pipe: Function } }>);
+      .value as Promise<{ data: { pipe: Function } }>); // eslint-disable-line @typescript-eslint/no-unsafe-function-type
     const mockedWriteStream = mocked(fs.createWriteStream).mock.results[0]
       .value as WriteStream;
 

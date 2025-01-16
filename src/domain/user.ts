@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+
 import { GitHubClient, User as GitHubUser } from '../infrastructure/github.js';
 
 export interface User {

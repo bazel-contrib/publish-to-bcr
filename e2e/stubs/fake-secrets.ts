@@ -1,6 +1,8 @@
+import url from 'node:url';
+
 import { generateKeyPairSync } from 'crypto';
 import * as mockttp from 'mockttp';
-import url from 'node:url';
+
 import { StubbedServer } from './stubbed-server';
 
 /**

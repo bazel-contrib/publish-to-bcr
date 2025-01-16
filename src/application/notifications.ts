@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 import { UserFacingError } from '../domain/error.js';
 import { Maintainer } from '../domain/metadata-file.js';
 import { Repository } from '../domain/repository.js';
@@ -22,7 +23,7 @@ export class NotificationsService {
     }
     this.sender = process.env.NOTIFICATIONS_EMAIL;
 
-    if (!!process.env.DEBUG_EMAIL) {
+    if (process.env.DEBUG_EMAIL) {
       this.debugEmail = process.env.DEBUG_EMAIL;
     }
   }
@@ -45,7 +46,7 @@ export class NotificationsService {
 
   public async notifyError(
     releaseAuthor: User,
-    maintainers: ReadonlyArray<Maintainer>,
+    maintainers: readonly Maintainer[],
     rulesetRepo: Repository,
     tag: string,
     errors: Error[]
@@ -111,7 +112,7 @@ Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Reg
       (error) => error instanceof UserFacingError
     );
 
-    for (let error of friendlyErrors) {
+    for (const error of friendlyErrors) {
       content += `${error.message}\n\n`;
     }
 
@@ -148,7 +149,7 @@ Failed to publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Reg
 User ${releaseAuthor.username} <${releaseAuthor.email}> encountered ${unknownErrors.length} unknown error(s) trying publish entry for ${repoCanonicalName}@${tag} to the Bazel Central Registry.
 
 `;
-    for (let error of unknownErrors) {
+    for (const error of unknownErrors) {
       content += `${error.message}\n${error.stack}\n\n`;
     }
 

@@ -2,6 +2,7 @@ import { sign } from '@octokit/webhooks-methods';
 import { ReleasePublishedEvent, User } from '@octokit/webhooks-types';
 import axios, { AxiosResponse } from 'axios';
 import { randomUUID } from 'crypto';
+
 import type { DeepPartial } from './types';
 
 export async function publishReleaseEvent(

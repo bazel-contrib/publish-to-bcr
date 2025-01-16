@@ -1,4 +1,5 @@
-import { mocked, Mocked } from 'jest-mock';
+import { Mocked, mocked } from 'jest-mock';
+
 import { GitHubClient } from '../infrastructure/github';
 import { PublishEntryService } from './publish-entry';
 import { Repository } from './repository';
@@ -176,7 +177,7 @@ describe('publish', () => {
     mockGithubClient.createPullRequest.mockResolvedValueOnce(4);
     mockGithubClient.enableAutoMerge.mockResolvedValueOnce(undefined);
 
-    const pr = await publishEntryService.publish(
+    await publishEntryService.publish(
       tag,
       bcrFork,
       bcr,

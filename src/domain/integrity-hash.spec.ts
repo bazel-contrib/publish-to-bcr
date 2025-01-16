@@ -1,6 +1,8 @@
-import { mocked, Mocked } from 'jest-mock';
 import crypto, { Hash } from 'node:crypto';
 import fs from 'node:fs';
+
+import { Mocked, mocked } from 'jest-mock';
+
 import { computeIntegrityHash } from './integrity-hash';
 
 jest.mock('node:fs');

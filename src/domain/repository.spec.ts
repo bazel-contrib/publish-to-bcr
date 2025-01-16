@@ -1,5 +1,7 @@
-import { mocked } from 'jest-mock';
 import os from 'node:os';
+
+import { mocked } from 'jest-mock';
+
 import { GitClient } from '../infrastructure/git';
 import { Repository } from './repository';
 

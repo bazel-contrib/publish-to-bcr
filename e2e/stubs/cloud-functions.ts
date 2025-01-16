@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { TestAccount } from 'nodemailer';
 import portfinder from 'portfinder';
+
 import { PREPARED_FIXTURES_PATH } from '../helpers/fixture';
 import { StubbedServer } from './stubbed-server';
 

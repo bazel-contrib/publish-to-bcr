@@ -77,3 +77,17 @@ js_library(
     srcs = [".prettierrc.cjs"],
     visibility = ["//visibility:public"],
 )
+
+js_library(
+    name = "eslintrc",
+    srcs = ["eslint.config.mjs"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:node_modules/@babel",
+        "//:node_modules/@eslint/js",
+        "//:node_modules/eslint-plugin-simple-import-sort",
+        "//:node_modules/eslint-plugin-unused-imports",
+        "//:node_modules/globals",
+        "//:node_modules/typescript-eslint",
+    ],
+)

@@ -1,4 +1,5 @@
-import { mocked, Mocked } from 'jest-mock';
+import { Mocked, mocked } from 'jest-mock';
+
 import { expectThrownError } from '../test/util';
 import {
   CANONICAL_BCR,

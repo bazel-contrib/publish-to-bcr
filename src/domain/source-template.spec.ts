@@ -1,5 +1,7 @@
-import { mocked } from 'jest-mock';
 import fs from 'node:fs';
+
+import { mocked } from 'jest-mock';
+
 import {
   fakeSourceFile,
   FakeSourceFileOptions,

@@ -1,6 +1,8 @@
+import fs from 'node:fs';
+
 import { createTwoFilesPatch, parsePatch } from 'diff';
 import { mocked } from 'jest-mock';
-import fs from 'node:fs';
+
 import { fakeModuleFile } from '../test/mock-template-files';
 import { ModuleFile, PatchModuleError } from './module-file';
 
