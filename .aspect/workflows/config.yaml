@@ -7,6 +7,11 @@ tasks:
   - configure:
       queue: aspect-medium
   - test:
+      targets:
+        - //...
+        # Disable e2e tests while ethereal mail is down
+        # https://github.com/nodemailer/nodemailer/issues/1710
+        - -//e2e:test
   - finalization:
       queue: aspect-small
 notifications:
