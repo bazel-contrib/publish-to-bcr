@@ -8,6 +8,14 @@ import { GitHubClient } from '../infrastructure/github.js';
 export class Repository {
   private _diskPath: string | null = null;
 
+  public static fromUrl(url: string): Repository {
+    return undefined;
+  }
+
+  public static fromLocalPath(path: string): Repository {
+    return undefined;
+  }
+
   public static fromCanonicalName(canonicalName: string) {
     const [owner, name] = canonicalName.split('/');
     const repository = new Repository(name, owner);

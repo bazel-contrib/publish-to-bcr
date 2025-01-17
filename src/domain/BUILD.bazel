@@ -8,6 +8,7 @@ ts_project(
         "create-entry.ts",
         "error.ts",
         "find-registry-fork.ts",
+        "github.repository.ts",
         "integrity-hash.ts",
         "metadata-file.ts",
         "module-file.ts",
@@ -43,6 +44,7 @@ ts_project(
     srcs = [
         "create-entry.spec.ts",
         "find-registry-fork.spec.ts",
+        "github.repository.spec.ts",
         "integrity-hash.spec.ts",
         "metadata-file.spec.ts",
         "module-file.spec.ts",
