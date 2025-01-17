@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+
 import { compareVersions } from './version.js';
 
 export class MetadataFileError extends Error {
@@ -65,15 +66,15 @@ export class MetadataFile {
     this.metadata.versions.sort(compareVersions);
   }
 
-  public get maintainers(): ReadonlyArray<Maintainer> {
+  public get maintainers(): readonly Maintainer[] {
     return (this.metadata.maintainers || []) as Maintainer[];
   }
 
-  public get versions(): ReadonlyArray<string> {
+  public get versions(): readonly string[] {
     return this.metadata.versions;
   }
 
-  public get yankedVersions(): Readonly<{ [version: string]: string }> {
+  public get yankedVersions(): Readonly<Record<string, string>> {
     return this.metadata.yanked_versions;
   }
 
@@ -85,14 +86,12 @@ export class MetadataFile {
     this.metadata.yanked_versions = {};
   }
 
-  public addVersions(...versions: ReadonlyArray<string>): void {
+  public addVersions(...versions: readonly string[]): void {
     this.metadata.versions.push(...versions);
     this.metadata.versions.sort(compareVersions);
   }
 
-  public addYankedVersions(yankedVersions: {
-    [version: string]: string;
-  }): void {
+  public addYankedVersions(yankedVersions: Record<string, string>): void {
     this.metadata.yanked_versions = {
       ...this.metadata.yanked_versions,
       ...yankedVersions,
@@ -131,7 +130,7 @@ export class MetadataFile {
 
         return maintainers;
       }
-    } catch (e) {}
+    } catch {} // eslint-disable-line no-empty
 
     return [];
   }

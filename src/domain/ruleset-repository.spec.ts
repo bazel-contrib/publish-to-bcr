@@ -1,6 +1,8 @@
-import { mocked } from 'jest-mock';
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { mocked } from 'jest-mock';
+
 import { GitClient } from '../infrastructure/git';
 import {
   fakeConfigFile,
@@ -395,7 +397,7 @@ function mockRulesetFiles(
       // checkout: jest.fn(),
       shallowClone: jest
         .fn()
-        .mockImplementation(async (url, diskPath, branchOrTag) => {
+        .mockImplementation(async (_url, diskPath, _branchOrTag) => {
           const templatesDir = path.join(
             diskPath,
             RulesetRepository.BCR_TEMPLATE_DIR

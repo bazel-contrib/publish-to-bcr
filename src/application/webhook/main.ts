@@ -1,6 +1,7 @@
 import { HttpFunction } from '@google-cloud/functions-framework';
 import { ContextIdFactory, NestFactory } from '@nestjs/core';
 import { Webhooks } from '@octokit/webhooks';
+
 import { SecretsClient } from '../../infrastructure/secrets.js';
 import { ReleaseEventHandler } from '../release-event-handler.js';
 import { AppModule } from './app.module.js';

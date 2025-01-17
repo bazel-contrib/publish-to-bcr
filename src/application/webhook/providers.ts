@@ -2,6 +2,7 @@ import { Provider, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Octokit } from '@octokit/rest';
 import { EmitterWebhookEvent } from '@octokit/webhooks';
+
 import { Repository } from '../../domain/repository.js';
 import { GitHubClient } from '../../infrastructure/github.js';
 import { SecretsClient } from '../../infrastructure/secrets.js';

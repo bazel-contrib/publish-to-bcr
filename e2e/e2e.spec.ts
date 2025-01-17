@@ -1,14 +1,16 @@
+import { randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import { ReturnTypeOf } from '@octokit/core/dist-types/types';
 import { User } from '@octokit/webhooks-types';
 import { ImapFlow } from 'imapflow';
 import { ParsedMail } from 'mailparser';
 import { CompletedRequest } from 'mockttp';
-import { randomBytes } from 'node:crypto';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 import { TestAccount } from 'nodemailer';
 import { simpleGit } from 'simple-git';
+
 import { GitHubClient } from '../src/infrastructure/github';
 import {
   makeReleaseTarball as _makeReleaseTarball,
@@ -20,11 +22,11 @@ import {
   fetchEmails,
 } from './helpers/email';
 import {
-  Fixture,
-  PREPARED_FIXTURES_PATH,
   deleteLocalRemoteRepos,
+  Fixture,
   getBcr,
   getLatestBranch,
+  PREPARED_FIXTURES_PATH,
   setupLocalRemoteBcr,
   setupLocalRemoteRulesetRepo,
 } from './helpers/fixture';
@@ -553,12 +555,12 @@ describe('e2e tests', () => {
 
     // One pull requests was created with the corrects params
     expect(fakeGitHub.createPullRequestHandler).toHaveBeenCalledTimes(1);
-    let request = fakeGitHub.createPullRequestHandler.mock
+    const request = fakeGitHub.createPullRequestHandler.mock
       .calls[0][0] as CompletedRequest;
     expect(request.path).toEqual(
       expect.stringMatching(/bazelbuild\/bazel-central-registry/)
     );
-    let body = (await request.body.getJson()) as any;
+    const body = (await request.body.getJson()) as any;
     expect(body).toEqual(
       expect.objectContaining({
         base: 'main',

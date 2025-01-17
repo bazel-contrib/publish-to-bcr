@@ -1,5 +1,7 @@
 # See https://docs.aspect.build/workflows/configuration
 tasks:
+  - lint:
+      queue: aspect-medium
   - format:
       queue: aspect-medium
   - buildifier:

@@ -1,9 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { createTwoFilesPatch, parsePatch } from 'diff';
-import { backOff } from 'exponential-backoff';
 import { randomBytes } from 'node:crypto';
 import fs, { readFileSync } from 'node:fs';
 import path from 'node:path';
+
+import { Inject, Injectable } from '@nestjs/common';
+import { createTwoFilesPatch, parsePatch } from 'diff';
+import { backOff } from 'exponential-backoff';
+
 import { GitClient } from '../infrastructure/git.js';
 import { GitHubClient } from '../infrastructure/github.js';
 import { UserFacingError } from './error.js';
@@ -214,7 +216,6 @@ export class CreateEntryService {
     for (const patch of patches) {
       const patchSrc = path.join(patchesPath, patch);
       const patchDest = path.join(bcrVersionEntryPath, 'patches', patch);
-      fs.mkdirSync;
       fs.copyFileSync(patchSrc, patchDest);
       sourceTemplate.addPatch(patch, computeIntegrityHash(patchDest), 1);
 

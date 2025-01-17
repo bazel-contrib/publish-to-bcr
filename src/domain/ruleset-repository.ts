@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import yaml from 'yaml';
+
 import { Configuration } from './config.js';
 import { UserFacingError } from './error.js';
 import {
@@ -10,8 +12,8 @@ import {
 } from './metadata-file.js';
 import { Repository } from './repository.js';
 import {
-  SourceTemplate,
   InvalidSourceTemplateError as _InvalidSourceTemplateError,
+  SourceTemplate,
 } from './source-template.js';
 
 export class RulesetRepoError extends UserFacingError {
@@ -119,7 +121,7 @@ export class RulesetRepository extends Repository {
     rulesetRepo._config = loadConfiguration(rulesetRepo);
 
     const requiredFiles = [];
-    for (let root of rulesetRepo._config.moduleRoots) {
+    for (const root of rulesetRepo._config.moduleRoots) {
       requiredFiles.push(
         ...[
           path.join(
@@ -136,7 +138,7 @@ export class RulesetRepository extends Repository {
         ]
       );
       const missingFiles = [];
-      for (let file of requiredFiles) {
+      for (const file of requiredFiles) {
         if (!fs.existsSync(path.join(rulesetRepo.diskPath, file))) {
           missingFiles.push(file);
         }
@@ -147,7 +149,7 @@ export class RulesetRepository extends Repository {
       }
     }
 
-    for (let moduleRoot of rulesetRepo._config.moduleRoots) {
+    for (const moduleRoot of rulesetRepo._config.moduleRoots) {
       try {
         rulesetRepo._sourceTemplate[moduleRoot] = new SourceTemplate(
           rulesetRepo.sourceTemplatePath(moduleRoot)
@@ -258,7 +260,7 @@ export class RulesetRepository extends Repository {
     return this._config;
   }
 
-  public getAllMaintainers(): ReadonlyArray<Maintainer> {
+  public getAllMaintainers(): readonly Maintainer[] {
     return Object.values(
       Object.values(this._metadataTemplate)
         .flatMap((template) => template.maintainers)
@@ -276,7 +278,7 @@ function validatePresubmitFile(
 ) {
   try {
     yaml.parse(fs.readFileSync(rulesetRepo.presubmitPath(moduleRoot), 'utf-8'));
-  } catch (error) {
+  } catch {
     throw new InvalidPresubmitFileError(
       rulesetRepo,
       moduleRoot,
@@ -296,7 +298,7 @@ function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
   try {
     config =
       yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, 'utf-8')) || {};
-  } catch (error) {
+  } catch {
     throw new InvalidConfigFileError(rulesetRepo, 'cannot parse file as yaml');
   }
 

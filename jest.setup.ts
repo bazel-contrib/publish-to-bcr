@@ -1,5 +1,4 @@
 import { expect } from '@jest/globals';
-
 import { toThrowWithMessage } from 'jest-extended';
 expect.extend({ toThrowWithMessage });
 
@@ -13,6 +12,7 @@ expect.extend({
 });
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Expect {
       matchesPredicate(predicate: (actual: any) => boolean): any;

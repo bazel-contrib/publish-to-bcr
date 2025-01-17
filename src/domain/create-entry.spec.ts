@@ -1,10 +1,12 @@
-import { createTwoFilesPatch } from 'diff';
-import { BackoffOptions, backOff } from 'exponential-backoff';
-import { Mocked, mocked } from 'jest-mock';
 import { randomUUID } from 'node:crypto';
 import fs, { PathLike } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
+import { createTwoFilesPatch } from 'diff';
+import { backOff, BackoffOptions } from 'exponential-backoff';
+import { Mocked, mocked } from 'jest-mock';
+
 import { GitClient } from '../infrastructure/git';
 import {
   GitHubApp,
@@ -46,7 +48,7 @@ jest.mock('exponential-backoff');
 
 const realExponentialBackoff = jest.requireActual('exponential-backoff');
 
-const mockedFileReads: { [path: string]: string } = {};
+const mockedFileReads: Record<string, string> = {};
 const EXTRACTED_MODULE_PATH = '/fake/path/to/MODULE.bazel';
 let mockReleaseArchive: ReleaseArchive;
 
@@ -64,7 +66,7 @@ beforeEach(() => {
     ]);
   }) as any);
 
-  mocked(fs.readdirSync).mockImplementation(((p: PathLike, options: any) => {
+  mocked(fs.readdirSync).mockImplementation(((p: PathLike, _options: any) => {
     return Object.keys(mockedFileReads)
       .filter((f) => path.dirname(f) === p)
       .map((f) => path.basename(f));
@@ -82,7 +84,7 @@ beforeEach(() => {
     return (jest.requireActual('node:fs') as any).existsSync(path);
   }) as any);
 
-  for (let key of Object.keys(mockedFileReads)) {
+  for (const key of Object.keys(mockedFileReads)) {
     delete mockedFileReads[key];
   }
 
@@ -1256,15 +1258,15 @@ function mockRulesetFiles(
     extractedModuleVersion?: string;
     metadataHomepage?: string;
     metadataVersions?: string[];
-    metadataYankedVersions?: { [version: string]: string };
+    metadataYankedVersions?: Record<string, string>;
     sourceUrl?: string;
     sourceStripPrefix?: string;
     moduleRoot?: string;
-    patches?: { [path: string]: string };
+    patches?: Record<string, string>;
   } = {}
 ) {
   mockGitClient.shallowClone.mockImplementation(
-    async (url: string, diskPath: string, ref?: string) => {
+    async (url: string, diskPath: string, _ref?: string) => {
       const moduleRoot = options?.moduleRoot || '.';
       if (options.extractedModuleContent) {
         mockedFileReads[EXTRACTED_MODULE_PATH] = options.extractedModuleContent;
@@ -1332,7 +1334,7 @@ function mockBcrMetadataFile(
   moduleName: string,
   options?: {
     versions?: string[];
-    yankedVersions?: { [version: string]: string };
+    yankedVersions?: Record<string, string>;
     homepage?: string;
     malformed?: boolean;
   }

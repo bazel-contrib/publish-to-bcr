@@ -120,7 +120,7 @@ export async function decompress(r: stream.Readable, w: stream.Writable) {
       }
 
       while (xzdec_input_empty(xzdec) == 0) {
-        let rc = xzdec_next_output(xzdec, outputPtr, BUF_SIZE, outputLenPtr);
+        const rc = xzdec_next_output(xzdec, outputPtr, BUF_SIZE, outputLenPtr);
         if (rc !== lzma_ret.OK) {
           throw new Error(`xzdec_next_output() failed: lzma_ret(${rc})`);
         }

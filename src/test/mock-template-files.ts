@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+
 import { FixedReleaser } from '../domain/config';
 
 export function fakeModuleFile(
@@ -105,7 +106,7 @@ tasks:
 export function fakeMetadataFile(
   options: {
     versions?: string[];
-    yankedVersions?: { [version: string]: string };
+    yankedVersions?: Record<string, string>;
     homepage?: string;
     malformed?: boolean;
     missingVersions?: boolean;

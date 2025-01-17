@@ -32,7 +32,7 @@ export async function fetchEmails(
   try {
     await emailClient.mailboxOpen('INBOX', { readOnly: true });
 
-    for await (let message of emailClient.fetch(
+    for await (const message of emailClient.fetch(
       { seq: '1:*', seen: false },
       {
         envelope: true,
