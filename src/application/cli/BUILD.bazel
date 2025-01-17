@@ -1,0 +1,45 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("//bazel/jest:defs.bzl", "jest_test")
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "cli",
+    srcs = [
+        "app.module.ts",
+        "create-entry-command.ts",
+        "main.ts",
+        "yargs.ts",
+    ],
+    deps = [
+        "//:node_modules/@nestjs/common",
+        "//:node_modules/@nestjs/core",
+        "//:node_modules/@types/node",  # keep
+        "//:node_modules/@types/yargs",
+        "//:node_modules/yargs",
+    ],
+)
+
+js_binary(
+    name = "bin",
+    data = [":cli"],
+    entry_point = "main.js",
+)
+
+ts_project(
+    name = "cli_tests",
+    testonly = True,
+    srcs = ["yargs.spec.ts"],
+    deps = [
+        ":cli",
+        "//:node_modules/@types/jest",  # keep
+        "//:node_modules/@types/yargs",
+        "//:node_modules/yargs",
+    ],
+)
+
+jest_test(
+    name = "test",
+    data = [
+        ":cli_tests",
+    ],
+)
