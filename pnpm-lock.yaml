@@ -105,8 +105,8 @@ devDependencies:
     specifier: ^5.0.2
     version: 5.2.3
   '@types/imapflow':
-    specifier: 1.0.17
-    version: 1.0.17
+    specifier: 1.0.19
+    version: 1.0.19
   '@types/jest':
     specifier: ^29.5.14
     version: 29.5.14
@@ -2402,8 +2402,8 @@ packages:
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
     dev: false
 
-  /@types/imapflow@1.0.17:
-    resolution: {integrity: sha512-L7qvMfFhaB5sMP+nx83pZL5r48yBhWIoLsSZwPPTvNHxUKbD2F20aViUm2NeL1h+Be9zDAXcnMyvO7pvhjXjng==}
+  /@types/imapflow@1.0.19:
+    resolution: {integrity: sha512-U48VZXe4XYhS3AFNI+4ougW8OXI4VaKjyF0nGXgVzIN8SPs9lh2LPNRM0HmIM+hUTw60l7MHgbQO8hsf+Q4U5w==}
     dependencies:
       '@types/node': 18.19.71
     dev: true
