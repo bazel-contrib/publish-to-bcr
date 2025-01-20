@@ -4,7 +4,7 @@ import { hideBin } from 'yargs/helpers';
 import { CreateEntryCommand } from './create-entry-command';
 
 export interface CreateEntryArgs {
-  rulesetRepo: string;
+  templatesDir: string;
 }
 
 export type ApplicationArgs = CreateEntryArgs;
@@ -22,9 +22,9 @@ export function createParser(
       'create-entry',
       'Create a new module version entry for the BCR',
       (yargs) => {
-        yargs.option('ruleset-repo', {
+        yargs.option('templates-dir', {
           describe:
-            'Ruleset repository containing .bcr folder with templates. Can be a remote git url, e.g. `git@github.com:org/repo.git` or local path e.g. `./path/to/repo`.',
+            'Directory containing a config file, BCR templates, and other release files: config.yml, source.template.json, metadata.template.json, presubmit.yaml. Equivalent to the .bcr directory required by the legacy GitHub app.',
           type: 'string',
           required: true,
           requiresArg: true,

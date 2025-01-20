@@ -30,23 +30,21 @@ describe('createParser', () => {
   });
 
   describe('create-entry', () => {
-    test('missing --ruleset-repo', async () => {
+    test('missing --templates-dir', async () => {
       expect(() => parser.parse('create-entry')).toThrow(
-        'Missing required argument: ruleset-repo'
+        'Missing required argument: templates-dir'
       );
     });
 
-    test('missing --ruleset-repo arg', () => {
-      expect(() => parser.parse('create-entry --ruleset-repo')).toThrow(
-        'Not enough arguments following: ruleset-repo'
+    test('missing --templates-dir arg', () => {
+      expect(() => parser.parse('create-entry --templates-dir')).toThrow(
+        'Not enough arguments following: templates-dir'
       );
     });
 
-    test('parses --ruleset-repo', async () => {
-      const args = await parser.parse(
-        'create-entry --ruleset-repo git@github.com:org/repo.git'
-      );
-      expect(args.rulesetRepo).toEqual('git@github.com:org/repo.git');
+    test('parses --templates-dir', async () => {
+      const args = await parser.parse('create-entry --templates-dir .bcr');
+      expect(args.templatesDir).toEqual('.bcr');
     });
   });
 });

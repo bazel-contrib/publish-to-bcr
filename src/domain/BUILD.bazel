@@ -4,7 +4,7 @@ load("//bazel/ts:defs.bzl", "ts_project")
 ts_project(
     name = "domain",
     srcs = [
-        "config.ts",
+        "configuration.ts",
         "create-entry.ts",
         "error.ts",
         "find-registry-fork.ts",
@@ -41,6 +41,7 @@ ts_project(
     name = "domain_tests",
     testonly = True,
     srcs = [
+        "configuration.spec.ts",
         "create-entry.spec.ts",
         "find-registry-fork.spec.ts",
         "integrity-hash.spec.ts",
