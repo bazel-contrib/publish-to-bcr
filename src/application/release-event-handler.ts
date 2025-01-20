@@ -78,7 +78,7 @@ export class ReleaseEventHandler {
           moduleNames.push(moduleName);
         }
 
-        branch = await this.createEntryService.commitEntryToNewBranch(
+        branch = await this.publishEntryService.commitEntryToNewBranch(
           rulesetRepo,
           bcr,
           tag,
@@ -213,7 +213,7 @@ export class ReleaseEventHandler {
     console.log(`Attempting publish to fork ${bcrFork.canonicalName}.`);
 
     try {
-      await this.createEntryService.pushEntryToFork(
+      await this.publishEntryService.pushEntryToFork(
         bcrFork,
         bcr,
         branch,
