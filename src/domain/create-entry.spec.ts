@@ -4,15 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { createTwoFilesPatch } from 'diff';
-import { backOff, BackoffOptions } from 'exponential-backoff';
 import { Mocked, mocked } from 'jest-mock';
 
 import { GitClient } from '../infrastructure/git';
-import {
-  GitHubApp,
-  GitHubClient,
-  User as GitHubUser,
-} from '../infrastructure/github';
 import {
   fakeMetadataFile,
   fakeModuleFile,
@@ -32,12 +26,9 @@ import { ModuleFile } from './module-file';
 import { ReleaseArchive } from './release-archive';
 import { Repository } from './repository';
 import { RulesetRepository } from './ruleset-repository';
-import { User, UserService } from './user';
 
 let createEntryService: CreateEntryService;
 let mockGitClient: Mocked<GitClient>;
-let mockBcrForkGitHubClient: Mocked<GitHubClient>;
-let mockBcrGitHubClient: Mocked<GitHubClient>;
 
 jest.mock('../infrastructure/git');
 jest.mock('../infrastructure/github');
@@ -45,8 +36,6 @@ jest.mock('./integrity-hash');
 jest.mock('./release-archive');
 jest.mock('node:fs');
 jest.mock('exponential-backoff');
-
-const realExponentialBackoff = jest.requireActual('exponential-backoff');
 
 const mockedFileReads: Record<string, string> = {};
 const EXTRACTED_MODULE_PATH = '/fake/path/to/MODULE.bazel';
@@ -99,13 +88,8 @@ beforeEach(() => {
   mocked(ReleaseArchive.fetch).mockResolvedValue(mockReleaseArchive);
 
   mockGitClient = mocked(new GitClient());
-  mockBcrForkGitHubClient = mocked(new GitHubClient({} as any));
-  mockBcrGitHubClient = mocked(new GitHubClient({} as any));
   mocked(computeIntegrityHash).mockReturnValue(`sha256-${randomUUID()}`);
-  createEntryService = new CreateEntryService(
-    mockGitClient,
-    mockBcrGitHubClient
-  );
+  createEntryService = new CreateEntryService();
 });
 
 describe('createEntryFiles', () => {
@@ -914,344 +898,7 @@ describe('createEntryFiles', () => {
   });
 });
 
-describe('commitEntryToNewBranch', () => {
-  test('sets the commit author to the releaser', async () => {
-    mockRulesetFiles();
-
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = CANONICAL_BCR;
-    const releaser: User = {
-      name: 'Json Bearded',
-      email: 'json@bearded.ca',
-      username: 'json',
-    };
-
-    await createEntryService.commitEntryToNewBranch(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      releaser
-    );
-
-    expect(mockGitClient.setUserNameAndEmail).toHaveBeenCalledWith(
-      bcrRepo.diskPath,
-      releaser.name,
-      releaser.email
-    );
-  });
-
-  test('sets the commit author to the publish-to-bcr bot when the release it the github-actions bot', async () => {
-    // https://github.com/bazel-contrib/publish-to-bcr/issues/120
-    mockRulesetFiles();
-
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = CANONICAL_BCR;
-    const releaser = UserService.fromGitHubUser(
-      GitHubClient.GITHUB_ACTIONS_BOT
-    );
-    const botUser: Partial<GitHubUser> = {
-      name: 'publish-to-bcr',
-      login: 'publish-to-bcr[bot]',
-      email: `12345+"publish-to-bcr[bot]@users.noreply.github.com`,
-    };
-    const botApp = { slug: 'publish-to-bcr' } as GitHubApp;
-
-    mockBcrGitHubClient.getApp.mockResolvedValue(botApp);
-    mockBcrGitHubClient.getBotAppUser.mockResolvedValue(botUser as GitHubUser);
-
-    await createEntryService.commitEntryToNewBranch(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      releaser
-    );
-
-    expect(mockBcrGitHubClient.getApp).toHaveBeenCalled();
-    expect(mockBcrGitHubClient.getBotAppUser).toHaveBeenCalledWith(botApp);
-
-    expect(mockGitClient.setUserNameAndEmail).toHaveBeenCalledWith(
-      bcrRepo.diskPath,
-      botUser.name,
-      botUser.email
-    );
-  });
-
-  test('checks out a new branch on the bcr repo', async () => {
-    mockRulesetFiles();
-
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = CANONICAL_BCR;
-    const releaser: User = {
-      name: 'Json Bearded',
-      email: 'json@bearded.ca',
-      username: 'json',
-    };
-
-    await createEntryService.commitEntryToNewBranch(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      releaser
-    );
-
-    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledWith(
-      bcrRepo.diskPath,
-      expect.any(String)
-    );
-  });
-
-  test('branch contains the repo name and release tag', async () => {
-    mockRulesetFiles();
-
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = CANONICAL_BCR;
-    const releaser: User = {
-      name: 'Json Bearded',
-      email: 'json@bearded.ca',
-      username: 'json',
-    };
-
-    await createEntryService.commitEntryToNewBranch(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      releaser
-    );
-
-    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledTimes(1);
-    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining(rulesetRepo.canonicalName)
-    );
-    expect(mockGitClient.checkoutNewBranchFromHead).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining(tag)
-    );
-  });
-
-  test('returns the created branch name', async () => {
-    mockRulesetFiles();
-
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = CANONICAL_BCR;
-    const releaser: User = {
-      name: 'Json Bearded',
-      email: 'json@bearded.ca',
-      username: 'json',
-    };
-
-    const returnedBranch = await createEntryService.commitEntryToNewBranch(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      releaser
-    );
-    const createdBranch =
-      mockGitClient.checkoutNewBranchFromHead.mock.calls[0][1];
-
-    expect(returnedBranch).toEqual(createdBranch);
-  });
-
-  test('commit message contains the repo name and release tag', async () => {
-    mockRulesetFiles();
-
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = CANONICAL_BCR;
-    const releaser: User = {
-      name: 'Json Bearded',
-      email: 'json@bearded.ca',
-      username: 'json',
-    };
-
-    await createEntryService.commitEntryToNewBranch(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      releaser
-    );
-
-    expect(mockGitClient.commitChanges).toHaveBeenCalledTimes(1);
-    expect(mockGitClient.commitChanges).toHaveBeenCalledWith(
-      bcrRepo.diskPath,
-      expect.stringContaining(rulesetRepo.canonicalName)
-    );
-    expect(mockGitClient.commitChanges).toHaveBeenCalledWith(
-      bcrRepo.diskPath,
-      expect.stringContaining(tag)
-    );
-  });
-});
-
-describe('pushEntryToFork', () => {
-  beforeEach(() => {
-    // Reduce the exponential-backoff delay to 0 for tests
-    (backOff as unknown as jest.SpyInstance).mockImplementation(
-      (request: () => Promise<void>, options?: BackoffOptions) =>
-        realExponentialBackoff.backOff(request, {
-          ...options,
-          startingDelay: 0,
-        })
-    );
-  });
-
-  test('acquires an authenticated remote url for the bcr fork', async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository('bazel-central-registry', 'aspect');
-    const branchName = `repo/owner@v1.2.3`;
-
-    await createEntryService.pushEntryToFork(
-      bcrForkRepo,
-      bcrRepo,
-      branchName,
-      mockBcrForkGitHubClient
-    );
-    expect(
-      mockBcrForkGitHubClient.getAuthenticatedRemoteUrl
-    ).toHaveBeenCalledWith(bcrForkRepo.owner, bcrForkRepo.name);
-  });
-
-  test('adds a remote with the authenticated url for the fork to the local bcr repo', async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository('bazel-central-registry', 'aspect');
-    const branchName = `repo/owner@v1.2.3`;
-    const authenticatedUrl = randomUUID();
-
-    mockBcrForkGitHubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
-      Promise.resolve(authenticatedUrl)
-    );
-
-    await createEntryService.pushEntryToFork(
-      bcrForkRepo,
-      bcrRepo,
-      branchName,
-      mockBcrForkGitHubClient
-    );
-    expect(mockGitClient.addRemote).toHaveBeenCalledWith(
-      bcrRepo.diskPath,
-      expect.any(String),
-      authenticatedUrl
-    );
-  });
-
-  test("named the authenticated remote 'authed-fork'", async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository('bazel-central-registry', 'aspect');
-    const branchName = `repo/owner@v1.2.3`;
-    const authenticatedUrl = randomUUID();
-
-    mockBcrForkGitHubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
-      Promise.resolve(authenticatedUrl)
-    );
-
-    await createEntryService.pushEntryToFork(
-      bcrForkRepo,
-      bcrRepo,
-      branchName,
-      mockBcrForkGitHubClient
-    );
-    expect(mockGitClient.addRemote).toHaveBeenCalledWith(
-      expect.any(String),
-      'authed-fork',
-      expect.any(String)
-    );
-  });
-
-  test('does not re-add the remote if it already exists', async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository('bazel-central-registry', 'aspect');
-    const branchName = `repo/owner@v1.2.3`;
-    const authenticatedUrl = randomUUID();
-
-    mockGitClient.hasRemote.mockReturnValueOnce(Promise.resolve(true));
-    mockBcrForkGitHubClient.getAuthenticatedRemoteUrl.mockReturnValueOnce(
-      Promise.resolve(authenticatedUrl)
-    );
-
-    await createEntryService.pushEntryToFork(
-      bcrForkRepo,
-      bcrRepo,
-      branchName,
-      mockBcrForkGitHubClient
-    );
-    expect(mockGitClient.addRemote).not.toHaveBeenCalled();
-  });
-
-  test('pushes the entry branch to the fork using the authorized remote', async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository('bazel-central-registry', 'aspect');
-    const branchName = `repo/owner@v1.2.3`;
-
-    await createEntryService.pushEntryToFork(
-      bcrForkRepo,
-      bcrRepo,
-      branchName,
-      mockBcrForkGitHubClient
-    );
-
-    expect(mockGitClient.push).toHaveBeenCalledWith(
-      bcrRepo.diskPath,
-      'authed-fork',
-      branchName
-    );
-  });
-
-  test('retries 5 times if it fails', async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository('bazel-central-registry', 'aspect');
-    const branchName = `repo/owner@v1.2.3`;
-
-    (backOff as unknown as jest.SpyInstance).mockImplementation(
-      (request: () => Promise<any>, options?: BackoffOptions) => {
-        return realExponentialBackoff.backOff(request, {
-          ...options,
-          startingDelay: 0,
-        });
-      }
-    );
-
-    mockGitClient.push
-      .mockRejectedValueOnce(new Error('failed push'))
-      .mockRejectedValueOnce(new Error('failed push'))
-      .mockRejectedValueOnce(new Error('failed push'))
-      .mockRejectedValueOnce(new Error('failed push'))
-      .mockResolvedValueOnce(undefined);
-
-    await createEntryService.pushEntryToFork(
-      bcrForkRepo,
-      bcrRepo,
-      branchName,
-      mockBcrForkGitHubClient
-    );
-
-    expect(mockGitClient.push).toHaveBeenCalledTimes(5);
-  });
-
-  test('fails after the 5th retry', async () => {
-    const bcrRepo = CANONICAL_BCR;
-    const bcrForkRepo = new Repository('bazel-central-registry', 'aspect');
-    const branchName = `repo/owner@v1.2.3`;
-
-    mockGitClient.push.mockRejectedValue(new Error('failed push'));
-
-    await expect(
-      createEntryService.pushEntryToFork(
-        bcrForkRepo,
-        bcrRepo,
-        branchName,
-        mockBcrForkGitHubClient
-      )
-    ).rejects.toThrow();
-    expect(mockGitClient.push).toHaveBeenCalledTimes(5);
-  });
-});
-
-function mockRulesetFiles(
+export function mockRulesetFiles(
   options: {
     extractedModuleContent?: string;
     extractedModuleName?: string;

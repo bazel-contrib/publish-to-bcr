@@ -1,13 +1,9 @@
-import { randomBytes } from 'node:crypto';
 import fs, { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { createTwoFilesPatch, parsePatch } from 'diff';
-import { backOff } from 'exponential-backoff';
 
-import { GitClient } from '../infrastructure/git.js';
-import { GitHubClient } from '../infrastructure/github.js';
 import { UserFacingError } from './error.js';
 import { computeIntegrityHash } from './integrity-hash.js';
 import { MetadataFile } from './metadata-file.js';
@@ -19,7 +15,6 @@ import { ReleaseArchive } from './release-archive.js';
 import { Repository } from './repository.js';
 import { RulesetRepository } from './ruleset-repository.js';
 import { SourceTemplate } from './source-template.js';
-import { User, UserService } from './user.js';
 
 export class VersionAlreadyPublishedError extends UserFacingError {
   public constructor(version: string) {
@@ -35,11 +30,6 @@ export class PatchModuleError extends UserFacingError {
 
 @Injectable()
 export class CreateEntryService {
-  constructor(
-    private readonly gitClient: GitClient,
-    @Inject('bcrGitHubClient') private bcrGitHubClient: GitHubClient
-  ) {}
-
   public async createEntryFiles(
     rulesetRepo: RulesetRepository,
     bcrRepo: Repository,
@@ -116,79 +106,6 @@ export class CreateEntryService {
     } finally {
       releaseArchive.cleanup();
     }
-  }
-
-  public async commitEntryToNewBranch(
-    rulesetRepo: Repository,
-    bcrRepo: Repository,
-    tag: string,
-    releaser: User
-  ): Promise<string> {
-    const repoAndVersion = `${rulesetRepo.canonicalName}@${tag}`;
-    const branchName = `${repoAndVersion}-${randomBytes(4).toString('hex')}`;
-
-    let commitAuthor: Partial<User> = releaser;
-    if (UserService.isGitHubActionsBot(releaser)) {
-      const botApp = await this.bcrGitHubClient.getApp();
-      const botAppUser = await this.bcrGitHubClient.getBotAppUser(botApp);
-
-      commitAuthor = {
-        name: botAppUser.name,
-        email: botAppUser.email,
-      };
-    }
-
-    await this.gitClient.setUserNameAndEmail(
-      bcrRepo.diskPath,
-      commitAuthor.name,
-      commitAuthor.email
-    );
-    await this.gitClient.checkoutNewBranchFromHead(
-      bcrRepo.diskPath,
-      branchName
-    );
-    await this.gitClient.commitChanges(
-      bcrRepo.diskPath,
-      `Publish ${repoAndVersion}`
-    );
-
-    return branchName;
-  }
-
-  public async pushEntryToFork(
-    bcrForkRepo: Repository,
-    bcr: Repository,
-    branch: string,
-    githubClient: GitHubClient
-  ): Promise<void> {
-    const authenticatedRemoteUrl = await githubClient.getAuthenticatedRemoteUrl(
-      bcrForkRepo.owner,
-      bcrForkRepo.name
-    );
-
-    if (!(await this.gitClient.hasRemote(bcr.diskPath, 'authed-fork'))) {
-      await this.gitClient.addRemote(
-        bcr.diskPath,
-        'authed-fork',
-        authenticatedRemoteUrl
-      );
-    }
-
-    if (process.env.INTEGRATION_TESTING) {
-      // It is too difficult to mock the responses to `git push` when
-      // not using a real git server. Just push to the original remote,
-      // which, during testing, is just a local repo on disk, so that
-      // we can examine the result.
-      await this.gitClient.push(bcr.diskPath, 'origin', branch);
-      return;
-    }
-
-    await backOff(
-      () => this.gitClient.push(bcr.diskPath, 'authed-fork', branch),
-      {
-        numOfAttempts: 5,
-      }
-    );
   }
 
   private addPatches(
