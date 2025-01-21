@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-import { FixedReleaser } from '../domain/config';
+import { FixedReleaser } from '../domain/configuration';
 
 export function fakeModuleFile(
   overrides: {

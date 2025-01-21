@@ -3,7 +3,11 @@ import path from 'node:path';
 
 import yaml from 'yaml';
 
-import { Configuration } from './config.js';
+import {
+  Configuration,
+  InvalidConfigurationFileError as _InvalidConfigurationFileError,
+  MissingConfigurationFileError,
+} from './configuration.js';
 import { UserFacingError } from './error.js';
 import {
   Maintainer,
@@ -77,7 +81,7 @@ export class InvalidPresubmitFileError extends RulesetRepoError {
   }
 }
 
-export class InvalidConfigFileError extends RulesetRepoError {
+export class InvalidConfigurationFileError extends RulesetRepoError {
   constructor(repository: RulesetRepository, reason: string) {
     super(
       repository,
@@ -288,45 +292,15 @@ function validatePresubmitFile(
 }
 
 function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
-  const DEFAULT_MODULE_ROOTS = ['.'];
-
-  if (!fs.existsSync(rulesetRepo.configFilePath)) {
-    return { moduleRoots: DEFAULT_MODULE_ROOTS };
-  }
-
-  let config: Record<string, any>;
   try {
-    config =
-      yaml.parse(fs.readFileSync(rulesetRepo.configFilePath, 'utf-8')) || {};
-  } catch {
-    throw new InvalidConfigFileError(rulesetRepo, 'cannot parse file as yaml');
+    return Configuration.fromFile(rulesetRepo.configFilePath);
+  } catch (e) {
+    if (e instanceof MissingConfigurationFileError) {
+      return Configuration.defaults();
+    }
+    if (e instanceof _InvalidConfigurationFileError) {
+      throw new InvalidConfigurationFileError(rulesetRepo, e.reason);
+    }
+    throw e;
   }
-
-  if (
-    config.fixedReleaser &&
-    (typeof config.fixedReleaser !== 'object' ||
-      typeof config.fixedReleaser.login !== 'string' ||
-      typeof config.fixedReleaser.email !== 'string')
-  ) {
-    throw new InvalidConfigFileError(
-      rulesetRepo,
-      "could not parse 'fixedReleaser'"
-    );
-  }
-
-  if (
-    config.moduleRoots !== undefined &&
-    (!Array.isArray(config.moduleRoots) ||
-      !config.moduleRoots.every((value) => typeof value === 'string'))
-  ) {
-    throw new InvalidConfigFileError(
-      rulesetRepo,
-      "could not parse 'moduleRoots'"
-    );
-  }
-
-  return {
-    fixedReleaser: config.fixedReleaser,
-    moduleRoots: config.moduleRoots || DEFAULT_MODULE_ROOTS,
-  } as Configuration;
 }

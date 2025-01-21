@@ -11,9 +11,9 @@ import {
   fakeSourceFile,
 } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
-import { FixedReleaser } from './config';
+import { Configuration, FixedReleaser } from './configuration';
 import {
-  InvalidConfigFileError,
+  InvalidConfigurationFileError,
   InvalidMetadataTemplateError,
   InvalidPresubmitFileError,
   InvalidSourceTemplateError,
@@ -146,55 +146,14 @@ describe('create', () => {
     test("defaults configuration when the file doesn't exist", async () => {
       mockRulesetFiles({ configExists: false });
       const rulesetRepo = await RulesetRepository.create('foo', 'bar', 'main');
-      expect(rulesetRepo.config.fixedReleaser).toBeUndefined();
+      expect(rulesetRepo.config).toEqual(Configuration.defaults());
     });
 
-    test('loads a fixedReleaser', async () => {
-      mockRulesetFiles({
-        configExists: true,
-        fixedReleaser: { login: 'jbedard', email: 'json@bearded.ca' },
-      });
-      const rulesetRepo = await RulesetRepository.create('foo', 'bar', 'main');
-      expect(rulesetRepo.config.fixedReleaser).toEqual({
-        login: 'jbedard',
-        email: 'json@bearded.ca',
-      });
-    });
-
-    test('throws on invalid fixedReleaser', async () => {
+    test('throws when the configuration file is invalid', async () => {
       mockRulesetFiles({ configExists: true, invalidFixedReleaser: true });
-      await expectThrownError(
-        () => RulesetRepository.create('foo', 'bar', 'main'),
-        InvalidConfigFileError
-      );
-    });
-
-    test('loads moduleRoots', async () => {
-      mockRulesetFiles({
-        configExists: true,
-        configContent: 'moduleRoots: [".", "subdir"]',
-      });
-    });
-
-    test('defaults moduleRoots to the root dir', async () => {
-      mockRulesetFiles({
-        configExists: true,
-        configContent: '',
-      });
-    });
-
-    test('throws on invalid moduleRoots value', async () => {
-      mockRulesetFiles({
-        configExists: true,
-        configContent: 'moduleRoots: false',
-      });
-    });
-
-    test("throws module root that doesn't exist in repo", async () => {
-      mockRulesetFiles({
-        configExists: true,
-        configContent: 'moduleRoots: ["does/not/exist"]',
-      });
+      await expect(
+        RulesetRepository.create('foo', 'bar', 'main')
+      ).rejects.toThrow(InvalidConfigurationFileError);
     });
 
     test("loads config file with alternate extension 'yaml'", async () => {
@@ -227,15 +186,6 @@ describe('create', () => {
         login: 'jbedard',
         email: 'json@bearded.ca',
       });
-    });
-
-    test('does not complain when the config file is empty', async () => {
-      mockRulesetFiles({
-        configExists: true,
-        configContent: '',
-      });
-
-      await RulesetRepository.create('foo', 'bar', 'main');
     });
   });
 });
