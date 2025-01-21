@@ -5,6 +5,7 @@
     "sourceMap": true,
     "module": "es2020",
     "target": "es2020",
+    "lib": ["es2021", "dom"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,

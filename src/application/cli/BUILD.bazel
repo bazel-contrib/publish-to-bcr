@@ -35,6 +35,7 @@ ts_project(
         "//:node_modules/@types/jest",  # keep
         "//:node_modules/@types/yargs",
         "//:node_modules/yargs",
+        "//src/domain",
     ],
 )
 

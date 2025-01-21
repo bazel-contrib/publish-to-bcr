@@ -66,14 +66,30 @@ export class ReleaseEventHandler {
       let branch: string;
       const candidateBcrForks: Repository[] = [];
       try {
+        await Promise.all([
+          bcr.shallowCloneAndCheckout('main'),
+          rulesetRepo.shallowCloneAndCheckout(tag),
+        ]);
+
         for (const moduleRoot of rulesetRepo.config.moduleRoots) {
           console.log(`Creating BCR entry for module root '${moduleRoot}'`);
 
+          const sourceTemplate = rulesetRepo.sourceTemplate(moduleRoot);
+          const version = RulesetRepository.getVersionFromTag(tag);
+          sourceTemplate.substitute({
+            OWNER: rulesetRepo.owner,
+            REPO: rulesetRepo.name,
+            VERSION: version,
+            TAG: tag,
+          });
+
           const { moduleName } = await this.createEntryService.createEntryFiles(
-            rulesetRepo,
-            bcr,
-            tag,
-            moduleRoot
+            rulesetRepo.metadataTemplate(moduleRoot),
+            sourceTemplate,
+            rulesetRepo.presubmitPath(moduleRoot),
+            rulesetRepo.patchesPath(moduleRoot),
+            bcr.diskPath,
+            version
           );
           moduleNames.push(moduleName);
         }

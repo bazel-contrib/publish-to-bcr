@@ -92,39 +92,11 @@ beforeEach(() => {
   createEntryService = new CreateEntryService();
 });
 
+afterEach(() => {
+  CANONICAL_BCR.cleanup();
+});
+
 describe('createEntryFiles', () => {
-  test('checks out the ruleset repository at the release tag', async () => {
-    mockRulesetFiles();
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = CANONICAL_BCR;
-
-    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
-    expect(mockGitClient.shallowClone).toHaveBeenCalledWith(
-      rulesetRepo.url,
-      rulesetRepo.diskPath,
-      tag
-    );
-  });
-
-  test('checks out the bcr repo at main', async () => {
-    mockRulesetFiles();
-
-    const tag = 'v1.2.3';
-    const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-    const bcrRepo = Repository.fromCanonicalName(CANONICAL_BCR.canonicalName);
-
-    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
-    expect(mockGitClient.shallowClone).toHaveBeenCalledTimes(2);
-    expect(mockGitClient.shallowClone).toHaveBeenCalledWith(
-      bcrRepo.url,
-      bcrRepo.diskPath,
-      'main'
-    );
-  });
-
   test('creates the required entry files', async () => {
     mockRulesetFiles();
 
@@ -132,7 +104,16 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
-    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
+    await createEntryService.createEntryFiles(
+      rulesetRepo.metadataTemplate('.'),
+      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.presubmitPath('.'),
+      rulesetRepo.patchesPath('.'),
+      bcrRepo.diskPath,
+      '1.2.3'
+    );
 
     const metadataFilePath = path.join(
       bcrRepo.diskPath,
@@ -187,11 +168,15 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
     const result = await createEntryService.createEntryFiles(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      '.'
+      rulesetRepo.metadataTemplate('.'),
+      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.presubmitPath('.'),
+      rulesetRepo.patchesPath('.'),
+      bcrRepo.diskPath,
+      '1.2.3'
     );
 
     expect(result.moduleName).toEqual('foomodule');
@@ -204,7 +189,16 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
-    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
+    await createEntryService.createEntryFiles(
+      rulesetRepo.metadataTemplate('.'),
+      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.presubmitPath('.'),
+      rulesetRepo.patchesPath('.'),
+      bcrRepo.diskPath,
+      '1.2.3'
+    );
 
     expect(mockReleaseArchive.cleanup).toHaveBeenCalled();
   });
@@ -218,11 +212,15 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      'sub/dir'
+      rulesetRepo.metadataTemplate('sub/dir'),
+      rulesetRepo.sourceTemplate('sub/dir'),
+      rulesetRepo.presubmitPath('sub/dir'),
+      rulesetRepo.patchesPath('sub/dir'),
+      bcrRepo.diskPath,
+      '1.2.3'
     );
 
     const metadataFilePath = path.join(
@@ -278,13 +276,24 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
-    mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', true);
-    mockBcrMetadataFile(rulesetRepo, bcrRepo, 'fake_ruleset', {
+    await bcrRepo.shallowCloneAndCheckout('main');
+    mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
+    mockBcrMetadataFile(bcrRepo, 'fake_ruleset', {
       versions: ['1.0.0'],
     });
 
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+
     const thrownError = await expectThrownError(
-      () => createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.'),
+      () =>
+        createEntryService.createEntryFiles(
+          rulesetRepo.metadataTemplate('.'),
+          rulesetRepo.sourceTemplate('.'),
+          rulesetRepo.presubmitPath('.'),
+          rulesetRepo.patchesPath('.'),
+          bcrRepo.diskPath,
+          '1.0.0'
+        ),
       VersionAlreadyPublishedError
     );
     expect(thrownError!.message.includes('1.0.0')).toEqual(true);
@@ -298,10 +307,18 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', false);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', false);
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
@@ -318,13 +335,21 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', true);
-      mockBcrMetadataFile(rulesetRepo, bcrRepo, 'fake_ruleset', {
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
+      mockBcrMetadataFile(bcrRepo, 'fake_ruleset', {
         versions: ['1.0.0', '1.1.0'],
       });
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
@@ -342,13 +367,21 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', true);
-      mockBcrMetadataFile(rulesetRepo, bcrRepo, 'fake_ruleset', {
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
+      mockBcrMetadataFile(bcrRepo, 'fake_ruleset', {
         versions: ['1.0.0'],
       });
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
@@ -365,11 +398,19 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', true);
-      mockBcrMetadataFile(rulesetRepo, bcrRepo, 'fake_ruleset');
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
+      mockBcrMetadataFile(bcrRepo, 'fake_ruleset');
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
@@ -388,10 +429,18 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', false);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', false);
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
@@ -408,14 +457,23 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', true);
-      mockBcrMetadataFile(rulesetRepo, bcrRepo, 'fake_ruleset', {
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
+      mockBcrMetadataFile(bcrRepo, 'fake_ruleset', {
         malformed: true,
       });
 
+      await rulesetRepo.shallowCloneAndCheckout(tag);
       await expectThrownError(
         () =>
-          createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.'),
+          createEntryService.createEntryFiles(
+            rulesetRepo.metadataTemplate('.'),
+            rulesetRepo.sourceTemplate('.'),
+            rulesetRepo.presubmitPath('.'),
+            rulesetRepo.patchesPath('.'),
+            bcrRepo.diskPath,
+            '1.2.3'
+          ),
         MetadataFileError
       );
     });
@@ -430,14 +488,22 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      mockBcrMetadataExists(rulesetRepo, bcrRepo, 'fake_ruleset', true);
-      mockBcrMetadataFile(rulesetRepo, bcrRepo, 'fake_ruleset', {
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
+      mockBcrMetadataFile(bcrRepo, 'fake_ruleset', {
         versions: ['1.0.0'],
         yankedVersions: { '1.0.0': 'has a bug' },
       });
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '2.0.0'
+      );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
@@ -460,8 +526,16 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeModuleCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('MODULE.bazel')
       );
@@ -481,8 +555,16 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '4.5.6'
+      );
       const writeModuleCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('MODULE.bazel')
       );
@@ -501,8 +583,16 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       expect(fs.copyFileSync).toHaveBeenCalledWith(
         rulesetRepo.presubmitPath('.'),
         path.join(
@@ -527,38 +617,21 @@ describe('createEntryFiles', () => {
       const hash = `sha256-${randomUUID()}`;
       mocked(computeIntegrityHash).mockReturnValue(hash);
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
       );
       const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
       expect(writtenSourceContent.integrity).toEqual(hash);
-    });
-
-    test('substitutes values for {REPO}, {OWNER}, {VERSION}, and {TAG}', async () => {
-      mockRulesetFiles({
-        sourceUrl:
-          'https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz',
-        sourceStripPrefix: '{REPO}-{VERSION}',
-      });
-
-      const tag = 'v1.2.3';
-      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-      const bcrRepo = CANONICAL_BCR;
-
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
-      const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
-        (call[0] as string).includes('source.json')
-      );
-      const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
-      expect(writtenSourceContent.url).toEqual(
-        `https://github.com/${rulesetRepo.owner}/${rulesetRepo.name}/archive/refs/tags/${tag}.tar.gz`
-      );
-      expect(writtenSourceContent.strip_prefix).toEqual(
-        `${rulesetRepo.name}-1.2.3`
-      );
     });
 
     test('saves with a trailing newline', async () => {
@@ -571,8 +644,16 @@ describe('createEntryFiles', () => {
       const hash = `sha256-${randomUUID()}`;
       mocked(computeIntegrityHash).mockReturnValue(hash);
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
       );
@@ -593,8 +674,16 @@ describe('createEntryFiles', () => {
       const hash = `sha256-${randomUUID()}`;
       mocked(computeIntegrityHash).mockReturnValue(hash);
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '4.5.6'
+      );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
       );
@@ -617,8 +706,16 @@ describe('createEntryFiles', () => {
       const hash = `sha256-${randomUUID()}`;
       mocked(computeIntegrityHash).mockReturnValue(hash);
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '4.5.6'
+      );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
       );
@@ -649,8 +746,16 @@ describe('createEntryFiles', () => {
       mocked(computeIntegrityHash).mockReturnValueOnce(hash1);
       mocked(computeIntegrityHash).mockReturnValueOnce(hash2);
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
       );
@@ -677,8 +782,16 @@ describe('createEntryFiles', () => {
     mocked(computeIntegrityHash).mockReturnValueOnce(`sha256-${randomUUID()}`); // release archive
     mocked(computeIntegrityHash).mockReturnValueOnce(hash);
 
-    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
+    await createEntryService.createEntryFiles(
+      rulesetRepo.metadataTemplate('.'),
+      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.presubmitPath('.'),
+      rulesetRepo.patchesPath('.'),
+      bcrRepo.diskPath,
+      '1.2.3'
+    );
     const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
       (call[0] as string).includes('source.json')
     );
@@ -697,8 +810,16 @@ describe('createEntryFiles', () => {
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '4.5.6'
+      );
       const expectedPatchPath = path.join(
         bcrRepo.diskPath,
         'modules',
@@ -743,8 +864,16 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
-    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
+    await createEntryService.createEntryFiles(
+      rulesetRepo.metadataTemplate('.'),
+      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.presubmitPath('.'),
+      rulesetRepo.patchesPath('.'),
+      bcrRepo.diskPath,
+      '1.2.3'
+    );
     const expectedPatchPath = path.join(
       bcrRepo.diskPath,
       'modules',
@@ -773,13 +902,16 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
-      rulesetRepo,
-      bcrRepo,
-      tag,
-      'submodule'
+      rulesetRepo.metadataTemplate('submodule'),
+      rulesetRepo.sourceTemplate('submodule'),
+      rulesetRepo.presubmitPath('submodule'),
+      rulesetRepo.patchesPath('submodule'),
+      bcrRepo.diskPath,
+      '1.2.3'
     );
-
     const expectedPatchPath = path.join(
       bcrRepo.diskPath,
       'modules',
@@ -825,8 +957,16 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
-    await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
-
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
+    await createEntryService.createEntryFiles(
+      rulesetRepo.metadataTemplate('.'),
+      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.presubmitPath('.'),
+      rulesetRepo.patchesPath('.'),
+      bcrRepo.diskPath,
+      '1.2.3'
+    );
     const moduleFilePath = path.join(
       bcrRepo.diskPath,
       'modules',
@@ -877,9 +1017,18 @@ describe('createEntryFiles', () => {
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
+    await rulesetRepo.shallowCloneAndCheckout(tag);
+    await bcrRepo.shallowCloneAndCheckout('main');
     let caughtError: any;
     try {
-      await createEntryService.createEntryFiles(rulesetRepo, bcrRepo, tag, '.');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        '1.2.3'
+      );
     } catch (e) {
       caughtError = e;
     }
@@ -960,7 +1109,6 @@ export function mockRulesetFiles(
 }
 
 function mockBcrMetadataExists(
-  rulesetRepo: RulesetRepository,
   bcrRepo: Repository,
   moduleName: string,
   exists: boolean
@@ -976,7 +1124,6 @@ function mockBcrMetadataExists(
 }
 
 function mockBcrMetadataFile(
-  rulesetRepo: RulesetRepository,
   bcrRepo: Repository,
   moduleName: string,
   options?: {

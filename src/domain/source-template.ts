@@ -6,6 +6,8 @@ export class InvalidSourceTemplateError extends Error {
   }
 }
 
+export type SubstitutableVar = 'OWNER' | 'REPO' | 'TAG' | 'VERSION';
+
 export class SourceTemplate {
   private sourceJson: Record<string, unknown>;
 
@@ -38,37 +40,25 @@ export class SourceTemplate {
   }
 
   // Substitute variables into the templated source.json
-  public substitute(
-    repoOwner: string,
-    repoName: string,
-    tag: string,
-    version: string
-  ) {
+  public substitute(vars: Partial<Record<SubstitutableVar, string>>) {
     for (const prop of ['url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
       this.sourceJson[prop] = this.replaceVariables(
         this.sourceJson[prop] as string,
-        repoOwner,
-        repoName,
-        tag,
-        version
+        vars
       );
     }
   }
 
   private replaceVariables(
     str: string,
-    repoOwner: string,
-    repoName: string,
-    tag: string,
-    version: string
+    vars: Partial<Record<SubstitutableVar, string>>
   ) {
-    return str
-      .replace(/{OWNER}/g, repoOwner)
-      .replace(/{REPO}/g, repoName)
-      .replace(/{VERSION}/g, version)
-      .replace(/{TAG}/g, tag);
+    for (const key of Object.keys(vars)) {
+      str = str.replaceAll(`{${key}}`, vars[key as SubstitutableVar]);
+    }
+    return str;
   }
 
   public setIntegrityHash(integrityHash: string) {

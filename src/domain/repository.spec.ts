@@ -14,6 +14,27 @@ describe('fromCanonicalName', () => {
     expect(repository.owner).toEqual('foo');
     expect(repository.name).toEqual('bar');
   });
+
+  test('throws when not a canonical name', () => {
+    expect(() => Repository.fromCanonicalName('foobar')).toThrowWithMessage(
+      Error,
+      "Invalid GitHub repository canonical name 'foobar'; expected format owner/repo"
+    );
+  });
+
+  test('throws when the owner is missing', () => {
+    expect(() => Repository.fromCanonicalName('/bar')).toThrowWithMessage(
+      Error,
+      "Invalid GitHub repository canonical name '/bar'; expected format owner/repo"
+    );
+  });
+
+  test('throws when the repo is missing', () => {
+    expect(() => Repository.fromCanonicalName('foo/')).toThrowWithMessage(
+      Error,
+      "Invalid GitHub repository canonical name 'foo/'; expected format owner/repo"
+    );
+  });
 });
 
 describe('canonicalName', () => {

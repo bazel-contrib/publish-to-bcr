@@ -2,38 +2,61 @@ import { Injectable } from '@nestjs/common';
 import path from 'path';
 import { ArgumentsCamelCase } from 'yargs';
 
+import { CreateEntryService } from '../../domain/create-entry.js';
+import { MetadataFile } from '../../domain/metadata-file.js';
+import { Repository } from '../../domain/repository.js';
 import {
-  Configuration,
-  MissingConfigurationFileError,
-} from '../../domain/configuration.js';
+  SourceTemplate,
+  SubstitutableVar,
+} from '../../domain/source-template.js';
 import { CreateEntryArgs } from './yargs.js';
 
 @Injectable()
 export class CreateEntryCommand {
-  public async handle(_args: ArgumentsCamelCase<CreateEntryArgs>) {
-    this.loadConfiguration(_args.templatesDir);
+  constructor(private readonly createEntryService: CreateEntryService) {}
+
+  public async handle(args: ArgumentsCamelCase<CreateEntryArgs>) {
+    const metadataTemplate = new MetadataFile(
+      path.join(args.templatesDir, 'metadata.template.json')
+    );
+    const sourceTemplate = new SourceTemplate(
+      path.join(args.templatesDir, 'source.template.json')
+    );
+    const presubmitPath = path.join(args.templatesDir, 'presubmit.yml');
+    const patchesPath = path.join(args.templatesDir, 'patches');
+
+    sourceTemplate.substitute({
+      ...ghRepoSubstitutions(args.githubRepository),
+      ...(args.tag ? { TAG: args.tag } : {}),
+      VERSION: args.moduleVersion,
+    });
+
+    const { moduleName } = await this.createEntryService.createEntryFiles(
+      metadataTemplate,
+      sourceTemplate,
+      presubmitPath,
+      patchesPath,
+      args.localRegistry,
+      args.moduleVersion
+    );
+
+    console.error(
+      `Created entry for ${moduleName}@${args.moduleVersion} at ${args.localRegistry}`
+    );
 
     return Promise.resolve(null);
   }
+}
 
-  private loadConfiguration(templatesDir: string): Configuration {
-    const filepaths = [
-      path.join(templatesDir, 'config.yml'),
-      path.join(templatesDir, 'config.yaml'),
-    ];
-    for (const filepath of filepaths) {
-      try {
-        return Configuration.fromFile(filepath);
-      } catch (e) {
-        if (e instanceof MissingConfigurationFileError) {
-          continue;
-        }
-        throw e;
-      }
-    }
-
-    // No configuration files at the expected paths. Load the defaults.
-    console.error('No configuration file found; using defaults');
-    return Configuration.defaults();
+function ghRepoSubstitutions(
+  githubRepository?: string
+): Partial<Record<SubstitutableVar, string>> {
+  if (githubRepository) {
+    const repo = Repository.fromCanonicalName(githubRepository);
+    return {
+      OWNER: repo.owner,
+      REPO: repo.name,
+    };
   }
+  return {};
 }
