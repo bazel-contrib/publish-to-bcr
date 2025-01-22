@@ -58,7 +58,7 @@
     "@types/yargs": "^17.0.32",
     "@types/tar": "^6.1.10",
     "@types/uuid": "^10.0.0",
-    "archiver": "^6.0.1",
+    "archiver": "^7.0.0",
     "babel-jest": "^29.7.0",
     "eslint": "^9.18.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
