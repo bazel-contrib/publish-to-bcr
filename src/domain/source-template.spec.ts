@@ -80,7 +80,12 @@ describe('substitute', () => {
     );
     expect(sourceTemplate.stripPrefix).toEqual('{REPO}-{VERSION}');
 
-    sourceTemplate.substitute('foo', 'bar', 'v1.2.3', '1.2.3');
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      TAG: 'v1.2.3',
+      VERSION: '1.2.3',
+    });
 
     sourceTemplate.save('source.json');
 
@@ -186,7 +191,12 @@ describe('url', () => {
       'https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz'
     );
 
-    sourceTemplate.substitute('foo', 'bar', 'v1.2.3', '1.2.3');
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      TAG: 'v1.2.3',
+      VERSION: '1.2.3',
+    });
 
     expect(sourceTemplate.url).toEqual(
       'https://github.com/foo/bar/archive/refs/tags/v1.2.3.tar.gz'
@@ -200,7 +210,12 @@ describe('stripPrefix', () => {
 
     expect(sourceTemplate.stripPrefix).toEqual('{REPO}-{VERSION}');
 
-    sourceTemplate.substitute('foo', 'bar', 'v1.2.3', '1.2.3');
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      TAG: 'v1.2.3',
+      VERSION: '1.2.3',
+    });
 
     expect(sourceTemplate.stripPrefix).toEqual('bar-1.2.3');
   });
@@ -211,7 +226,12 @@ describe('stripPrefix', () => {
 
     expect(sourceTemplate.stripPrefix).toEqual('');
 
-    sourceTemplate.substitute('foo', 'bar', 'v1.2.3', '1.2.3');
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      TAG: 'v1.2.3',
+      VERSION: '1.2.3',
+    });
 
     expect(sourceTemplate.stripPrefix).toEqual('');
   });

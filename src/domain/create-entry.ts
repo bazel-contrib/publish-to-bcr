@@ -12,8 +12,6 @@ import {
   PatchModuleError as _PatchModuleError,
 } from './module-file.js';
 import { ReleaseArchive } from './release-archive.js';
-import { Repository } from './repository.js';
-import { RulesetRepository } from './ruleset-repository.js';
 import { SourceTemplate } from './source-template.js';
 
 export class VersionAlreadyPublishedError extends UserFacingError {
@@ -31,26 +29,13 @@ export class PatchModuleError extends UserFacingError {
 @Injectable()
 export class CreateEntryService {
   public async createEntryFiles(
-    rulesetRepo: RulesetRepository,
-    bcrRepo: Repository,
-    tag: string,
-    moduleRoot: string
+    metadataTemplate: MetadataFile,
+    sourceTemplate: SourceTemplate,
+    presubmitPath: string,
+    patchesPath: string,
+    registryPath: string,
+    version: string
   ): Promise<{ moduleName: string }> {
-    await Promise.all([
-      rulesetRepo.shallowCloneAndCheckout(tag),
-      bcrRepo.shallowCloneAndCheckout('main'),
-    ]);
-
-    const version = RulesetRepository.getVersionFromTag(tag);
-
-    const sourceTemplate = rulesetRepo.sourceTemplate(moduleRoot);
-    sourceTemplate.substitute(
-      rulesetRepo.owner,
-      rulesetRepo.name,
-      tag,
-      version
-    );
-
     const releaseArchive = await ReleaseArchive.fetch(
       sourceTemplate.url,
       sourceTemplate.stripPrefix
@@ -63,7 +48,7 @@ export class CreateEntryService {
       const moduleFile = await releaseArchive.extractModuleFile();
 
       const bcrEntryPath = path.resolve(
-        bcrRepo.diskPath,
+        registryPath,
         'modules',
         moduleFile.moduleName
       );
@@ -73,18 +58,15 @@ export class CreateEntryService {
         fs.mkdirSync(bcrEntryPath);
       }
 
-      const metadataTemplate = rulesetRepo.metadataTemplate(moduleRoot);
-
       updateMetadataFile(metadataTemplate, bcrEntryPath, version);
 
       fs.mkdirSync(bcrVersionEntryPath);
 
       this.addPatches(
-        rulesetRepo,
+        patchesPath,
         sourceTemplate,
         moduleFile,
-        bcrVersionEntryPath,
-        moduleRoot
+        bcrVersionEntryPath
       );
 
       this.patchModuleVersionIfMismatch(
@@ -98,7 +80,7 @@ export class CreateEntryService {
       moduleFile.save(path.join(bcrVersionEntryPath, 'MODULE.bazel'));
 
       fs.copyFileSync(
-        rulesetRepo.presubmitPath(moduleRoot),
+        presubmitPath,
         path.join(bcrVersionEntryPath, 'presubmit.yml')
       );
 
@@ -109,13 +91,11 @@ export class CreateEntryService {
   }
 
   private addPatches(
-    rulesetRepo: RulesetRepository,
+    patchesPath: string,
     sourceTemplate: SourceTemplate,
     moduleFile: ModuleFile,
-    bcrVersionEntryPath: string,
-    moduleRoot: string
+    bcrVersionEntryPath: string
   ): void {
-    const patchesPath = rulesetRepo.patchesPath(moduleRoot);
     if (!fs.existsSync(patchesPath)) {
       return;
     }

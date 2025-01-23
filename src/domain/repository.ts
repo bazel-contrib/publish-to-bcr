@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -11,7 +12,13 @@ export class Repository {
   private _diskPath: string | null = null;
 
   public static fromCanonicalName(canonicalName: string) {
-    const [owner, name] = canonicalName.split('/');
+    const tokens = canonicalName.split('/');
+    if (tokens.length !== 2 || !tokens[0].length || !tokens[1].length) {
+      throw new Error(
+        `Invalid GitHub repository canonical name '${canonicalName}'; expected format owner/repo`
+      );
+    }
+    const [owner, name] = tokens;
     const repository = new Repository(name, owner);
     return repository;
   }
@@ -50,6 +57,13 @@ export class Repository {
     if (!this.isCheckedOut()) {
       this._diskPath = path.join(os.tmpdir(), randomUUID(), this.name);
       await gitClient.shallowClone(this.url, this._diskPath, branchOrTag);
+    }
+  }
+
+  public cleanup(): void {
+    if (this.isCheckedOut()) {
+      fs.rmSync(this._diskPath, { recursive: true });
+      this._diskPath = null;
     }
   }
 
