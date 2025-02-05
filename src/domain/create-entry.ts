@@ -36,6 +36,9 @@ export class CreateEntryService {
     registryPath: string,
     version: string
   ): Promise<{ moduleName: string }> {
+    sourceTemplate.substitute({ VERSION: version });
+    sourceTemplate.validateFullySubstituted();
+
     const releaseArchive = await ReleaseArchive.fetch(
       sourceTemplate.url,
       sourceTemplate.stripPrefix

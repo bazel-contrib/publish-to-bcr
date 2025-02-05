@@ -157,7 +157,7 @@ export class RulesetRepository extends Repository {
       try {
         rulesetRepo._sourceTemplate[moduleRoot] = new SourceTemplate(
           rulesetRepo.sourceTemplatePath(moduleRoot)
-        );
+        ).substitute({ OWNER: rulesetRepo.owner, REPO: rulesetRepo.name });
         rulesetRepo._metadataTemplate[moduleRoot] = new MetadataFile(
           rulesetRepo.metadataTemplatePath(moduleRoot)
         );

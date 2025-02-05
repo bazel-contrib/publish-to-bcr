@@ -77,9 +77,6 @@ export class ReleaseEventHandler {
           const sourceTemplate = rulesetRepo.sourceTemplate(moduleRoot);
           const version = RulesetRepository.getVersionFromTag(tag);
           sourceTemplate.substitute({
-            OWNER: rulesetRepo.owner,
-            REPO: rulesetRepo.name,
-            VERSION: version,
             TAG: tag,
           });
 
