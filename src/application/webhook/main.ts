@@ -12,7 +12,9 @@ export const handleGithubWebhookEvent: HttpFunction = async (
   request,
   response
 ) => {
-  const app = await NestFactory.createApplicationContext(AppModule);
+  const app = await NestFactory.createApplicationContext(AppModule, {
+    logger: ['error', 'warn'],
+  });
 
   const secretsClient = app.get(SecretsClient);
   const githubWebhookSecret = await secretsClient.accessSecret(

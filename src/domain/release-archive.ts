@@ -13,13 +13,19 @@ import { UserFacingError } from './error.js';
 import { ModuleFile } from './module-file.js';
 
 export class UnsupportedArchiveFormat extends UserFacingError {
-  constructor(extension: string) {
-    super(`Unsupported release archive format ${extension}`);
+  constructor(
+    public readonly url: string,
+    public readonly extension: string
+  ) {
+    super();
   }
 }
 
 export class ArchiveDownloadError extends UserFacingError {
-  constructor(url: string, statusCode: number) {
+  constructor(
+    public readonly url: string,
+    public readonly statusCode: number
+  ) {
     let msg = `Failed to download release archive from ${url}. Received status ${statusCode}`;
 
     if (statusCode === 404) {
@@ -39,6 +45,7 @@ export class MissingModuleFileError extends UserFacingError {
 }
 
 export class ReleaseArchive {
+  public static readonly SUPPORTED_EXTENSIONS = ['.zip', '.tar.gz', '.tar.xz'];
   public static async fetch(
     url: string,
     stripPrefix: string
@@ -50,12 +57,13 @@ export class ReleaseArchive {
     );
     await download(url, downloadedPath);
 
-    return new ReleaseArchive(downloadedPath, stripPrefix);
+    return new ReleaseArchive(url, downloadedPath, stripPrefix);
   }
 
   private extractDir: string | undefined;
 
   private constructor(
+    private readonly url: string,
     private readonly _diskPath: string,
     private readonly stripPrefix: string
   ) {}
@@ -69,7 +77,7 @@ export class ReleaseArchive {
       await this.extractReleaseZip(this.extractDir);
     } else {
       const extension = this._diskPath.split('.').slice(1).join('.');
-      throw new UnsupportedArchiveFormat(extension);
+      throw new UnsupportedArchiveFormat(this.url, extension);
     }
 
     const pathInArchive = path.join(this.stripPrefix, 'MODULE.bazel');

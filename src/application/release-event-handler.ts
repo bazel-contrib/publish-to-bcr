@@ -55,11 +55,11 @@ export class ReleaseEventHandler {
       }
 
       const rulesetRepo = createRepoResult.rulesetRepo!;
-      console.log(
+      console.error(
         `Release published: ${rulesetRepo.canonicalName}@${tag} by @${releaser.username}`
       );
 
-      console.log(`Release author: ${releaser.username}`);
+      console.error(`Release author: ${releaser.username}`);
       releaser = await this.overrideReleaser(releaser, rulesetRepo);
 
       const moduleNames = [];
@@ -72,7 +72,7 @@ export class ReleaseEventHandler {
         ]);
 
         for (const moduleRoot of rulesetRepo.config.moduleRoots) {
-          console.log(`Creating BCR entry for module root '${moduleRoot}'`);
+          console.error(`Creating BCR entry for module root '${moduleRoot}'`);
 
           const sourceTemplate = rulesetRepo.sourceTemplate(moduleRoot);
           const version = RulesetRepository.getVersionFromTag(tag);
@@ -105,13 +105,13 @@ export class ReleaseEventHandler {
           ))
         );
 
-        console.log(
+        console.error(
           `Found ${candidateBcrForks.length} candidate forks: ${JSON.stringify(
             candidateBcrForks.map((fork) => fork.canonicalName)
           )}.`
         );
       } catch (error) {
-        console.log(error);
+        console.error(error);
         await this.notificationsService.notifyError(
           releaser,
           rulesetRepo.getAllMaintainers(),
@@ -223,7 +223,7 @@ export class ReleaseEventHandler {
     releaseUrl: string,
     bcrForkGitHubClient: GitHubClient
   ): Promise<PublishAttempt> {
-    console.log(`Attempting publish to fork ${bcrFork.canonicalName}.`);
+    console.error(`Attempting publish to fork ${bcrFork.canonicalName}.`);
 
     try {
       await this.publishEntryService.pushEntryToFork(
@@ -234,11 +234,11 @@ export class ReleaseEventHandler {
       );
 
       if (moduleNames.length === 1) {
-        console.log(
+        console.error(
           `Pushed bcr entry for module '${moduleNames[0]}' to fork ${bcrFork.canonicalName} on branch ${branch}`
         );
       } else {
-        console.log(
+        console.error(
           `Pushed bcr entry for modules '${moduleNames.join(', ')}' to fork ${
             bcrFork.canonicalName
           } on branch ${branch}`
@@ -254,13 +254,13 @@ export class ReleaseEventHandler {
         releaseUrl
       );
 
-      console.log(`Created pull request against ${bcr.canonicalName}`);
+      console.error(`Created pull request against ${bcr.canonicalName}`);
     } catch (error) {
-      console.log(
+      console.error(
         `Failed to create pull request using fork ${bcrFork.canonicalName}`
       );
 
-      console.log(error);
+      console.error(error);
 
       return {
         successful: false,
@@ -281,7 +281,7 @@ export class ReleaseEventHandler {
   ): Promise<User> {
     // Use the release author unless a fixedReleaser is configured
     if (rulesetRepo.config.fixedReleaser) {
-      console.log(
+      console.error(
         `Overriding releaser to ${rulesetRepo.config.fixedReleaser.login}`
       );
 

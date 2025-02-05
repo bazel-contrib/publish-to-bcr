@@ -15,8 +15,11 @@ import { ReleaseArchive } from './release-archive.js';
 import { SourceTemplate } from './source-template.js';
 
 export class VersionAlreadyPublishedError extends UserFacingError {
-  public constructor(version: string) {
-    super(`Version ${version} has already been published.`);
+  public constructor(
+    public readonly moduleName: string,
+    public readonly version: string
+  ) {
+    super(`${moduleName}@${version} has already been published`);
   }
 }
 
@@ -39,6 +42,7 @@ export class CreateEntryService {
     sourceTemplate.substitute({ VERSION: version });
     sourceTemplate.validateFullySubstituted();
 
+    console.error(`Fetching release archive ${sourceTemplate.url}`);
     const releaseArchive = await ReleaseArchive.fetch(
       sourceTemplate.url,
       sourceTemplate.stripPrefix
@@ -61,7 +65,12 @@ export class CreateEntryService {
         fs.mkdirSync(bcrEntryPath);
       }
 
-      updateMetadataFile(metadataTemplate, bcrEntryPath, version);
+      updateMetadataFile(
+        moduleFile.moduleName,
+        metadataTemplate,
+        bcrEntryPath,
+        version
+      );
 
       fs.mkdirSync(bcrVersionEntryPath);
 
@@ -152,8 +161,8 @@ export class CreateEntryService {
     bcrVersionEntryPath: string
   ): void {
     if (moduleFile.version !== version) {
-      console.log(
-        `Archived MODULE.bazel version ${moduleFile.version} does not match release version ${version}.`,
+      console.error(
+        `The release archive's MODULE.bazel version ${moduleFile.version} does not match release version ${version}.`,
         'Creating a version patch.'
       );
       const patchFileName = 'module_dot_bazel_version.patch';
@@ -185,6 +194,7 @@ export class CreateEntryService {
 }
 
 function updateMetadataFile(
+  moduleName: string,
   metadataTemplate: MetadataFile,
   bcrEntryPath: string,
   version: string
@@ -200,7 +210,7 @@ function updateMetadataFile(
     const bcrMetadata = new MetadataFile(destPath);
 
     if (bcrMetadata.hasVersion(version)) {
-      throw new VersionAlreadyPublishedError(version);
+      throw new VersionAlreadyPublishedError(moduleName, version);
     }
 
     // Add all versions from the BCR metadata
