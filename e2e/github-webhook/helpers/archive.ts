@@ -20,7 +20,7 @@ export async function makeReleaseTarball(
       gzip: { level: 1 },
       prefix,
       file: filename,
-      cwd: path.join('e2e', 'fixtures', fixture),
+      cwd: path.join('e2e', 'github-webhook', 'fixtures', fixture),
       portable: true,
       mtime: new Date(0),
     } as any, // Typing bug, missing `mtime``: https://github.com/DefinitelyTyped/DefinitelyTyped/issues/67775
@@ -45,9 +45,13 @@ export async function makeReleaseZip(
   archive.pipe(output);
 
   const hermeticDate = new Date(0);
-  archive.directory(path.join('e2e', 'fixtures', fixture), prefix || false, {
-    date: hermeticDate,
-  });
+  archive.directory(
+    path.join('e2e', 'github-webhook', 'fixtures', fixture),
+    prefix || false,
+    {
+      date: hermeticDate,
+    }
+  );
 
   await archive.finalize();
 

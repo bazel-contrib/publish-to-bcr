@@ -4,7 +4,7 @@ import path from 'node:path';
 import { User } from '@octokit/webhooks-types';
 import simpleGit, { SimpleGit } from 'simple-git';
 
-export const FIXTURES_PATH = path.join('e2e', 'fixtures');
+export const FIXTURES_PATH = path.join('e2e', 'github-webhook', 'fixtures');
 export const PREPARED_FIXTURES_PATH = fs.mkdtempSync(
   process.env.TEST_TMPDIR + path.sep + 'fixtures-'
 );

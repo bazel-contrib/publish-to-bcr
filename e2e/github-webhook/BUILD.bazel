@@ -2,7 +2,7 @@ load("//bazel/jest:defs.bzl", "jest_test")
 load("//bazel/ts:defs.bzl", "ts_project")
 
 ts_project(
-    name = "e2e_tests",
+    name = "github-webhook_tests",
     testonly = True,
     srcs = ["e2e.spec.ts"],
     data = glob(["fixtures/**/*"]) + [
@@ -24,8 +24,8 @@ ts_project(
         "//:node_modules/mockttp",
         "//:node_modules/nodemailer",
         "//:node_modules/simple-git",
-        "//e2e/helpers",
-        "//e2e/stubs",
+        "//e2e/github-webhook/helpers",
+        "//e2e/github-webhook/stubs",
         "//src/infrastructure",
     ],
 )
@@ -34,7 +34,7 @@ jest_test(
     name = "test",
     timeout = "moderate",
     data = [
-        ":e2e_tests",
+        ":github-webhook_tests",
     ],
     snapshots = ["__snapshots__/e2e.spec.js.snap"],
     tags = ["requires-network"],

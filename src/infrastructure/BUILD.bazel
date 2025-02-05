@@ -9,7 +9,7 @@ ts_project(
         "secrets.ts",
     ],
     visibility = [
-        "//e2e:__pkg__",
+        "//e2e:__subpackages__",
         "//src:__pkg__",
         "//src/application:__subpackages__",
         "//src/domain:__subpackages__",

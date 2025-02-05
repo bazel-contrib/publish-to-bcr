@@ -18,7 +18,7 @@ ts_project(
         "//:node_modules/mockttp",
         "//:node_modules/nodemailer",
         "//:node_modules/portfinder",
-        "//e2e/helpers",
+        "//e2e/github-webhook/helpers",
         "//src:dist",  # keep
     ],
 )
