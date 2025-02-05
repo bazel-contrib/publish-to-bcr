@@ -11,7 +11,7 @@ import { CompletedRequest } from 'mockttp';
 import { TestAccount } from 'nodemailer';
 import { simpleGit } from 'simple-git';
 
-import { GitHubClient } from '../src/infrastructure/github';
+import { GitHubClient } from '../../src/infrastructure/github';
 import {
   makeReleaseTarball as _makeReleaseTarball,
   makeReleaseZip as _makeReleaseZip,
