@@ -10,6 +10,7 @@ ts_project(
         "main.ts",
         "yargs.ts",
     ],
+    visibility = ["//e2e/cli:__pkg__"],
     deps = [
         "//:node_modules/@nestjs/common",
         "//:node_modules/@nestjs/core",
@@ -26,6 +27,7 @@ js_binary(
     name = "bin",
     data = [":cli"],
     entry_point = "main.js",
+    visibility = ["//e2e/cli:__pkg__"],
 )
 
 ts_project(
