@@ -41,8 +41,8 @@ export class PublishEntryService {
       commitAuthor.name,
       commitAuthor.email
     );
-    console.log(bcrRepo.diskPath);
-    console.log(branchName);
+    console.error(bcrRepo.diskPath);
+    console.error(branchName);
     await this.gitClient.checkoutNewBranchFromHead(
       bcrRepo.diskPath,
       branchName

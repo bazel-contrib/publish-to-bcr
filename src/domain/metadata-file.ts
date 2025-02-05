@@ -3,8 +3,11 @@ import fs from 'node:fs';
 import { compareVersions } from './version.js';
 
 export class MetadataFileError extends Error {
-  constructor(path: string, message: string) {
-    super(`Could not read metadata file at ${path}: ${message}`);
+  constructor(
+    public readonly path: string,
+    message: string
+  ) {
+    super(message);
   }
 }
 

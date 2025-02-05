@@ -15,6 +15,8 @@ ts_project(
         "//:node_modules/@nestjs/core",
         "//:node_modules/@types/node",  # keep
         "//:node_modules/@types/yargs",
+        "//:node_modules/chalk",
+        "//:node_modules/tree-node-cli",
         "//:node_modules/yargs",
         "//src/domain",
     ],

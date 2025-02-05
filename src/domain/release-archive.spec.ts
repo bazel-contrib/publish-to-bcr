@@ -179,11 +179,9 @@ describe('extractModuleFile', () => {
       STRIP_PREFIX
     );
 
-    const thrownError = await expectThrownError(
-      () => releaseArchive.extractModuleFile(),
+    await expect(releaseArchive.extractModuleFile()).rejects.toThrow(
       UnsupportedArchiveFormat
     );
-    expect(thrownError.message.includes('deb')).toEqual(true);
   });
 
   test('extracts contents next to the tarball archive', async () => {

@@ -8,8 +8,8 @@ import {
 } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
 import {
-  InvalidSourceTemplateError,
   SourceTemplate,
+  SourceTemplateError,
   UnsubstitutedVarsError,
 } from './source-template';
 
@@ -44,7 +44,7 @@ describe('constructor', () => {
 
     await expectThrownError(
       () => new SourceTemplate('source.template.json'),
-      InvalidSourceTemplateError
+      SourceTemplateError
     );
   });
 
@@ -53,7 +53,7 @@ describe('constructor', () => {
 
     await expectThrownError(
       () => new SourceTemplate('source.template.json'),
-      InvalidSourceTemplateError
+      SourceTemplateError
     );
   });
 
@@ -74,7 +74,7 @@ describe('constructor', () => {
 
     await expectThrownError(
       () => new SourceTemplate('source.template.json'),
-      InvalidSourceTemplateError
+      SourceTemplateError
     );
   });
 });

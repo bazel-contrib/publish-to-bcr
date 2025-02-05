@@ -16,8 +16,8 @@ import {
 } from './metadata-file.js';
 import { Repository } from './repository.js';
 import {
-  InvalidSourceTemplateError as _InvalidSourceTemplateError,
   SourceTemplate,
+  SourceTemplateError as _InvalidSourceTemplateError,
 } from './source-template.js';
 
 export class RulesetRepoError extends UserFacingError {

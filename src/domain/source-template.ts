@@ -1,8 +1,11 @@
 import fs from 'node:fs';
 
-export class InvalidSourceTemplateError extends Error {
-  constructor(reason: string) {
-    super(`Invalid source.template.json file: ${reason}`);
+export class SourceTemplateError extends Error {
+  constructor(
+    public readonly path: string,
+    message: string
+  ) {
+    super(message);
   }
 }
 
@@ -28,23 +31,26 @@ export class SourceTemplate {
     try {
       const sourceContent = fs.readFileSync(filePath, 'utf8');
       this.sourceJson = JSON.parse(sourceContent);
-    } catch {
-      throw new InvalidSourceTemplateError('cannot parse file as json');
+    } catch (e) {
+      throw new SourceTemplateError(this.filePath, e.message);
     }
 
     if (
       'strip_prefix' in this.sourceJson &&
       typeof this.sourceJson.strip_prefix !== 'string'
     ) {
-      throw new InvalidSourceTemplateError('invalid strip_prefix field');
+      throw new SourceTemplateError(
+        this.filePath,
+        'invalid strip_prefix field'
+      );
     }
 
     if (!this.sourceJson.url) {
-      throw new InvalidSourceTemplateError('missing url field');
+      throw new SourceTemplateError(this.filePath, 'missing url field');
     }
 
     if (typeof this.sourceJson.url !== 'string') {
-      throw new InvalidSourceTemplateError('invalid url field');
+      throw new SourceTemplateError(this.filePath, 'invalid url field');
     }
   }
 
