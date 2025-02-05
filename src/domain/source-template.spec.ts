@@ -7,7 +7,11 @@ import {
   FakeSourceFileOptions,
 } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
-import { InvalidSourceTemplateError, SourceTemplate } from './source-template';
+import {
+  InvalidSourceTemplateError,
+  SourceTemplate,
+  UnsubstitutedVarsError,
+} from './source-template';
 
 jest.mock('node:fs');
 
@@ -18,8 +22,12 @@ beforeEach(() => {
 });
 
 function mockSourceFile(
-  options: FakeSourceFileOptions & { missing?: boolean } = {}
+  options: FakeSourceFileOptions & { missing?: boolean; content?: string } = {}
 ) {
+  if (options.content) {
+    mocked(fs.readFileSync).mockReturnValue(options.content);
+    return;
+  }
   sourceTemplateContent = fakeSourceFile(options);
   if (options.missing) {
     mocked(fs.readFileSync).mockImplementation(() => {
@@ -96,6 +104,75 @@ describe('substitute', () => {
       'https://github.com/foo/bar/archive/refs/tags/v1.2.3.tar.gz'
     );
     expect(jsonContent.strip_prefix).toEqual('bar-1.2.3');
+  });
+});
+
+describe('validateFullySubstituted', () => {
+  it('should succeed when all values are substituted', () => {
+    mockSourceFile({
+      content: `\
+{
+  "integrity": "",
+  "strip_prefix": "{REPO}-{VERSION}",
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.tar.gz"
+}`,
+    });
+    const sourceTemplate = new SourceTemplate('source.template.json');
+
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      TAG: 'v1.2.3',
+      VERSION: '1.2.3',
+    });
+
+    expect(() => sourceTemplate.validateFullySubstituted()).not.toThrow();
+  });
+
+  it('should throw when a value is not substituted into the url', () => {
+    mockSourceFile({
+      content: `\
+{
+  "integrity": "",
+  "strip_prefix": "{REPO}-{VERSION}",
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.tar.gz"
+}`,
+    });
+    const sourceTemplate = new SourceTemplate('source.template.json');
+
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      // TAG: 'v1.2.3',
+      VERSION: '1.2.3',
+    });
+
+    expect(() => sourceTemplate.validateFullySubstituted()).toThrow(
+      UnsubstitutedVarsError
+    );
+  });
+
+  it('should throw when a value is not substituted into the strip prefix', () => {
+    mockSourceFile({
+      content: `\
+{
+  "integrity": "",
+  "strip_prefix": "{REPO}-{VERSION}",
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.tar.gz"
+}`,
+    });
+    const sourceTemplate = new SourceTemplate('source.template.json');
+
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      TAG: 'v1.2.3',
+      // VERSION: '1.2.3',
+    });
+
+    expect(() => sourceTemplate.validateFullySubstituted()).toThrow(
+      UnsubstitutedVarsError
+    );
   });
 });
 

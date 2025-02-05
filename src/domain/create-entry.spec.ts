@@ -101,6 +101,7 @@ describe('createEntryFiles', () => {
     mockRulesetFiles();
 
     const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -108,11 +109,11 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('.'),
-      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('.'),
       rulesetRepo.patchesPath('.'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
 
     const metadataFilePath = path.join(
@@ -125,21 +126,21 @@ describe('createEntryFiles', () => {
       bcrRepo.diskPath,
       'modules',
       'fake_ruleset',
-      '1.2.3',
+      version,
       'source.json'
     );
     const presubmitFilePath = path.join(
       bcrRepo.diskPath,
       'modules',
       'fake_ruleset',
-      '1.2.3',
+      version,
       'presubmit.yml'
     );
     const moduleFilePath = path.join(
       bcrRepo.diskPath,
       'modules',
       'fake_ruleset',
-      '1.2.3',
+      version,
       'MODULE.bazel'
     );
 
@@ -165,6 +166,7 @@ describe('createEntryFiles', () => {
     mockRulesetFiles({ extractedModuleName: 'foomodule' });
 
     const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -172,11 +174,11 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     const result = await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('.'),
-      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('.'),
       rulesetRepo.patchesPath('.'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
 
     expect(result.moduleName).toEqual('foomodule');
@@ -186,6 +188,7 @@ describe('createEntryFiles', () => {
     mockRulesetFiles();
 
     const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -193,11 +196,11 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('.'),
-      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('.'),
       rulesetRepo.patchesPath('.'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
 
     expect(mockReleaseArchive.cleanup).toHaveBeenCalled();
@@ -209,6 +212,7 @@ describe('createEntryFiles', () => {
     });
 
     const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -216,11 +220,11 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('sub/dir'),
-      rulesetRepo.sourceTemplate('sub/dir'),
+      rulesetRepo.sourceTemplate('sub/dir').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('sub/dir'),
       rulesetRepo.patchesPath('sub/dir'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
 
     const metadataFilePath = path.join(
@@ -233,21 +237,21 @@ describe('createEntryFiles', () => {
       bcrRepo.diskPath,
       'modules',
       'fake_ruleset',
-      '1.2.3',
+      version,
       'source.json'
     );
     const presubmitFilePath = path.join(
       bcrRepo.diskPath,
       'modules',
       'fake_ruleset',
-      '1.2.3',
+      version,
       'presubmit.yml'
     );
     const moduleFilePath = path.join(
       bcrRepo.diskPath,
       'modules',
       'fake_ruleset',
-      '1.2.3',
+      version,
       'MODULE.bazel'
     );
 
@@ -273,13 +277,14 @@ describe('createEntryFiles', () => {
     mockRulesetFiles();
 
     const tag = 'v1.0.0';
+    const version = RulesetRepository.getVersionFromTag(tag);
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
     await bcrRepo.shallowCloneAndCheckout('main');
     mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
     mockBcrMetadataFile(bcrRepo, 'fake_ruleset', {
-      versions: ['1.0.0'],
+      versions: [version],
     });
 
     await rulesetRepo.shallowCloneAndCheckout(tag);
@@ -288,15 +293,15 @@ describe('createEntryFiles', () => {
       () =>
         createEntryService.createEntryFiles(
           rulesetRepo.metadataTemplate('.'),
-          rulesetRepo.sourceTemplate('.'),
+          rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
           rulesetRepo.presubmitPath('.'),
           rulesetRepo.patchesPath('.'),
           bcrRepo.diskPath,
-          '1.0.0'
+          version
         ),
       VersionAlreadyPublishedError
     );
-    expect(thrownError!.message.includes('1.0.0')).toEqual(true);
+    expect(thrownError!.message.includes(version)).toEqual(true);
   });
 
   describe('metadata.json', () => {
@@ -304,6 +309,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles();
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -313,17 +319,17 @@ describe('createEntryFiles', () => {
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
       const writtenMetadataContent = writeMetadataCall[1] as string;
-      expect(JSON.parse(fakeMetadataFile({ versions: ['1.2.3'] }))).toEqual(
+      expect(JSON.parse(fakeMetadataFile({ versions: [version] }))).toEqual(
         JSON.parse(writtenMetadataContent)
       );
     });
@@ -332,6 +338,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles();
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -344,18 +351,18 @@ describe('createEntryFiles', () => {
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
       const writtenMetadataContent = writeMetadataCall[1] as string;
       expect(
-        JSON.parse(fakeMetadataFile({ versions: ['1.0.0', '1.1.0', '1.2.3'] }))
+        JSON.parse(fakeMetadataFile({ versions: ['1.0.0', '1.1.0', version] }))
       ).toEqual(JSON.parse(writtenMetadataContent));
     });
 
@@ -364,6 +371,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles({ metadataVersions: ['0.0.1'] });
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -376,18 +384,18 @@ describe('createEntryFiles', () => {
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
       const writtenMetadataContent = writeMetadataCall[1] as string;
       expect(
-        JSON.parse(fakeMetadataFile({ versions: ['1.0.0', '1.2.3'] })) // doesn't have 0.0.1
+        JSON.parse(fakeMetadataFile({ versions: ['1.0.0', version] })) // doesn't have 0.0.1
       ).toEqual(JSON.parse(writtenMetadataContent));
     });
 
@@ -395,6 +403,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles({ metadataHomepage: 'foo.bar.com' });
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -405,11 +414,11 @@ describe('createEntryFiles', () => {
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
@@ -417,7 +426,7 @@ describe('createEntryFiles', () => {
       const writtenMetadataContent = writeMetadataCall[1] as string;
       expect(JSON.parse(writtenMetadataContent)).toEqual(
         JSON.parse(
-          fakeMetadataFile({ versions: ['1.2.3'], homepage: 'foo.bar.com' })
+          fakeMetadataFile({ versions: [version], homepage: 'foo.bar.com' })
         )
       );
     });
@@ -426,6 +435,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles();
 
       const tag = '1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -435,17 +445,17 @@ describe('createEntryFiles', () => {
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
       );
       const writtenMetadataContent = writeMetadataCall[1] as string;
-      expect(JSON.parse(fakeMetadataFile({ versions: ['1.2.3'] }))).toEqual(
+      expect(JSON.parse(fakeMetadataFile({ versions: [version] }))).toEqual(
         JSON.parse(writtenMetadataContent)
       );
     });
@@ -454,6 +464,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles();
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -468,11 +479,11 @@ describe('createEntryFiles', () => {
         () =>
           createEntryService.createEntryFiles(
             rulesetRepo.metadataTemplate('.'),
-            rulesetRepo.sourceTemplate('.'),
+            rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
             rulesetRepo.presubmitPath('.'),
             rulesetRepo.patchesPath('.'),
             bcrRepo.diskPath,
-            '1.2.3'
+            version
           ),
         MetadataFileError
       );
@@ -485,6 +496,7 @@ describe('createEntryFiles', () => {
       });
 
       const tag = 'v2.0.0';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -498,11 +510,11 @@ describe('createEntryFiles', () => {
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '2.0.0'
+        version
       );
       const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
         (call) => (call[0] as string).includes('metadata.json')
@@ -517,12 +529,13 @@ describe('createEntryFiles', () => {
 
   describe('MODULE.bazel', () => {
     test('uses the archived module file', async () => {
+      const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       mockRulesetFiles({
         extractedModuleName: 'rules_bar',
-        extractedModuleVersion: '1.2.3',
+        extractedModuleVersion: version,
       });
 
-      const tag = 'v1.2.3';
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -530,18 +543,18 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeModuleCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('MODULE.bazel')
       );
       const writtenModuleContent = writeModuleCall[1] as string;
       expect(writtenModuleContent).toEqual(
-        fakeModuleFile({ moduleName: 'rules_bar', version: '1.2.3' })
+        fakeModuleFile({ moduleName: 'rules_bar', version: version })
       );
     });
 
@@ -552,6 +565,7 @@ describe('createEntryFiles', () => {
       });
 
       const tag = 'v4.5.6';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -559,18 +573,18 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '4.5.6'
+        version
       );
       const writeModuleCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('MODULE.bazel')
       );
       const writtenModuleContent = writeModuleCall[1] as string;
       expect(writtenModuleContent).toEqual(
-        fakeModuleFile({ moduleName: 'rules_bar', version: '4.5.6' })
+        fakeModuleFile({ moduleName: 'rules_bar', version: version })
       );
     });
   });
@@ -580,6 +594,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles({ extractedModuleName: 'foo_ruleset' });
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -587,11 +602,11 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       expect(fs.copyFileSync).toHaveBeenCalledWith(
         rulesetRepo.presubmitPath('.'),
@@ -599,7 +614,7 @@ describe('createEntryFiles', () => {
           bcrRepo.diskPath,
           'modules',
           'foo_ruleset',
-          '1.2.3',
+          version,
           'presubmit.yml'
         )
       );
@@ -611,6 +626,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles();
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -621,11 +637,11 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
@@ -638,6 +654,7 @@ describe('createEntryFiles', () => {
       mockRulesetFiles();
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -648,11 +665,11 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
@@ -668,6 +685,7 @@ describe('createEntryFiles', () => {
       });
 
       const tag = 'v4.5.6';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -678,11 +696,11 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '4.5.6'
+        version
       );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
@@ -700,6 +718,7 @@ describe('createEntryFiles', () => {
       });
 
       const tag = 'v4.5.6';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -710,11 +729,11 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '4.5.6'
+        version
       );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
@@ -734,6 +753,7 @@ describe('createEntryFiles', () => {
       });
 
       const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -750,11 +770,11 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('source.json')
@@ -762,6 +782,36 @@ describe('createEntryFiles', () => {
       const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
       expect(writtenSourceContent.patches['patch1.patch']).toEqual(hash1);
       expect(writtenSourceContent.patches['patch2.patch']).toEqual(hash2);
+    });
+
+    test('substitutes the module version into the source template', async () => {
+      mockRulesetFiles();
+
+      const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
+      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      const hash = `sha256-${randomUUID()}`;
+      mocked(computeIntegrityHash).mockReturnValue(hash);
+
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        version
+      );
+      const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
+        (call[0] as string).includes('source.json')
+      );
+      const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
+      expect(writtenSourceContent.strip_prefix).toMatch(
+        new RegExp(version.replaceAll('.', '\\.'))
+      );
     });
   });
 
@@ -775,6 +825,7 @@ describe('createEntryFiles', () => {
     });
 
     const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -786,11 +837,11 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('.'),
-      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('.'),
       rulesetRepo.patchesPath('.'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
     const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
       (call[0] as string).includes('source.json')
@@ -807,6 +858,7 @@ describe('createEntryFiles', () => {
       });
 
       const tag = 'v4.5.6';
+      const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
 
@@ -814,17 +866,17 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '4.5.6'
+        version
       );
       const expectedPatchPath = path.join(
         bcrRepo.diskPath,
         'modules',
         'rules_bar',
-        '4.5.6',
+        version,
         'patches',
         'module_dot_bazel_version.patch'
       );
@@ -845,7 +897,7 @@ describe('createEntryFiles', () => {
    name = "rules_bar",
    compatibility_level = 1,
 -  version = "1.2.3",
-+  version = "4.5.6",
++  version = "${version}",
  )`)
       ).toEqual(true);
     });
@@ -861,6 +913,7 @@ describe('createEntryFiles', () => {
     });
 
     const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -868,17 +921,17 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('.'),
-      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('.'),
       rulesetRepo.patchesPath('.'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
     const expectedPatchPath = path.join(
       bcrRepo.diskPath,
       'modules',
       'rules_bar',
-      '1.2.3',
+      version,
       'patches',
       'my_patch.patch'
     );
@@ -889,16 +942,18 @@ describe('createEntryFiles', () => {
   });
 
   test('includes patches in a different module root', async () => {
+    const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
+
     mockRulesetFiles({
       extractedModuleName: 'rules_bar',
-      extractedModuleVersion: '1.2.3',
+      extractedModuleVersion: version,
       patches: {
         'submodule.patch': randomUUID(),
       },
       moduleRoot: 'submodule',
     });
 
-    const tag = 'v1.2.3';
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -906,17 +961,17 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('submodule'),
-      rulesetRepo.sourceTemplate('submodule'),
+      rulesetRepo.sourceTemplate('submodule').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('submodule'),
       rulesetRepo.patchesPath('submodule'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
     const expectedPatchPath = path.join(
       bcrRepo.diskPath,
       'modules',
       'rules_bar',
-      '1.2.3',
+      version,
       'patches',
       'submodule.patch'
     );
@@ -927,14 +982,17 @@ describe('createEntryFiles', () => {
   });
 
   test("applies a patch to the entry's MODULE.bazel file", async () => {
+    const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
+
     const extractedModule = fakeModuleFile({
-      version: '1.2.3',
+      version,
       moduleName: 'rules_bar',
       deps: false,
     });
 
     const exptectedPatchedModule = fakeModuleFile({
-      version: '1.2.3',
+      version,
       moduleName: 'rules_bar',
       deps: true,
     });
@@ -953,7 +1011,6 @@ describe('createEntryFiles', () => {
       },
     });
 
-    const tag = 'v1.2.3';
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -961,17 +1018,17 @@ describe('createEntryFiles', () => {
     await bcrRepo.shallowCloneAndCheckout('main');
     await createEntryService.createEntryFiles(
       rulesetRepo.metadataTemplate('.'),
-      rulesetRepo.sourceTemplate('.'),
+      rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
       rulesetRepo.presubmitPath('.'),
       rulesetRepo.patchesPath('.'),
       bcrRepo.diskPath,
-      '1.2.3'
+      version
     );
     const moduleFilePath = path.join(
       bcrRepo.diskPath,
       'modules',
       'rules_bar',
-      '1.2.3',
+      version,
       'MODULE.bazel'
     );
 
@@ -982,6 +1039,9 @@ describe('createEntryFiles', () => {
   });
 
   test('throws when a patch that alters MODULE.bazel cannot be applied', async () => {
+    const tag = 'v1.2.3';
+    const version = RulesetRepository.getVersionFromTag(tag);
+
     const patchFrom = fakeModuleFile({
       version: '1.0.0',
       moduleName: 'rules_bar',
@@ -989,7 +1049,7 @@ describe('createEntryFiles', () => {
     });
 
     const patchTo = fakeModuleFile({
-      version: '1.2.3',
+      version,
       moduleName: 'rules_bar',
       deps: true,
     });
@@ -1004,7 +1064,7 @@ describe('createEntryFiles', () => {
     mockRulesetFiles({
       // Different from the patch origin
       extractedModuleContent: fakeModuleFile({
-        version: '1.2.3',
+        version,
         moduleName: 'rules_bar',
         deps: false,
       }),
@@ -1013,7 +1073,6 @@ describe('createEntryFiles', () => {
       },
     });
 
-    const tag = 'v1.2.3';
     const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
     const bcrRepo = CANONICAL_BCR;
 
@@ -1023,11 +1082,11 @@ describe('createEntryFiles', () => {
     try {
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
         rulesetRepo.presubmitPath('.'),
         rulesetRepo.patchesPath('.'),
         bcrRepo.diskPath,
-        '1.2.3'
+        version
       );
     } catch (e) {
       caughtError = e;

@@ -28,7 +28,6 @@ export class CreateEntryCommand {
     sourceTemplate.substitute({
       ...ghRepoSubstitutions(args.githubRepository),
       ...(args.tag ? { TAG: args.tag } : {}),
-      VERSION: args.moduleVersion,
     });
 
     const { moduleName } = await this.createEntryService.createEntryFiles(

@@ -6,13 +6,22 @@ export class InvalidSourceTemplateError extends Error {
   }
 }
 
+export class UnsubstitutedVarsError extends Error {
+  constructor(
+    public readonly path: string,
+    public readonly unsubstituted: Set<SubstitutableVar>
+  ) {
+    super();
+  }
+}
+
 export type SubstitutableVar = 'OWNER' | 'REPO' | 'TAG' | 'VERSION';
 
 export class SourceTemplate {
   private sourceJson: Record<string, unknown>;
 
   constructor(private readonly filePath: string) {
-    this.parseAndValidate(filePath);
+    this.parseAndValidate(this.filePath);
   }
 
   private parseAndValidate(filePath: string) {
@@ -40,7 +49,9 @@ export class SourceTemplate {
   }
 
   // Substitute variables into the templated source.json
-  public substitute(vars: Partial<Record<SubstitutableVar, string>>) {
+  public substitute(
+    vars: Partial<Record<SubstitutableVar, string>>
+  ): SourceTemplate {
     for (const prop of ['url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
@@ -48,6 +59,31 @@ export class SourceTemplate {
         this.sourceJson[prop] as string,
         vars
       );
+    }
+
+    return this;
+  }
+
+  public validateFullySubstituted(): void {
+    const tempalteVars: SubstitutableVar[] = [
+      'OWNER',
+      'REPO',
+      'TAG',
+      'VERSION',
+    ];
+    const unsubstituted = new Set<SubstitutableVar>();
+    for (const prop of ['url', 'strip_prefix'].filter(
+      (prop) => prop in this.sourceJson
+    )) {
+      for (const templateVar of tempalteVars) {
+        if ((this.sourceJson[prop] as string).includes(`{${templateVar}}`)) {
+          unsubstituted.add(templateVar);
+        }
+      }
+    }
+
+    if (unsubstituted.size > 0) {
+      throw new UnsubstitutedVarsError(this.filePath, unsubstituted);
     }
   }
 
