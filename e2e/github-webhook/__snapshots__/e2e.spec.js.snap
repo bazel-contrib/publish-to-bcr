@@ -29,7 +29,7 @@ bcr_test_module:
 modules/no-prefix/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-bJ2Xfwra9b+xS7zKSEpP0ammXllsZPkJNgwRT59E6to=",
+    "integrity": "sha256-qu7XxK4CB2YfFkceBAkY4mp2klo5bJYU8xQNwUGu1QE=",
     "url": "https://github.com/testorg/no-prefix/archive/refs/tags/v1.0.0.tar.gz"
 }
 
@@ -111,7 +111,7 @@ bcr_test_module:
 modules/empty-prefix/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-5TYQ+giuNTh5YplxFIAEcr2X96ht90LJpehveS4++G0=",
+    "integrity": "sha256-WQxg3TTTSIG5+tev5Ult6ek8IKwP+QO+m9/qBAxLsm4=",
     "strip_prefix": "",
     "url": "https://github.com/testorg/empty-prefix/archive/refs/tags/v1.0.0.tar.gz"
 }
@@ -169,7 +169,7 @@ bcr_test_module:
 modules/module/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-TNq18BsxVczY1FA2lJkWLBXMhQAkYloc8qAZcjPH+40=",
+    "integrity": "sha256-TKDqxqkkveSsuYF/j7kP/JI01iijIjtFaWv6ciI5fgo=",
     "strip_prefix": "multi-module-1.0.0",
     "url": "https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz"
 }
@@ -223,7 +223,7 @@ bcr_test_module:
 modules/submodule/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-TNq18BsxVczY1FA2lJkWLBXMhQAkYloc8qAZcjPH+40=",
+    "integrity": "sha256-TKDqxqkkveSsuYF/j7kP/JI01iijIjtFaWv6ciI5fgo=",
     "strip_prefix": "multi-module-1.0.0/submodule",
     "url": "https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz"
 }
@@ -286,7 +286,7 @@ bcr_test_module:
 modules/tarball/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-YFE/8KavtapcwFusSXdOrUk8aXATwtdEgZgDEgiZZ/U=",
+    "integrity": "sha256-IfxRo6OnN+q8mW1TeiWqo+svXpAfCsQ4JsyzPZqnreA=",
     "strip_prefix": "tarball-1.0.0",
     "url": "https://github.com/testorg/tarball/archive/refs/tags/v1.0.0.tar.gz"
 }
@@ -356,7 +356,7 @@ bcr_test_module:
 modules/unversioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-Q0ySwS1iZvzII/KXwZoxaWE2lLpp6ZrS7uMd4xLVdg4=",
+    "integrity": "sha256-PQi/tL2WmCaagUGXXGTk3eqa5YIu1V9SHAmWPaVs/3w=",
     "strip_prefix": "unversioned-1.0.0",
     "url": "https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz",
     "patches": {
@@ -418,7 +418,7 @@ bcr_test_module:
 modules/versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-iVWytRu1iuiPYMIOTOSooeY0dESDK71QNkGQPFbxzeM=",
+    "integrity": "sha256-xfjIw3n1H+COtEMgH49j1HCdW0H35vJ2oCrF2W8qelE=",
     "strip_prefix": "versioned-1.0.0",
     "url": "https://github.com/testorg/versioned/archive/refs/tags/v1.0.0.tar.gz"
 }
@@ -489,7 +489,7 @@ bcr_test_module:
 modules/zero-versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-CjfqJ9mn11skB/0SHmvr2BhiQuMZ3gZl9DnZKvC8ECI=",
+    "integrity": "sha256-SjKJSF/GuDeTCMYhd9hMkOEjM+r4xP0JSIjP1QzjVco=",
     "strip_prefix": "zero-versioned-1.0.0",
     "url": "https://github.com/testorg/zero-versioned/archive/refs/tags/v1.0.0.tar.gz",
     "patches": {
@@ -551,7 +551,7 @@ bcr_test_module:
 modules/zip/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-Ko4V5xPneq+Bq8C4EKMXUCnbzjrTTUaFLwC4ckVz3go=",
+    "integrity": "sha256-8u04c7Lk1psMKzFgnN3yysw93jvWp4RnqGGW/9n/+Jk=",
     "strip_prefix": "zip-1.0.0",
     "url": "https://github.com/testorg/zip/archive/refs/tags/v1.0.0.zip"
 }

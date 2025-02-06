@@ -1,0 +1,76 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load(":fixture.bzl", "fixture_archive")
+
+fixture_archive(
+    name = "empty-prefix",
+    archive = "tar",
+    prefix = None,
+)
+
+fixture_archive(
+    name = "fixed-releaser",
+    archive = "tar",
+    prefix = "fixed-releaser-1.0.0",
+)
+
+fixture_archive(
+    name = "multi-module",
+    archive = "tar",
+    prefix = "multi-module-1.0.0",
+)
+
+fixture_archive(
+    name = "multi-module_invalid_prefix",
+    archive = "tar",
+    fixture = "multi-module",
+    prefix = "invalid-prefix",
+)
+
+fixture_archive(
+    name = "no-prefix",
+    archive = "tar",
+    prefix = None,
+)
+
+fixture_archive(
+    name = "tarball",
+    archive = "tar",
+    prefix = "tarball-1.0.0",
+)
+
+fixture_archive(
+    name = "unversioned",
+    archive = "tar",
+    prefix = "unversioned-1.0.0",
+)
+
+fixture_archive(
+    name = "versioned",
+    archive = "tar",
+    prefix = "versioned-1.0.0",
+)
+
+fixture_archive(
+    name = "versioned_invalid_prefix",
+    archive = "tar",
+    fixture = "versioned",
+    prefix = "invalid-prefix",
+)
+
+fixture_archive(
+    name = "zero-versioned",
+    archive = "tar",
+    prefix = "zero-versioned-1.0.0",
+)
+
+fixture_archive(
+    name = "zip",
+    archive = "zip",
+    prefix = "zip-1.0.0",
+)
+
+copy_to_bin(
+    name = "fixtures",
+    srcs = glob(["**/*"]),
+    visibility = ["//e2e:__subpackages__"],
+)
