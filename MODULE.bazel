@@ -21,12 +21,16 @@ git_override(
     remote = "https://github.com/bazel-contrib/toolchains_llvm",
 )
 
+bazel_lib = use_extension("@aspect_bazel_lib//lib:extensions.bzl", "toolchains")
+bazel_lib.bats()
+
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 multitool.hub(lockfile = "//tools:tools.lock.json")
 use_repo(multitool, "multitool")
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
 node.toolchain(node_version = "20.18.0")
+use_repo(node, "nodejs", "nodejs_toolchains")
 
 pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
 pnpm.pnpm(

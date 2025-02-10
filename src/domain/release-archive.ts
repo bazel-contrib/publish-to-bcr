@@ -45,7 +45,12 @@ export class MissingModuleFileError extends UserFacingError {
 }
 
 export class ReleaseArchive {
-  public static readonly SUPPORTED_EXTENSIONS = ['.zip', '.tar.gz', '.tar.xz'];
+  public static readonly SUPPORTED_EXTENSIONS = [
+    '.zip',
+    '.tar',
+    '.tar.gz',
+    '.tar.xz',
+  ];
   public static async fetch(
     url: string,
     stripPrefix: string
@@ -92,6 +97,9 @@ export class ReleaseArchive {
   }
 
   private isSupportedTarball(): boolean {
+    if (this._diskPath.endsWith('.tar')) {
+      return true;
+    }
     if (this._diskPath.endsWith('.tar.gz')) {
       return true;
     }
@@ -174,6 +182,13 @@ async function download(url: string, dest: string): Promise<void> {
     parsed.port = port;
 
     url = `http://${host}:${port}${parsed.path}`;
+  }
+
+  // Support downloading from another location on disk.
+  // Useful for swapping in a local path for e2e tests.
+  if (url.startsWith('file://')) {
+    fs.copyFileSync(url.substring('file://'.length), dest);
+    return;
   }
 
   const writer = fs.createWriteStream(dest, { flags: 'w' });

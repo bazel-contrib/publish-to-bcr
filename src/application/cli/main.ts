@@ -16,6 +16,7 @@ async function main() {
     await parser.parse();
   } catch (err) {
     console.error(`${err.message}\n ${await parser.getHelp()}`);
+    process.exit(1);
   }
 
   await app.close();
