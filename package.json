@@ -15,6 +15,8 @@
     "gcp-build": ""
   },
   "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/exec": "^1.1.1",
     "@google-cloud/functions-framework": "^3.1.2",
     "@google-cloud/secret-manager": "^5.0.1",
     "@nestjs/common": "^10.3.9",

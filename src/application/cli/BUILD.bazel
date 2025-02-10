@@ -34,15 +34,15 @@ js_binary(
 esbuild(
     name = "bundle",
     srcs = [
-        "cjs-shim.js",
         ":cli",
+        "//src/application:cjs-shim",
     ],
     config = {
         "target": "es2020",
         "resolveExtensions": [".js"],
         "platform": "node",
         "format": "esm",
-        "inject": ["{}/cjs-shim.js".format(package_name())],
+        "inject": ["src/application/cjs-shim.js"],
     },
     entry_point = "main.js",
     external = [

@@ -1,0 +1,65 @@
+# End-to-end tests for the Publish to BCR custom GitHub action
+name: action-e2e
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  # Cancel previous actions from the same PR or branch except 'main' branch.
+  # See https://docs.github.com/en/actions/using-jobs/using-concurrency and https://docs.github.com/en/actions/learn-github-actions/contexts for more info.
+  group: concurrency-group::${{ github.workflow }}::${{ github.event.pull_request.number > 0 && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}${{ github.ref_name == 'main' && format('::{0}', github.run_id) || ''}}
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
+jobs:
+  # Each job is an e2e test. Unfortunately a full workflow cannot be added as
+  # required status check on branch protection rules, so each test must be added
+  # as a required check: https://github.com/orgs/community/discussions/12395.
+  test-happy-path:
+    # Create a new module entry and test the content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: this
+      - name: Setup test fixture
+        run: this/e2e/action/setup-test-fixture.sh versioned versioned-1.0.0
+      - name: Create registry
+        run: |
+          mkdir -p bazel-central-registry/modules
+          cd bazel-central-registry
+          git init
+      - name: Create entry
+        uses: ./this
+        with:
+          tag: v1.0.0
+          module-version: 1.0.0
+          github-repository: foobar/versioned
+          templates-dir: this/e2e/fixtures/versioned/.bcr
+          local-registry: bazel-central-registry
+      - name: Test entry content
+        run: this/e2e/action/test-happy-path-content.sh
+  test-github-repository-default:
+    # Test that the `github-repository` input defaults to ${{ github.repository }}
+    # indirectly by checking the resulting subtituted source.json file in the entry.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: this
+      - name: Setup test fixture
+        run: this/e2e/action/setup-test-fixture.sh versioned publish-to-bcr-1.0.0
+      - name: Create registry
+        run: |
+          mkdir -p bazel-central-registry/modules
+          cd bazel-central-registry
+          git init
+      - name: Create entry
+        uses: ./this
+        with:
+          tag: v1.0.0
+          module-version: 1.0.0
+          templates-dir: this/e2e/fixtures/versioned/.bcr
+          local-registry: bazel-central-registry
+      - name: Test repository substitution
+        run: this/e2e/action/test-github-repository-default-substitution.sh

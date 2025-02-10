@@ -1,0 +1,33 @@
+load("@aspect_rules_esbuild//esbuild:defs.bzl", "esbuild")
+load("//bazel/ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "action",
+    srcs = ["main.ts"],
+    deps = [
+        "//:node_modules/@actions/core",
+        "//:node_modules/@actions/exec",
+        "//:node_modules/@types/node",
+    ],
+)
+
+esbuild(
+    name = "bundle",
+    srcs = [
+        ":action",
+        "//src/application:cjs-shim",
+    ],
+    config = {
+        "target": "es2020",
+        "resolveExtensions": [".js"],
+        "platform": "node",
+        "format": "esm",
+        "inject": ["src/application/cjs-shim.js"],
+    },
+    entry_point = "main.js",
+    minify = True,
+    output = "index.js",
+    platform = "node",
+    sourcemap = "inline",
+    visibility = ["//dist/action:__pkg__"],
+)
