@@ -1,0 +1,7 @@
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_file")
+
+write_source_file(
+    name = "cli",
+    in_file = "//src/application/cli:bundle",
+    out_file = "index.js",
+)
