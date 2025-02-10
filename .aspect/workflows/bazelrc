@@ -64,3 +64,6 @@ build --remote_local_fallback
 # Fixes builds hanging on CI that get the TCP connection closed without sending RST packets.
 # Docs: https://bazel.build/reference/command-line-reference#flag--grpc_keepalive_time
 build --grpc_keepalive_time=30s
+
+# Don't use bzlmod lockfile as it generates locks for MODULE.bazel files in e2e/fixtures.
+build --lockfile_mode=off

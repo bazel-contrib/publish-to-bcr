@@ -5,7 +5,19 @@ ts_project(
     name = "github-webhook_tests",
     testonly = True,
     srcs = ["e2e.spec.ts"],
-    data = glob(["fixtures/**/*"]) + [
+    data = [
+        "//e2e/fixtures",
+        "//e2e/fixtures:empty-prefix",
+        "//e2e/fixtures:fixed-releaser",
+        "//e2e/fixtures:multi-module",
+        "//e2e/fixtures:multi-module_invalid_prefix",
+        "//e2e/fixtures:no-prefix",
+        "//e2e/fixtures:tarball",
+        "//e2e/fixtures:unversioned",
+        "//e2e/fixtures:versioned",
+        "//e2e/fixtures:versioned_invalid_prefix",
+        "//e2e/fixtures:zero-versioned",
+        "//e2e/fixtures:zip",
         # e2e tests run a cloud function emulator which runs on the
         # distribution package. The emulator (unlike GCP) doesn't install
         # deps from the included pnpm-lock.yaml file. For simplicity just
