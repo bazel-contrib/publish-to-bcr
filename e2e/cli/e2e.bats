@@ -2,10 +2,6 @@ bats_load_library "bats-assert"
 bats_load_library "bats-file"
 bats_load_library "bats-support"
 
-setup_file() {
-    export CLI_BIN="$(dirname "${CLI_BIN}")/../main.js"
-}
-
 setup() {
     export REGISTRY_PATH="${TEST_TMPDIR}/bazel-central-registry"
     mkdir -p "${REGISTRY_PATH}/modules"

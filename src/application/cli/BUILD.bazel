@@ -1,3 +1,4 @@
+load("@aspect_rules_esbuild//esbuild:defs.bzl", "esbuild")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("//bazel/jest:defs.bzl", "jest_test")
 load("//bazel/ts:defs.bzl", "ts_project")
@@ -28,6 +29,38 @@ js_binary(
     data = [":cli"],
     entry_point = "main.js",
     visibility = ["//e2e/cli:__pkg__"],
+)
+
+esbuild(
+    name = "bundle",
+    srcs = [
+        "cjs-shim.js",
+        ":cli",
+    ],
+    config = {
+        "target": "es2020",
+        "resolveExtensions": [".js"],
+        "platform": "node",
+        "format": "esm",
+        "inject": ["{}/cjs-shim.js".format(package_name())],
+    },
+    entry_point = "main.js",
+    external = [
+        "class-transformer",
+        "class-validator",
+        "encoding",
+        "@nestjs/websockets",
+        "@nestjs/microservices",
+        "@nestjs/platform-express",
+    ],
+    minify = True,
+    output = "index.js",
+    platform = "node",
+    sourcemap = "inline",
+    visibility = [
+        "//dist/cli:__pkg__",
+        "//e2e/cli:__pkg__",
+    ],
 )
 
 ts_project(

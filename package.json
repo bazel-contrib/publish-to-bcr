@@ -86,6 +86,16 @@
         "dependencies": {
           "long": "5.2.3"
         }
+      },
+      "debug": {
+        "dependencies": {
+          "supports-color": "*"
+        }
+      },
+      "follow-redirects": {
+        "dependencies": {
+          "debug": "*"
+        }
       }
     }
   }
