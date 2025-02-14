@@ -1,0 +1,40 @@
+name: 'Publish to BCR'
+description: 'Create a new module version entry in a Bazel registry'
+inputs:
+  github-repository:
+    description: 'GitHub repository for the module being published. Used to substititue the OWNER and REPO vars into the source template. Defaults to the repository this action runs in.'
+    required: false
+    default: ${{ github.repository }}
+  local-registry:
+    description: 'Path to a locally checked out registry where the entry files will be created.'
+    required: true
+  metadata-template:
+    description: 'Content of the metadata template. An alternative to supplying a metadata.template.json file in the templates dir.'
+    required: false
+    default: ''
+  module-version:
+    description: 'The module version to publish to the registry.'
+    required: true
+  patch:
+    description: 'Patch content to apply to the release archive. An alternative to supplying a patches folder in the templates dir. The GitHub action is limited to a single patch input so all patches should be merged into one.'
+    required: false
+    default: ''
+  presubmit:
+    description: 'Content of the presubmit. An alternative to supplying a presubmit.yml file in the templates dir.'
+    required: false
+    default: ''
+  source-template:
+    description: 'Content of the source template. An alternative to supplying a source.template.json file in the templates dir.'
+    required: false
+    default: ''
+  tag:
+    description: "Tag of the the module repository's release. Used for substitution in the source template."
+    required: false
+    default: ''
+  templates-dir:
+    description: 'Directory containing BCR release template files: metadata.template.json, source.template.json, presubmit.yaml, patches/. Equivalent to the .bcr directory required by the legacy GitHub app.'
+    required: false
+    default: ''
+runs:
+  using: 'node20'
+  main: 'dist/action/index.js'
