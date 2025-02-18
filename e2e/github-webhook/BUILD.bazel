@@ -7,6 +7,7 @@ ts_project(
     srcs = ["e2e.spec.ts"],
     data = [
         "//e2e/fixtures",
+        "//e2e/fixtures:attestations",
         "//e2e/fixtures:empty-prefix",
         "//e2e/fixtures:fixed-releaser",
         "//e2e/fixtures:multi-module",

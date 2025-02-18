@@ -4,6 +4,10 @@ import path from 'node:path';
 import yaml from 'yaml';
 
 import {
+  AttestationsTemplate,
+  AttestationsTemplateError,
+} from './attestations-template.js';
+import {
   Configuration,
   InvalidConfigurationFileError as _InvalidConfigurationFileError,
   MissingConfigurationFileError,
@@ -107,11 +111,29 @@ export class InvalidSourceTemplateError extends RulesetRepoError {
   }
 }
 
+export class InvalidAttestationsTemplateError extends RulesetRepoError {
+  constructor(
+    repository: RulesetRepository,
+    moduleRoot: string,
+    reason: string
+  ) {
+    super(
+      repository,
+      moduleRoot,
+      `Invalid attestations template file ${repository.attestationsTemplate(
+        moduleRoot
+      )}: ${reason}`
+    );
+  }
+}
+
 export class RulesetRepository extends Repository {
   public static readonly BCR_TEMPLATE_DIR = '.bcr';
 
   private _sourceTemplate: Record<string, SourceTemplate> = {};
   private _metadataTemplate: Record<string, MetadataFile> = {};
+  private _attestationsTemplate: Record<string, AttestationsTemplate | null> =
+    {};
   private _config: Configuration;
 
   public static async create(
@@ -161,6 +183,16 @@ export class RulesetRepository extends Repository {
         rulesetRepo._metadataTemplate[moduleRoot] = new MetadataFile(
           rulesetRepo.metadataTemplatePath(moduleRoot)
         );
+        rulesetRepo._attestationsTemplate[moduleRoot] =
+          AttestationsTemplate.tryLoad(
+            rulesetRepo.attestationsTemplatePath(moduleRoot)
+          );
+        if (rulesetRepo._attestationsTemplate[moduleRoot]) {
+          rulesetRepo._attestationsTemplate[moduleRoot].substitute({
+            OWNER: rulesetRepo.owner,
+            REPO: rulesetRepo.name,
+          });
+        }
       } catch (e) {
         if (e instanceof _InvalidSourceTemplateError) {
           throw new InvalidSourceTemplateError(
@@ -170,6 +202,12 @@ export class RulesetRepository extends Repository {
           );
         } else if (e instanceof MetadataFileError) {
           throw new InvalidMetadataTemplateError(
+            rulesetRepo,
+            moduleRoot,
+            e.message
+          );
+        } else if (e instanceof AttestationsTemplateError) {
+          throw new InvalidAttestationsTemplateError(
             rulesetRepo,
             moduleRoot,
             e.message
@@ -225,6 +263,15 @@ export class RulesetRepository extends Repository {
     );
   }
 
+  public attestationsTemplatePath(moduleRoot: string): string {
+    return path.resolve(
+      this.diskPath,
+      RulesetRepository.BCR_TEMPLATE_DIR,
+      moduleRoot,
+      'attestations.template.json'
+    );
+  }
+
   public patchesPath(moduleRoot: string): string {
     return path.resolve(
       this.diskPath,
@@ -240,6 +287,10 @@ export class RulesetRepository extends Repository {
 
   public metadataTemplate(moduleRoot: string): MetadataFile {
     return this._metadataTemplate[moduleRoot];
+  }
+
+  public attestationsTemplate(moduleRoot: string): AttestationsTemplate | null {
+    return this._attestationsTemplate[moduleRoot];
   }
 
   public get configFilePath(): string {

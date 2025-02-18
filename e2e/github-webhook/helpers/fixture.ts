@@ -10,6 +10,7 @@ export const PREPARED_FIXTURES_PATH = fs.mkdtempSync(
 );
 
 export enum Fixture {
+  Attestations = 'attestations',
   EmptyPrefix = 'empty-prefix',
   FixedReleaser = 'fixed-releaser',
   MultiModule = 'multi-module',

@@ -1,5 +1,3 @@
-// export type SubstitutableVar = 'OWNER' | 'REPO' | 'TAG' | 'VERSION';
-
 export enum SubstitutableVar {
   OWNER = 'OWNER',
   REPO = 'REPO',

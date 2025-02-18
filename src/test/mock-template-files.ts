@@ -158,3 +158,32 @@ ${
 }
 `;
 }
+
+export function fakeAttestationsFile(
+  options: {
+    content?: string;
+  } = {}
+): string {
+  if (options.content) {
+    return options.content;
+  }
+  return `\
+{
+  "types": ["https://slsa.dev/provenance/v1"],
+  "attestations": {
+    "source.json": {
+      "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/source.json.intoto.jsonl",
+      "integrity": ""
+    },
+    "MODULE.bazel": {
+      "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/MODULE.bazel.intoto.jsonl",
+      "integrity": ""
+    },
+    "{REPO}-{TAG}.tar.gz.intoto.jsonl": {
+      "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.tar.gz.intoto.jsonl",
+      "integrity": ""
+    }
+  }
+}
+`;
+}
