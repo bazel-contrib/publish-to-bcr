@@ -1,6 +1,18 @@
 name: 'Publish to BCR'
 description: 'Create a new module version entry in a Bazel registry'
 inputs:
+  attest:
+    description: 'Whether to generate attestations for files created by Publish to BCR.'
+    required: false
+    default: false
+  attestations-dest:
+    description: 'Directory to output attestations to. Attestations are not included in the entry.'
+    required: false
+    default: ''
+  gh-token:
+    description: 'Token for persisting attestations to the repo. This must be a token with id-token and attestation write permissions.'
+    required: false
+    default: ${{ github.token }}
   github-repository:
     description: 'GitHub repository for the module being published. Used to substititue the OWNER and REPO vars into the source template. Defaults to the repository this action runs in.'
     required: false

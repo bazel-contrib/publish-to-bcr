@@ -25,6 +25,11 @@ import {
 import { SourceTemplateError } from '../../domain/source-template.js';
 import { CreateEntryArgs } from './yargs.js';
 
+export interface CreateEntryCommandOutput {
+  moduleName: string;
+  entryPath: string;
+}
+
 @Injectable()
 export class CreateEntryCommand {
   constructor(private readonly createEntryService: CreateEntryService) {}
@@ -71,6 +76,22 @@ export class CreateEntryCommand {
         args.localRegistry,
         moduleName,
         args.moduleVersion
+      );
+
+      console.log(
+        JSON.stringify(
+          {
+            moduleName,
+            entryPath: path.join(
+              args.localRegistry,
+              'modules',
+              moduleName,
+              args.moduleVersion
+            ),
+          } as CreateEntryCommandOutput,
+          undefined,
+          4
+        )
       );
     } catch (e) {
       this.handleErrorAndExit(sourceTemplatePath, e);

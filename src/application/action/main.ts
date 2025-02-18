@@ -5,7 +5,13 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import path from 'path';
 
-interface Inputs {
+import { CreateEntryCommandOutput } from '../cli/create-entry-command';
+import { attest } from './attest';
+
+export interface Inputs {
+  attest: boolean;
+  attestationsDest: string;
+  ghToken: string;
   githubRepo: string;
   localRegistry: string;
   metadataTemplate: string;
@@ -23,6 +29,9 @@ async function main() {
       // GitHub doesn't actually validate inputs that have the `required`
       // property so we need to verify that ourselves with { required: true }.
       // https://github.com/actions/runner/issues/1070
+      attest: core.getBooleanInput('attest'),
+      attestationsDest: core.getInput('attestations-dest'),
+      ghToken: core.getInput('gh-token'),
       githubRepo: core.getInput('github-repository'),
       localRegistry: core.getInput('local-registry', { required: true }),
       metadataTemplate: core.getInput('metadata-template'),
@@ -51,11 +60,14 @@ async function main() {
       cliArgs.push(`--tag=${inputs.tag}`);
     }
 
-    const code = await exec.exec('node', [cliBin, ...cliArgs]);
+    const { code, output: cliOutput } = await executeCli(cliBin, cliArgs);
 
     if (code !== 0) {
       core.setFailed(`CLI exited with code ${code}`);
+      return;
     }
+
+    await attest(inputs, cliOutput!);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -64,6 +76,25 @@ async function main() {
 function getCliBin(): string {
   const actionBin = process.argv[1];
   return path.join(path.dirname(actionBin), '..', 'cli/index.js');
+}
+
+async function executeCli(
+  bin: string,
+  args: string[]
+): Promise<{ code: number; output?: CreateEntryCommandOutput }> {
+  let stdout = '';
+  const code = await exec.exec('node', [bin, ...args], {
+    listeners: {
+      stdout: (data: Buffer) => {
+        stdout += data.toString();
+      },
+    },
+  });
+  return {
+    code,
+    output:
+      code === 0 ? (JSON.parse(stdout) as CreateEntryCommandOutput) : undefined,
+  };
 }
 
 // Copy all templates to a new directory then override them with
