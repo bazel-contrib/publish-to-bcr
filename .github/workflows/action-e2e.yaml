@@ -63,3 +63,36 @@ jobs:
           local-registry: bazel-central-registry
       - name: Test repository substitution
         run: this/e2e/action/test-github-repository-default-substitution.sh
+  test-attestations:
+    # Test that attestations are created when `attest` is set to true
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: this
+      - name: Setup test fixture
+        run: this/e2e/action/setup-test-fixture.sh versioned versioned-1.0.0
+      - name: Create registry
+        run: |
+          mkdir -p bazel-central-registry/modules
+          cd bazel-central-registry
+          git init
+      - name: Create entry
+        uses: ./this
+        with:
+          attest: true
+          attestations-dest: attestations
+          tag: v1.0.0
+          module-version: 1.0.0
+          github-repository: foobar/versioned
+          templates-dir: this/e2e/fixtures/versioned/.bcr
+          local-registry: bazel-central-registry
+      - name: Test attestations exist
+        run: |
+          set -o errexit -o nounset -o pipefail -o xtrace
+
+          [ -f attestations/MODULE.bazel.intoto.jsonl ]
+          [ -f attestations/source.json.intoto.jsonl ]

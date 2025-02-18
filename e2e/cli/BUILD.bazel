@@ -11,10 +11,15 @@ bats_test(
         "//e2e/fixtures:versioned",
         "//e2e/fixtures:zip",
         "//src/application/cli:bundle",
+        "@jq_toolchains//:resolved_toolchain",
         "@nodejs_toolchains//:resolved_toolchain",
     ],
     env = {
         "CLI_BIN": "$(rootpath //src/application/cli:bundle)",
+        "JQ_BIN": "$(JQ_BIN)",
         "NODE_BIN": "$(rootpath @nodejs_toolchains//:resolved_toolchain)",
     },
+    toolchains = [
+        "@jq_toolchains//:resolved_toolchain",
+    ],
 )
