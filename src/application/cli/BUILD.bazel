@@ -11,7 +11,10 @@ ts_project(
         "main.ts",
         "yargs.ts",
     ],
-    visibility = ["//e2e/cli:__pkg__"],
+    visibility = [
+        "//e2e/cli:__pkg__",
+        "//src/application/action:__pkg__",
+    ],
     deps = [
         "//:node_modules/@nestjs/common",
         "//:node_modules/@nestjs/core",

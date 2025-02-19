@@ -15,6 +15,7 @@
     "gcp-build": ""
   },
   "dependencies": {
+    "@actions/attest": "^1.5.0",
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
     "@google-cloud/functions-framework": "^3.1.2",
@@ -32,6 +33,7 @@
     "axios-retry": "^4.0.0",
     "chalk": "^4.1.2",
     "diff": "^5.1.0",
+    "encoding": "0.1.13",
     "exponential-backoff": "3.1.1",
     "extract-zip": "^2.0.1",
     "gcp-metadata": "^6.0.0",
@@ -84,6 +86,11 @@
   "pnpm": {
     "onlyBuiltDependencies": [],
     "packageExtensions": {
+      "@actions/github": {
+        "dependencies": {
+          "undici": "*"
+        }
+      },
       "@google-cloud/secret-manager": {
         "dependencies": {
           "long": "5.2.3"
@@ -97,6 +104,11 @@
       "follow-redirects": {
         "dependencies": {
           "debug": "*"
+        }
+      },
+      "node-fetch": {
+        "dependencies": {
+          "encoding": "*"
         }
       }
     }

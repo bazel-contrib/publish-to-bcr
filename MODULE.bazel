@@ -24,6 +24,8 @@ git_override(
 
 bazel_lib = use_extension("@aspect_bazel_lib//lib:extensions.bzl", "toolchains")
 bazel_lib.bats()
+bazel_lib.jq()
+use_repo(bazel_lib, "jq_toolchains")
 
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 multitool.hub(lockfile = "//tools:tools.lock.json")
