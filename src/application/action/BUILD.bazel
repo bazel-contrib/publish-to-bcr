@@ -3,11 +3,17 @@ load("//bazel/ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "action",
-    srcs = ["main.ts"],
+    srcs = [
+        "attest.ts",
+        "main.ts",
+    ],
     deps = [
+        "//:node_modules/@actions/attest",
         "//:node_modules/@actions/core",
         "//:node_modules/@actions/exec",
         "//:node_modules/@types/node",
+        "//src/application/cli",
+        "//src/domain",
     ],
 )
 

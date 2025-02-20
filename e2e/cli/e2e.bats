@@ -5,10 +5,12 @@ bats_load_library "bats-support"
 setup() {
     export REGISTRY_PATH="${TEST_TMPDIR}/bazel-central-registry"
     mkdir -p "${REGISTRY_PATH}/modules"
+    
+    export jq="../${JQ_BIN#"external/"}"
 }
 
 teardown() {
-    rm -rf "${TEST_TMPDIR}/*"
+    rm -rf "${TEST_TMPDIR}"/*
 }
 
 swap_source_url() {
@@ -94,4 +96,22 @@ swap_source_url() {
     assert_failure
 
     assert_output --partial 'Did you forget to pass --github-repository to substitute the OWNER and REPO variables?'
+}
+
+@test 'outputs json blob with info about entry to stdout' {
+    FIXTURE="e2e/fixtures/versioned"
+    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
+    TEMPLATES_DIR="${FIXTURE}/.bcr"
+    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar"
+
+    swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
+
+    STDOUT=$("${NODE_BIN}" "${CLI_BIN}" create-entry --local-registry "${REGISTRY_PATH}" --templates-dir "${TEMPLATES_DIR}" --module-version 1.0.0 --github-repository owner/versioned --tag v1.0.0)
+    ENTRY_PATH="${REGISTRY_PATH}/modules/versioned/1.0.0"
+
+    ACTUAL=$("${jq}" <<< ${STDOUT} .)
+    EXPECTED=$("${jq}" --null-input "{moduleName: \"versioned\", entryPath: \"${ENTRY_PATH}\"}")
+
+    assert_equal "${EXPECTED}" "${ACTUAL}"
 }
