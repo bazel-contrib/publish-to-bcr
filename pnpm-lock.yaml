@@ -61,8 +61,8 @@ dependencies:
     specifier: ^4.1.2
     version: 4.1.2
   diff:
-    specifier: ^5.1.0
-    version: 5.2.0
+    specifier: ^7.0.0
+    version: 7.0.0
   encoding:
     specifier: 0.1.13
     version: 0.1.13
@@ -117,8 +117,8 @@ devDependencies:
     specifier: ^29.7.0
     version: 29.7.0
   '@types/diff':
-    specifier: ^5.0.2
-    version: 5.2.3
+    specifier: ^7.0.0
+    version: 7.0.1
   '@types/imapflow':
     specifier: 1.0.19
     version: 1.0.19
@@ -2493,8 +2493,8 @@ packages:
       '@types/node': 18.19.71
     dev: true
 
-  /@types/diff@5.2.3:
-    resolution: {integrity: sha512-K0Oqlrq3kQMaO2RhfrNQX5trmt+XLyom88zS0u84nnIcLvFnRUMRRHmrGny5GSM+kNO9IZLARsdQHDzkhAgmrQ==}
+  /@types/diff@7.0.1:
+    resolution: {integrity: sha512-R/BHQFripuhW6XPXy05hIvXJQdQ4540KnTvEFHSLjXfHYM41liOLKgIJEyYYiQe796xpaMHfe4Uj/p7Uvng2vA==}
     dev: true
 
   /@types/estree@1.0.6:
@@ -3551,8 +3551,8 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dev: true
 
-  /diff@5.2.0:
-    resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
+  /diff@7.0.0:
+    resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
     engines: {node: '>=0.3.1'}
     dev: false
 
