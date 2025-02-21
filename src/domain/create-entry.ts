@@ -49,8 +49,9 @@ export class CreateEntryService {
     );
 
     try {
-      const integrityHash = computeIntegrityHash(releaseArchive.diskPath);
-      sourceTemplate.setIntegrityHash(integrityHash);
+      sourceTemplate.setIntegrityHash(
+        releaseArchive.artifact.computeIntegrityHash()
+      );
 
       const moduleFile = await releaseArchive.extractModuleFile();
 

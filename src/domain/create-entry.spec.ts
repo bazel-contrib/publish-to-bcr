@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import fs, { PathLike } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 
 import { createTwoFilesPatch } from 'diff';
@@ -14,6 +13,7 @@ import {
   fakeSourceFile,
 } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
+import { Artifact } from './artifact';
 import {
   CreateEntryService,
   PatchModuleError,
@@ -34,6 +34,7 @@ jest.mock('../infrastructure/git');
 jest.mock('../infrastructure/github');
 jest.mock('./integrity-hash');
 jest.mock('./release-archive');
+jest.mock('./artifact');
 jest.mock('node:fs');
 jest.mock('exponential-backoff');
 
@@ -81,7 +82,10 @@ beforeEach(() => {
     extractModuleFile: jest.fn(async () => {
       return new ModuleFile(EXTRACTED_MODULE_PATH);
     }),
-    diskPath: path.join(os.tmpdir(), 'archive.tar.gz'),
+    artifact: {
+      computeIntegrityHash: jest.fn().mockReturnValue(`sha256-${randomUUID()}`),
+      cleanup: jest.fn(),
+    } as Partial<Artifact> as Artifact,
     cleanup: jest.fn(),
   } as Partial<ReleaseArchive> as ReleaseArchive;
 
@@ -631,7 +635,9 @@ describe('createEntryFiles', () => {
       const bcrRepo = CANONICAL_BCR;
 
       const hash = `sha256-${randomUUID()}`;
-      mocked(computeIntegrityHash).mockReturnValue(hash);
+      mocked(mockReleaseArchive.artifact.computeIntegrityHash).mockReturnValue(
+        hash
+      );
 
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await bcrRepo.shallowCloneAndCheckout('main');
@@ -659,7 +665,9 @@ describe('createEntryFiles', () => {
       const bcrRepo = CANONICAL_BCR;
 
       const hash = `sha256-${randomUUID()}`;
-      mocked(computeIntegrityHash).mockReturnValue(hash);
+      mocked(mockReleaseArchive.artifact.computeIntegrityHash).mockReturnValue(
+        hash
+      );
 
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await bcrRepo.shallowCloneAndCheckout('main');
@@ -723,7 +731,9 @@ describe('createEntryFiles', () => {
       const bcrRepo = CANONICAL_BCR;
 
       const hash = `sha256-${randomUUID()}`;
-      mocked(computeIntegrityHash).mockReturnValue(hash);
+      mocked(mockReleaseArchive.artifact.computeIntegrityHash).mockReturnValue(
+        hash
+      );
 
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await bcrRepo.shallowCloneAndCheckout('main');
@@ -760,9 +770,9 @@ describe('createEntryFiles', () => {
       const hash1 = `sha256-${randomUUID()}`;
       const hash2 = `sha256-${randomUUID()}`;
 
-      mocked(computeIntegrityHash).mockReturnValueOnce(
-        `sha256-${randomUUID()}`
-      ); // release archive
+      mocked(
+        mockReleaseArchive.artifact.computeIntegrityHash
+      ).mockReturnValueOnce(`sha256-${randomUUID()}`); // release archive
       mocked(computeIntegrityHash).mockReturnValueOnce(hash1);
       mocked(computeIntegrityHash).mockReturnValueOnce(hash2);
 
@@ -793,7 +803,9 @@ describe('createEntryFiles', () => {
       const bcrRepo = CANONICAL_BCR;
 
       const hash = `sha256-${randomUUID()}`;
-      mocked(computeIntegrityHash).mockReturnValue(hash);
+      mocked(mockReleaseArchive.artifact.computeIntegrityHash).mockReturnValue(
+        hash
+      );
 
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await bcrRepo.shallowCloneAndCheckout('main');
@@ -830,7 +842,9 @@ describe('createEntryFiles', () => {
     const bcrRepo = CANONICAL_BCR;
 
     const hash = `sha256-${randomUUID()}`;
-    mocked(computeIntegrityHash).mockReturnValueOnce(`sha256-${randomUUID()}`); // release archive
+    mocked(
+      mockReleaseArchive.artifact.computeIntegrityHash
+    ).mockReturnValueOnce(`sha256-${randomUUID()}`); // release archive
     mocked(computeIntegrityHash).mockReturnValueOnce(hash);
 
     await rulesetRepo.shallowCloneAndCheckout(tag);
