@@ -1,14 +1,13 @@
-import fs, { WriteStream } from 'node:fs';
-import os from 'node:os';
+import fs from 'node:fs';
 import path from 'node:path';
+import { parse as parseUrl } from 'node:url';
 
-import axios from 'axios';
-import axiosRetry from 'axios-retry';
 import { mocked } from 'jest-mock';
 import tar from 'tar';
 
 import { fakeModuleFile } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
+import { Artifact, ArtifactDownloadError } from './artifact';
 import {
   ArchiveDownloadError,
   MissingModuleFileError,
@@ -17,144 +16,60 @@ import {
 } from './release-archive';
 
 jest.mock('node:fs');
-jest.mock('axios');
-jest.mock('axios-retry');
-jest.mock('node:os');
 jest.mock('tar');
 jest.mock('extract-zip');
+jest.mock('./artifact', () => {
+  return {
+    Artifact: jest.fn().mockImplementation((url) => {
+      mockArtifact.url = url;
+      return mockArtifact;
+    }),
+    ArtifactDownloadError:
+      jest.requireActual('./artifact').ArtifactDownloadError,
+  };
+});
 
 const RELEASE_ARCHIVE_URL = 'https://foo.bar/rules-foo-v1.2.3.tar.gz';
 const STRIP_PREFIX = 'rules-foo';
-const TEMP_DIR = '/tmp';
-const EXTRACT_DIR = `${TEMP_DIR}/archive-1234`;
+
+const mockArtifact = {
+  url: RELEASE_ARCHIVE_URL,
+  download: jest.fn(),
+  diskPath: null as string,
+};
 
 beforeEach(() => {
-  mocked(axios.get).mockReturnValue(
-    Promise.resolve({
-      data: {
-        pipe: jest.fn(),
-      },
-      status: 200,
-    })
-  );
-
-  mocked(fs.createWriteStream).mockReturnValue({
-    on: jest.fn((event: string, func: (...args: any[]) => unknown) => {
-      if (event === 'finish') {
-        func();
-      }
-    }),
-  } as any);
-
   mocked(fs.readFileSync).mockReturnValue(
     fakeModuleFile({ moduleName: 'rules_foo', version: '1.2.3' })
   );
 
-  mocked(os.tmpdir).mockReturnValue(TEMP_DIR);
-  mocked(fs.mkdtempSync).mockReturnValue(EXTRACT_DIR);
-
   mocked(fs.existsSync).mockReturnValue(true); // Existence check on MODULE.bazel
+  mockArtifact.diskPath = null;
+  mockArtifact.url = null;
+  mockArtifact.download.mockImplementation(() => {
+    (mockArtifact as any).diskPath = path.join(
+      '/tmp/artifact-1234',
+      path.basename(parseUrl(mockArtifact.url).pathname)
+    );
+    return Promise.resolve(null);
+  });
 });
 
 describe('fetch', () => {
   test('downloads the archive', async () => {
-    await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
-
-    expect(axios.get).toHaveBeenCalledWith(RELEASE_ARCHIVE_URL, {
-      responseType: 'stream',
-    });
-  });
-
-  test('retries the request if it fails', async () => {
-    // Restore the original behavior of exponentialDelay.
-    mocked(axiosRetry.exponentialDelay).mockImplementation(
-      jest.requireActual('axios-retry').exponentialDelay
-    );
-
-    await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
-
-    expect(axiosRetry).toHaveBeenCalledWith(axios, {
-      retries: 3,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-      retryCondition: expect.matchesPredicate((retryConditionFn: Function) => {
-        // Make sure HTTP 404 errors are retried.
-        const notFoundError = { response: { status: 404 } };
-        return retryConditionFn.call(this, notFoundError);
-      }),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-      retryDelay: expect.matchesPredicate((retryDelayFn: Function) => {
-        // Make sure the retry delays follow exponential backoff
-        // and the final retry happens after at least 1 minute total
-        // (in this case, at least 70 seconds).
-        // Axios randomly adds an extra 0-20% of jitter to each delay.
-        // Test upper bounds as well to ensure the workflow completes reasonably quickly
-        // (in this case, no more than 84 seconds total).
-        const firstRetryDelay = retryDelayFn.call(this, 0);
-        const secondRetryDelay = retryDelayFn.call(this, 1);
-        const thirdRetryDelay = retryDelayFn.call(this, 2);
-        return (
-          10000 <= firstRetryDelay &&
-          firstRetryDelay <= 12000 &&
-          20000 <= secondRetryDelay &&
-          secondRetryDelay <= 24000 &&
-          40000 <= thirdRetryDelay &&
-          thirdRetryDelay <= 48000
-        );
-      }),
-      shouldResetTimeout: true,
-    });
-  });
-
-  test('saves the archive to disk', async () => {
-    await ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX);
-
-    const expectedPath = path.join(EXTRACT_DIR, 'rules-foo-v1.2.3.tar.gz');
-    expect(fs.createWriteStream).toHaveBeenCalledWith(expectedPath, {
-      flags: 'w',
-    });
-
-    const mockedAxiosResponse = await (mocked(axios.get).mock.results[0]
-      .value as Promise<{ data: { pipe: Function } }>); // eslint-disable-line @typescript-eslint/no-unsafe-function-type
-    const mockedWriteStream = mocked(fs.createWriteStream).mock.results[0]
-      .value as WriteStream;
-
-    expect(mockedAxiosResponse.data.pipe).toHaveBeenCalledWith(
-      mockedWriteStream
-    );
-  });
-
-  test('returns a ReleaseArchive with the correct diskPath', async () => {
-    const releaseArchive = await ReleaseArchive.fetch(
+    const archive = await ReleaseArchive.fetch(
       RELEASE_ARCHIVE_URL,
       STRIP_PREFIX
     );
 
-    const expectedPath = path.join(EXTRACT_DIR, 'rules-foo-v1.2.3.tar.gz');
-    expect(releaseArchive.diskPath).toEqual(expectedPath);
-  });
-
-  test('throws on a non 200 status', async () => {
-    mocked(axios.get).mockRejectedValue({
-      response: {
-        status: 401,
-      },
-    });
-
-    const thrownError = await expectThrownError(
-      () => ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX),
-      ArchiveDownloadError
-    );
-
-    expect(thrownError.message.includes(RELEASE_ARCHIVE_URL)).toEqual(true);
-    expect(thrownError.message.includes('401')).toEqual(true);
+    expect(Artifact).toHaveBeenCalledWith(RELEASE_ARCHIVE_URL);
+    expect(archive.artifact.download).toHaveBeenCalled();
   });
 
   test('provides suggestions on a 404 error', async () => {
-    mocked(axios.get).mockRejectedValue({
-      response: {
-        status: 404,
-      },
-    });
+    mockArtifact.download.mockRejectedValue(
+      new ArtifactDownloadError(RELEASE_ARCHIVE_URL, 404)
+    );
 
     const thrownError = await expectThrownError(
       () => ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX),
@@ -192,8 +107,8 @@ describe('extractModuleFile', () => {
     await releaseArchive.extractModuleFile();
 
     expect(tar.x).toHaveBeenCalledWith({
-      cwd: path.dirname(releaseArchive.diskPath),
-      file: releaseArchive.diskPath,
+      cwd: path.dirname(releaseArchive.artifact.diskPath),
+      file: releaseArchive.artifact.diskPath,
     });
   });
 
@@ -205,7 +120,7 @@ describe('extractModuleFile', () => {
     await releaseArchive.extractModuleFile();
 
     const expectedPath = path.join(
-      path.dirname(releaseArchive.diskPath),
+      path.dirname(releaseArchive.artifact.diskPath),
       STRIP_PREFIX,
       'MODULE.bazel'
     );
