@@ -19,11 +19,11 @@ import {
 import { Repository } from '../../domain/repository.js';
 import {
   SourceTemplate,
-  SubstitutableVar,
   UnsubstitutedVarsError,
 } from '../../domain/source-template.js';
 import { SourceTemplateError } from '../../domain/source-template.js';
 import { CreateEntryArgs } from './yargs.js';
+import { SubstitutableVar } from '../../domain/substitution.js';
 
 export interface CreateEntryCommandOutput {
   moduleName: string;
@@ -113,12 +113,15 @@ export class CreateEntryCommand {
       console.error(
         `Source template ${e.path} has unsubstituted variables ${Array.from(e.unsubstituted).join(',')}`
       );
-      if (e.unsubstituted.has('OWNER') || e.unsubstituted.has('REPO')) {
+      if (
+        e.unsubstituted.has(SubstitutableVar.OWNER) ||
+        e.unsubstituted.has(SubstitutableVar.REPO)
+      ) {
         console.error(
           'Did you forget to pass --github-repository to substitute the OWNER and REPO variables?'
         );
       }
-      if (e.unsubstituted.has('TAG')) {
+      if (e.unsubstituted.has(SubstitutableVar.TAG)) {
         console.error(
           'Did you forget to pass --tag to substitute the TAG variable?'
         );

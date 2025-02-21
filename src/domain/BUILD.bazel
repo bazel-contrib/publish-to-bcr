@@ -17,6 +17,7 @@ ts_project(
         "repository.ts",
         "ruleset-repository.ts",
         "source-template.ts",
+        "substitution.ts",
         "user.ts",
         "version.ts",
     ],
@@ -54,6 +55,7 @@ ts_project(
         "repository.spec.ts",
         "ruleset-repository.spec.ts",
         "source-template.spec.ts",
+        "substitution.spec.ts",
         "version.spec.ts",
     ],
     deps = [

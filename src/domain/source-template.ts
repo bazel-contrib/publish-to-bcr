@@ -1,5 +1,11 @@
 import fs from 'node:fs';
 
+import {
+  getUnsubstitutedVars,
+  SubstitutableVar,
+  substituteVars,
+} from './substitution.js';
+
 export class SourceTemplateError extends Error {
   constructor(
     public readonly path: string,
@@ -17,8 +23,6 @@ export class UnsubstitutedVarsError extends Error {
     super();
   }
 }
-
-export type SubstitutableVar = 'OWNER' | 'REPO' | 'TAG' | 'VERSION';
 
 export class SourceTemplate {
   private sourceJson: Record<string, unknown>;
@@ -61,7 +65,7 @@ export class SourceTemplate {
     for (const prop of ['url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
-      this.sourceJson[prop] = this.replaceVariables(
+      this.sourceJson[prop] = substituteVars(
         this.sourceJson[prop] as string,
         vars
       );
@@ -71,36 +75,18 @@ export class SourceTemplate {
   }
 
   public validateFullySubstituted(): void {
-    const tempalteVars: SubstitutableVar[] = [
-      'OWNER',
-      'REPO',
-      'TAG',
-      'VERSION',
-    ];
     const unsubstituted = new Set<SubstitutableVar>();
     for (const prop of ['url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
-      for (const templateVar of tempalteVars) {
-        if ((this.sourceJson[prop] as string).includes(`{${templateVar}}`)) {
-          unsubstituted.add(templateVar);
-        }
-      }
+      getUnsubstitutedVars(this.sourceJson[prop] as string).forEach((v) =>
+        unsubstituted.add(v)
+      );
     }
 
     if (unsubstituted.size > 0) {
       throw new UnsubstitutedVarsError(this.filePath, unsubstituted);
     }
-  }
-
-  private replaceVariables(
-    str: string,
-    vars: Partial<Record<SubstitutableVar, string>>
-  ) {
-    for (const key of Object.keys(vars)) {
-      str = str.replaceAll(`{${key}}`, vars[key as SubstitutableVar]);
-    }
-    return str;
   }
 
   public setIntegrityHash(integrityHash: string) {
