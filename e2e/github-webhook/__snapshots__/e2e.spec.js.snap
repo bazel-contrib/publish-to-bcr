@@ -338,6 +338,64 @@ modules/attestations/metadata.json
 "
 `;
 
+exports[`e2e tests [snapshot] ruleset with tar.xz release archive 1`] = `
+"----------------------------------------------------
+modules/tarball-xz/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = "tarball-xz",
+    version = "1.0.0",
+)
+
+----------------------------------------------------
+modules/tarball-xz/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: "e2e/bzlmod"
+  matrix:
+    platform: ["debian10", "macos", "ubuntu2004", "windows"]
+    bazel: [6.x, 7.x]
+  tasks:
+    run_tests:
+      name: "Run test module"
+      platform: \${{ platform }}
+      bazel: \${{ bazel }}
+      test_targets:
+        - "//..."
+
+----------------------------------------------------
+modules/tarball-xz/1.0.0/source.json
+----------------------------------------------------
+{
+    "integrity": "sha256-eWwOFAbPPUNnjch/AWrX8Uu8i108b7KdueVSdlODUKU=",
+    "strip_prefix": "tarball-xz-1.0.0",
+    "url": "https://github.com/testorg/tarball-xz/archive/refs/tags/v1.0.0.tar.xz"
+}
+
+----------------------------------------------------
+modules/tarball-xz/metadata.json
+----------------------------------------------------
+{
+    "homepage": "https://github.com/testorg/tarball-xz",
+    "maintainers": [
+        {
+            "name": "Foo McBar",
+            "email": "foo@test.org",
+            "github": "foobar"
+        }
+    ],
+    "repository": [
+        "github:testorg/tarball-xz"
+    ],
+    "versions": [
+        "1.0.0"
+    ],
+    "yanked_versions": {}
+}
+
+"
+`;
+
 exports[`e2e tests [snapshot] ruleset with tarball release archive 1`] = `
 "----------------------------------------------------
 modules/tarball/1.0.0/MODULE.bazel

@@ -304,6 +304,50 @@ describe('e2e tests', () => {
     expect(snapshot).toMatchSnapshot();
   });
 
+  test('[snapshot] ruleset with tar.xz release archive', async () => {
+    const repo = Fixture.TarballXz;
+    const tag = 'v1.0.0';
+    await setupLocalRemoteRulesetRepo(repo, tag, releaser);
+
+    fakeGitHub.mockUser(releaser);
+    fakeGitHub.mockRepository(testOrg, repo);
+    fakeGitHub.mockRepository(
+      testOrg,
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
+    );
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
+
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'tarball-xz-1.0.0',
+      'tar.xz'
+    );
+    await fakeGitHub.mockReleaseArtifact(
+      `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.xz`,
+      releaseArchive
+    );
+
+    const response = await publishReleaseEvent(
+      cloudFunctions.getBaseUrl(),
+      secrets.webhookSecret,
+      installationId,
+      {
+        owner: testOrg,
+        repo,
+        tag,
+        releaser,
+      }
+    );
+
+    expect(response.status).toEqual(200);
+
+    const snapshot = await rollupEntryFiles();
+    expect(snapshot).toMatchSnapshot();
+  });
+
   test('[snapshot] empty strip prefix', async () => {
     const repo = Fixture.NoPrefix;
     const tag = 'v1.0.0';
@@ -1018,7 +1062,7 @@ export function mockSecrets(
 function releaseArchivePath(
   fixture: Fixture,
   stripPrefix: string,
-  ext: 'tar.gz' | 'zip'
+  ext: 'tar.gz' | 'tar.xz' | 'zip'
 ) {
   return path.join('e2e', 'fixtures', `${fixture}-${stripPrefix}.${ext}`);
 }

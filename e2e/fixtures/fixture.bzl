@@ -3,6 +3,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:pkg.bzl", "pkg_tar")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
+load("@rules_xz//xz/compress:defs.bzl", "xz_compress")
 
 def fixture_archive(name, archive, prefix, fixture = None):
     """Create a release archive for a module fixture
@@ -38,5 +39,19 @@ def fixture_archive(name, archive, prefix, fixture = None):
             package_dir = prefix,
             out = "{}-{}.tar.gz".format(fixture, "" if prefix == None else prefix),
             extension = "tar.gz",
+            visibility = ["//e2e:__subpackages__"],
+        )
+    elif archive == "tar.xz":
+        pkg_tar(
+            name = "{}_archive".format(name),
+            srcs = [":{}_files".format(name)],
+            package_dir = prefix,
+            out = "{}-{}.tar".format(fixture, "" if prefix == None else prefix),
+            extension = "tar",
+        )
+
+        xz_compress(
+            name = name,
+            src = "{}_archive".format(name),
             visibility = ["//e2e:__subpackages__"],
         )

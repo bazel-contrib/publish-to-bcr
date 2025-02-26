@@ -45,6 +45,12 @@ fixture_archive(
 )
 
 fixture_archive(
+    name = "tarball-xz",
+    archive = "tar.xz",
+    prefix = "tarball-xz-1.0.0",
+)
+
+fixture_archive(
     name = "unversioned",
     archive = "tar.gz",
     prefix = "unversioned-1.0.0",
