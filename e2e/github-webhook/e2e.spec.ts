@@ -110,7 +110,11 @@ describe('e2e tests', () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, 'unversioned-1.0.0', 'tar');
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'unversioned-1.0.0',
+      'tar.gz'
+    );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -152,7 +156,7 @@ describe('e2e tests', () => {
     const releaseArchive = releaseArchivePath(
       repo,
       'zero-versioned-1.0.0',
-      'tar'
+      'tar.gz'
     );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
@@ -192,7 +196,11 @@ describe('e2e tests', () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, 'versioned-1.0.0', 'tar');
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'versioned-1.0.0',
+      'tar.gz'
+    );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -232,7 +240,7 @@ describe('e2e tests', () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, 'tarball-1.0.0', 'tar');
+    const releaseArchive = releaseArchivePath(repo, 'tarball-1.0.0', 'tar.gz');
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -312,7 +320,7 @@ describe('e2e tests', () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, '', 'tar');
+    const releaseArchive = releaseArchivePath(repo, '', 'tar.gz');
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -352,7 +360,7 @@ describe('e2e tests', () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, '', 'tar');
+    const releaseArchive = releaseArchivePath(repo, '', 'tar.gz');
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -395,7 +403,7 @@ describe('e2e tests', () => {
     const releaseArchive = releaseArchivePath(
       repo,
       'multi-module-1.0.0',
-      'tar'
+      'tar.gz'
     );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/releases/download/${tag}.tar.gz`,
@@ -438,7 +446,7 @@ describe('e2e tests', () => {
     const releaseArchive = releaseArchivePath(
       repo,
       'attestations-1.0.0',
-      'tar'
+      'tar.gz'
     );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/releases/download/${tag}/${repo}-${tag}.tar.gz`,
@@ -490,7 +498,11 @@ describe('e2e tests', () => {
     const rulesetInstallationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, 'versioned-1.0.0', 'tar');
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'versioned-1.0.0',
+      'tar.gz'
+    );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -583,7 +595,7 @@ describe('e2e tests', () => {
     const releaseArchive = releaseArchivePath(
       repo,
       'multi-module-1.0.0',
-      'tar'
+      'tar.gz'
     );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/releases/download/${tag}.tar.gz`,
@@ -653,7 +665,7 @@ describe('e2e tests', () => {
     const releaseArchive = releaseArchivePath(
       repo,
       'fixed-releaser-1.0.0',
-      'tar'
+      'tar.gz'
     );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
@@ -698,7 +710,11 @@ describe('e2e tests', () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(releaser.login!, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, 'versioned-1.0.0', 'tar');
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'versioned-1.0.0',
+      'tar.gz'
+    );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -749,7 +765,11 @@ describe('e2e tests', () => {
     // App not installed to fork
     // fakeGitHub.mockAppInstallation(testOrg, "bazel-central-registry");
 
-    const releaseArchive = releaseArchivePath(repo, 'versioned-1.0.0', 'tar');
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'versioned-1.0.0',
+      'tar.gz'
+    );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -802,7 +822,11 @@ describe('e2e tests', () => {
     const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
-    const releaseArchive = releaseArchivePath(repo, 'versioned-1.0.0', 'tar');
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'versioned-1.0.0',
+      'tar.gz'
+    );
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -849,7 +873,7 @@ describe('e2e tests', () => {
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     // Strip prefix in release archive doesn't match source.template.json
-    const releaseArchive = releaseArchivePath(repo, 'invalid-prefix', 'tar');
+    const releaseArchive = releaseArchivePath(repo, 'invalid-prefix', 'tar.gz');
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -892,7 +916,7 @@ describe('e2e tests', () => {
     fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
 
     // Strip prefix in release archive doesn't match source.template.json
-    const releaseArchive = releaseArchivePath(repo, 'invalid-prefix', 'tar');
+    const releaseArchive = releaseArchivePath(repo, 'invalid-prefix', 'tar.gz');
     await fakeGitHub.mockReleaseArtifact(
       `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
       releaseArchive
@@ -994,7 +1018,7 @@ export function mockSecrets(
 function releaseArchivePath(
   fixture: Fixture,
   stripPrefix: string,
-  ext: 'tar' | 'zip'
+  ext: 'tar.gz' | 'zip'
 ) {
   return path.join('e2e', 'fixtures', `${fixture}-${stripPrefix}.${ext}`);
 }

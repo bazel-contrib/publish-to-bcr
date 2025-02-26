@@ -31,11 +31,12 @@ def fixture_archive(name, archive, prefix, fixture = None):
             out = "{}-{}.zip".format(fixture, "" if prefix == None else prefix),
             visibility = ["//e2e:__subpackages__"],
         )
-    elif archive == "tar":
+    elif archive == "tar.gz":
         pkg_tar(
             name = name,
             srcs = [":{}_files".format(name)],
             package_dir = prefix,
-            out = "{}-{}.tar".format(fixture, "" if prefix == None else prefix),
+            out = "{}-{}.tar.gz".format(fixture, "" if prefix == None else prefix),
+            extension = "tar.gz",
             visibility = ["//e2e:__subpackages__"],
         )
