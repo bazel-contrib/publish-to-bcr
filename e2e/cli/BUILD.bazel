@@ -8,6 +8,7 @@ bats_test(
     ],
     data = [
         "//e2e/fixtures",
+        "//e2e/fixtures:attestations",
         "//e2e/fixtures:versioned",
         "//e2e/fixtures:zip",
         "//src/application/cli:bundle",

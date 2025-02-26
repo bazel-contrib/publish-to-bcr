@@ -5,6 +5,12 @@ import treeNodeCli from 'tree-node-cli';
 import { ArgumentsCamelCase } from 'yargs';
 
 import {
+  AttestationDownloadError,
+  AttestationsTemplate,
+  AttestationsTemplateError,
+  UnsubstitutedAttestationVarsError,
+} from '../../domain/attestations-template.js';
+import {
   CreateEntryService,
   VersionAlreadyPublishedError,
 } from '../../domain/create-entry.js';
@@ -19,11 +25,11 @@ import {
 import { Repository } from '../../domain/repository.js';
 import {
   SourceTemplate,
-  UnsubstitutedVarsError,
+  UnsubstitutedVarsError as UnsubstitutedSourceVarsError,
 } from '../../domain/source-template.js';
 import { SourceTemplateError } from '../../domain/source-template.js';
-import { CreateEntryArgs } from './yargs.js';
 import { SubstitutableVar } from '../../domain/substitution.js';
+import { CreateEntryArgs } from './yargs.js';
 
 export interface CreateEntryCommandOutput {
   moduleName: string;
@@ -42,18 +48,29 @@ export class CreateEntryCommand {
       args.templatesDir,
       'source.template.json'
     );
+    const attestationsTemplatePath = path.join(
+      args.templatesDir,
+      'attestations.template.json'
+    );
     try {
       const metadataTemplate = new MetadataFile(
         path.join(args.templatesDir, 'metadata.template.json')
       );
       const sourceTemplate = new SourceTemplate(sourceTemplatePath);
+      const attestationsTemplate = AttestationsTemplate.tryLoad(
+        attestationsTemplatePath
+      );
       const presubmitPath = path.join(args.templatesDir, 'presubmit.yml');
       const patchesPath = path.join(args.templatesDir, 'patches');
 
-      sourceTemplate.substitute({
+      const substitutions = {
         ...ghRepoSubstitutions(args.githubRepository),
         ...(args.tag ? { TAG: args.tag } : {}),
-      });
+      };
+      sourceTemplate.substitute(substitutions);
+      if (attestationsTemplate) {
+        attestationsTemplate.substitute(substitutions);
+      }
 
       console.error(
         `Creating entry for module version ${args.moduleVersion} in ${args.localRegistry}`
@@ -65,7 +82,8 @@ export class CreateEntryCommand {
         presubmitPath,
         patchesPath,
         args.localRegistry,
-        args.moduleVersion
+        args.moduleVersion,
+        attestationsTemplate
       );
 
       console.error(
@@ -94,13 +112,17 @@ export class CreateEntryCommand {
         )
       );
     } catch (e) {
-      this.handleErrorAndExit(sourceTemplatePath, e);
+      this.handleErrorAndExit(sourceTemplatePath, attestationsTemplatePath, e);
     }
 
     return Promise.resolve(null);
   }
 
-  private handleErrorAndExit(sourceTemplatePath: string, e: Error): void {
+  private handleErrorAndExit(
+    sourceTemplatePath: string,
+    attestationsTemplatePath: string,
+    e: Error
+  ): void {
     if (e instanceof MetadataFileError) {
       console.error(
         `Failed to read metadata template at ${e.path}: ${e.message}`
@@ -109,7 +131,7 @@ export class CreateEntryCommand {
       console.error(
         `Failed to read source template at ${e.path}: ${e.message}`
       );
-    } else if (e instanceof UnsubstitutedVarsError) {
+    } else if (e instanceof UnsubstitutedSourceVarsError) {
       console.error(
         `Source template ${e.path} has unsubstituted variables ${Array.from(e.unsubstituted).join(',')}`
       );
@@ -147,6 +169,34 @@ export class CreateEntryCommand {
     } else if (e instanceof VersionAlreadyPublishedError) {
       console.error(
         `The local registry already has version ${e.version} of module ${e.moduleName}. Aborting.`
+      );
+    } else if (e instanceof AttestationsTemplateError) {
+      console.error(
+        `Failed to read attestations template at ${e.path}: ${e.message}`
+      );
+    } else if (e instanceof UnsubstitutedAttestationVarsError) {
+      console.error(
+        `Attestations template ${e.path} has unsubstituted variables ${Array.from(e.unsubstituted).join(',')}`
+      );
+      if (
+        e.unsubstituted.has(SubstitutableVar.OWNER) ||
+        e.unsubstituted.has(SubstitutableVar.REPO)
+      ) {
+        console.error(
+          'Did you forget to pass --github-repository to substitute the OWNER and REPO variables?'
+        );
+      }
+      if (e.unsubstituted.has(SubstitutableVar.TAG)) {
+        console.error(
+          'Did you forget to pass --tag to substitute the TAG variable?'
+        );
+      }
+    } else if (e instanceof AttestationDownloadError) {
+      console.error(
+        `Failed to download attestation ${e.url}; received status code ${e.statusCode}`
+      );
+      console.error(
+        `Double check that the url in ${attestationsTemplatePath} is correct and that the attestation has been uploaded by the time this command is run. `
       );
     } else {
       throw e;

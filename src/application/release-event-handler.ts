@@ -75,10 +75,17 @@ export class ReleaseEventHandler {
           console.error(`Creating BCR entry for module root '${moduleRoot}'`);
 
           const sourceTemplate = rulesetRepo.sourceTemplate(moduleRoot);
+          const attestationsTemplate =
+            rulesetRepo.attestationsTemplate(moduleRoot);
           const version = RulesetRepository.getVersionFromTag(tag);
           sourceTemplate.substitute({
             TAG: tag,
           });
+          if (attestationsTemplate) {
+            attestationsTemplate.substitute({
+              TAG: tag,
+            });
+          }
 
           const { moduleName } = await this.createEntryService.createEntryFiles(
             rulesetRepo.metadataTemplate(moduleRoot),
@@ -86,7 +93,8 @@ export class ReleaseEventHandler {
             rulesetRepo.presubmitPath(moduleRoot),
             rulesetRepo.patchesPath(moduleRoot),
             bcr.diskPath,
-            version
+            version,
+            attestationsTemplate
           );
           moduleNames.push(moduleName);
         }

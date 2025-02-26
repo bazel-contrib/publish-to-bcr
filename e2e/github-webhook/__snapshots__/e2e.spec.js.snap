@@ -257,6 +257,87 @@ modules/submodule/metadata.json
 "
 `;
 
+exports[`e2e tests [snapshot] ruleset with attestations 1`] = `
+"----------------------------------------------------
+modules/attestations/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = "attestations",
+    version = "1.0.0",
+)
+
+----------------------------------------------------
+modules/attestations/1.0.0/attestations.json
+----------------------------------------------------
+{
+    "types": [
+        "https://slsa.dev/provenance/v1"
+    ],
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/source.json.intoto.jsonl",
+            "integrity": "sha256-uKDY/T+tSAasJP4TVUoB8zHqM8IGh8IJaOiN/4kJUDM="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-IXNI7+fdDXNXwbhf/tYlRHWg6g0SzZLi3Va2bnDfEM0="
+        },
+        "attestations-v1.0.0.tar.gz.intoto.jsonl": {
+            "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/attestations-v1.0.0.tar.gz.intoto.jsonl",
+            "integrity": "sha256-F8+mmnlCygeJk5x/E89lVtxmXvxyfzUe/vb+3cmrTGs="
+        }
+    }
+}
+
+----------------------------------------------------
+modules/attestations/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: "e2e/bzlmod"
+  matrix:
+    platform: ["debian10", "macos", "ubuntu2004", "windows"]
+    bazel: [6.x, 7.x]
+  tasks:
+    run_tests:
+      name: "Run test module"
+      platform: \${{ platform }}
+      bazel: \${{ bazel }}
+      test_targets:
+        - "//..."
+
+----------------------------------------------------
+modules/attestations/1.0.0/source.json
+----------------------------------------------------
+{
+    "integrity": "sha256-R+12jZIR/44X7Tphnee6gygY9XJlYlPCghh1nmsvPHY=",
+    "strip_prefix": "attestations-1.0.0",
+    "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/attestations-v1.0.0.tar.gz"
+}
+
+----------------------------------------------------
+modules/attestations/metadata.json
+----------------------------------------------------
+{
+    "homepage": "https://github.com/testorg/attestations",
+    "maintainers": [
+        {
+            "name": "Foo McBar",
+            "email": "foo@test.org",
+            "github": "foobar"
+        }
+    ],
+    "repository": [
+        "github:testorg/attestations"
+    ],
+    "versions": [
+        "1.0.0"
+    ],
+    "yanked_versions": {}
+}
+
+"
+`;
+
 exports[`e2e tests [snapshot] ruleset with tarball release archive 1`] = `
 "----------------------------------------------------
 modules/tarball/1.0.0/MODULE.bazel

@@ -7,6 +7,7 @@ import { Mocked, mocked } from 'jest-mock';
 
 import { GitClient } from '../infrastructure/git';
 import {
+  fakeAttestationsFile,
   fakeMetadataFile,
   fakeModuleFile,
   fakePresubmitFile,
@@ -1118,6 +1119,135 @@ describe('createEntryFiles', () => {
       expect.stringContaining(patchPath)
     );
   });
+
+  describe('attestations.json', () => {
+    test('creates attestions.json when the template exists', async () => {
+      mockRulesetFiles({ attestationsTemplate: true });
+
+      const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
+      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        version,
+        rulesetRepo.attestationsTemplate('.').substitute({ TAG: tag })
+      );
+
+      const attestationsFilePath = path.join(
+        bcrRepo.diskPath,
+        'modules',
+        'fake_ruleset',
+        version,
+        'attestations.json'
+      );
+
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        attestationsFilePath,
+        expect.any(String),
+        'utf8'
+      );
+    });
+
+    test('substitutes version the attestations template', async () => {
+      mockRulesetFiles({
+        attestationsTemplate: true,
+        attestationsContent: `\
+{
+  "types": ["https://slsa.dev/provenance/v1"],
+  "attestations": {
+    "source.json": {
+      "url": "https://github.com/{OWNER}/{REPO}/releases/download/{VERSION}/source.json.intoto.jsonl",
+      "integrity": ""
+    }
+  }
+}
+`,
+      });
+
+      const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
+      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        version,
+        rulesetRepo.attestationsTemplate('.').substitute({ TAG: tag })
+      );
+
+      const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
+        (call[0] as string).includes('attestations.json')
+      );
+      const written = JSON.parse(writeSourceCall[1] as string);
+      expect(written.attestations['source.json'].url.includes(version)).toBe(
+        true
+      );
+    });
+
+    test('downloads attestation and calculates integrity hash', async () => {
+      mockRulesetFiles({
+        attestationsTemplate: true,
+        attestationsContent: `\
+{
+  "types": ["https://slsa.dev/provenance/v1"],
+  "attestations": {
+    "source.json": {
+      "url": "https://github.com/{OWNER}/{REPO}/releases/download/{VERSION}/source.json.intoto.jsonl",
+      "integrity": ""
+    }
+  }
+}
+`,
+      });
+
+      const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
+      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await bcrRepo.shallowCloneAndCheckout('main');
+
+      const hash = `sha256-${randomUUID()}`;
+      jest
+        .spyOn(Artifact.prototype, 'computeIntegrityHash')
+        .mockReturnValue(hash);
+
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        version,
+        rulesetRepo.attestationsTemplate('.').substitute({ TAG: tag })
+      );
+
+      // Called once for the attestation. Note that the Artifact.download
+      // for the release archive is mocked out above in the test setup.
+      expect(Artifact.prototype.download).toHaveBeenCalledTimes(1);
+
+      const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
+        (call[0] as string).includes('attestations.json')
+      );
+      const written = JSON.parse(writeSourceCall[1] as string);
+      expect(written.attestations['source.json'].integrity).toEqual(hash);
+    });
+  });
 });
 
 export function mockRulesetFiles(
@@ -1132,6 +1262,8 @@ export function mockRulesetFiles(
     sourceStripPrefix?: string;
     moduleRoot?: string;
     patches?: Record<string, string>;
+    attestationsTemplate?: boolean;
+    attestationsContent?: string;
   } = {}
 ) {
   mockGitClient.shallowClone.mockImplementation(
@@ -1159,6 +1291,11 @@ export function mockRulesetFiles(
       });
       mockedFileReads[path.join(templatesDir, moduleRoot, 'presubmit.yml')] =
         fakePresubmitFile();
+      if (options.attestationsTemplate) {
+        mockedFileReads[
+          path.join(templatesDir, moduleRoot, 'attestations.template.json')
+        ] = fakeAttestationsFile({ content: options.attestationsContent });
+      }
       mockedFileReads[
         path.join(templatesDir, moduleRoot, 'metadata.template.json')
       ] = fakeMetadataFile({

@@ -2,6 +2,12 @@ load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load(":fixture.bzl", "fixture_archive")
 
 fixture_archive(
+    name = "attestations",
+    archive = "tar",
+    prefix = "attestations-1.0.0",
+)
+
+fixture_archive(
     name = "empty-prefix",
     archive = "tar",
     prefix = None,

@@ -21,6 +21,24 @@ swap_source_url() {
     mv "${TEST_TMPDIR}/tmp" "${SRC}"
 }
 
+swap_attestation_url() {
+    local SRC=$1
+    local FIELD=$2
+    local URL=$3
+
+    cat "${SRC}" | jq ".attestations[\"${FIELD}\"].url = \"${URL}\"" > "${TEST_TMPDIR}/tmp"
+    mv "${TEST_TMPDIR}/tmp" "${SRC}"
+}
+
+mock_attestation() {
+    local NAME=$1
+
+    FILE="$(mktemp -p "${TEST_TMPDIR}" --directory)/${NAME}"
+    jq --null-input "{foobar:\"${NAME}\"}" > "${FILE}"
+
+    echo -n "${FILE}"
+}
+
 @test 'no_args_shows_help' {
     run "${NODE_BIN}" "${CLI_BIN}"
 
@@ -80,6 +98,31 @@ swap_source_url() {
     assert_file_exists "${ENTRY_PATH}/1.0.0/MODULE.bazel"
     assert_file_exists "${ENTRY_PATH}/1.0.0/source.json"
     assert_file_exists "${ENTRY_PATH}/1.0.0/presubmit.yml"
+}
+
+@test 'create entry with attestations' {
+    FIXTURE="e2e/fixtures/attestations"
+    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
+    TEMPLATES_DIR="${FIXTURE}/.bcr"
+    RELEASE_ARCHIVE="e2e/fixtures/attestations-attestations-1.0.0.tar"
+
+    SOURCE_ATTESTATION=$(mock_attestation "source.json.intoto.jsonl")
+    MODULE_ATTESTATION=$(mock_attestation "MODULE.bazel.intoto.jsonl")
+    ARCHIVE_ATTESTATION=$(mock_attestation "attestations-v1.0.0.tar.gz.intoto.jsonl")
+
+    swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
+    swap_attestation_url "${TEMPLATES_DIR}/attestations.template.json" "source.json" "file://$(realpath "${SOURCE_ATTESTATION}")"
+    swap_attestation_url "${TEMPLATES_DIR}/attestations.template.json" "MODULE.bazel" "file://$(realpath "${MODULE_ATTESTATION}")"
+    swap_attestation_url "${TEMPLATES_DIR}/attestations.template.json" "{REPO}-{TAG}.tar.gz.intoto.jsonl" "file://$(realpath "${ARCHIVE_ATTESTATION}")"
+
+    run "${NODE_BIN}" "${CLI_BIN}" create-entry --local-registry "${REGISTRY_PATH}" --templates-dir "${TEMPLATES_DIR}" --module-version 1.0.0 --github-repository owner/attestations --tag v1.0.0
+
+    assert_success
+
+    ENTRY_PATH="${REGISTRY_PATH}/modules/attestations"
+
+    assert_file_exists "${ENTRY_PATH}/1.0.0/attestations.json"
 }
 
 @test 'missing OWNER/REPO vars' {

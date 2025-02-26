@@ -119,7 +119,7 @@ export class FakeGitHub implements StubbedServer {
     this.ownedRepos.get(owner)!.push(repo);
   }
 
-  public async mockReleaseArchive(
+  public async mockReleaseArtifact(
     urlPath: string,
     filepath: string
   ): Promise<void> {

@@ -5,6 +5,7 @@ ts_project(
     name = "domain",
     srcs = [
         "artifact.ts",
+        "attestations-template.ts",
         "configuration.ts",
         "create-entry.ts",
         "error.ts",
@@ -44,6 +45,7 @@ ts_project(
     testonly = True,
     srcs = [
         "artifact.spec.ts",
+        "attestations-template.spec.ts",
         "configuration.spec.ts",
         "create-entry.spec.ts",
         "find-registry-fork.spec.ts",

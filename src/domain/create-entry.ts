@@ -4,6 +4,7 @@ import path from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { createTwoFilesPatch, parsePatch } from 'diff';
 
+import { AttestationsTemplate } from './attestations-template.js';
 import { UserFacingError } from './error.js';
 import { computeIntegrityHash } from './integrity-hash.js';
 import { MetadataFile } from './metadata-file.js';
@@ -37,7 +38,8 @@ export class CreateEntryService {
     presubmitPath: string,
     patchesPath: string,
     registryPath: string,
-    version: string
+    version: string,
+    attestationsTemplate: AttestationsTemplate | null = null
   ): Promise<{ moduleName: string }> {
     sourceTemplate.substitute({ VERSION: version });
     sourceTemplate.validateFullySubstituted();
@@ -96,6 +98,15 @@ export class CreateEntryService {
         presubmitPath,
         path.join(bcrVersionEntryPath, 'presubmit.yml')
       );
+
+      if (attestationsTemplate) {
+        attestationsTemplate.substitute({ VERSION: version });
+        attestationsTemplate.validateFullySubstituted();
+        await attestationsTemplate.computeIntegrityHashes();
+        attestationsTemplate.save(
+          path.join(bcrVersionEntryPath, 'attestations.json')
+        );
+      }
 
       return { moduleName: moduleFile.moduleName };
     } finally {
