@@ -1,6 +1,10 @@
 import { promises as fs } from 'node:fs';
+import { dirname, join } from 'node:path';
 import stream from 'node:stream';
+import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const LZMA_CONCATENATED = 0x08;
 
@@ -64,7 +68,7 @@ interface xzdec_exports {
 let moduleOnce: Promise<WebAssembly.Module> = null;
 
 async function loadXzdec(): Promise<WebAssembly.Module> {
-  const wasmPath = './infrastructure/xzdec/xzdec.wasm.gz';
+  const wasmPath = join(__dirname, 'xzdec.wasm.gz');
   const wasmGzBytes = await fs.readFile(wasmPath);
   const wasmBytes = new Uint8Array(zlib.gunzipSync(wasmGzBytes));
   return await WebAssembly.compile(wasmBytes);

@@ -1,0 +1,4 @@
+module(
+    name = "tarball-xz",
+    version = "1.0.0",
+)

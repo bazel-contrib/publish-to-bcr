@@ -31,6 +31,7 @@ def jest_test(name, **kwargs):
         data = data + [
             "babel.config.json",
             "//:node_modules/@babel/preset-env",
+            "//:node_modules/babel-plugin-transform-import-meta",
             "//:package_json",
         ],
         node_modules = "//:node_modules",

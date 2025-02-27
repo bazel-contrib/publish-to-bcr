@@ -63,7 +63,7 @@ mock_attestation() {
     cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar"
+    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 
@@ -105,7 +105,7 @@ mock_attestation() {
     cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/attestations-attestations-1.0.0.tar"
+    RELEASE_ARCHIVE="e2e/fixtures/attestations-attestations-1.0.0.tar.gz"
 
     SOURCE_ATTESTATION=$(mock_attestation "source.json.intoto.jsonl")
     MODULE_ATTESTATION=$(mock_attestation "MODULE.bazel.intoto.jsonl")
@@ -130,7 +130,7 @@ mock_attestation() {
     cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar"
+    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 
@@ -146,7 +146,7 @@ mock_attestation() {
     cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar"
+    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 

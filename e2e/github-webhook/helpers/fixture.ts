@@ -16,6 +16,7 @@ export enum Fixture {
   MultiModule = 'multi-module',
   NoPrefix = 'no-prefix',
   Tarball = 'tarball',
+  TarballXz = 'tarball-xz',
   Unversioned = 'unversioned',
   ZeroVersioned = 'zero-versioned',
   Versioned = 'versioned',
