@@ -67,7 +67,7 @@ describe('Artifact', () => {
 
       expect(axiosRetry).toHaveBeenCalledWith(axios, {
         retries: 3,
-
+        onRetry: expect.any(Function),
         retryCondition: expect.matchesPredicate(
           // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
           (retryConditionFn: Function) => {
@@ -79,21 +79,18 @@ describe('Artifact', () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         retryDelay: expect.matchesPredicate((retryDelayFn: Function) => {
           // Make sure the retry delays follow exponential backoff
-          // and the final retry happens after at least 1 minute total
-          // (in this case, at least 70 seconds).
-          // Axios randomly adds an extra 0-20% of jitter to each delay.
-          // Test upper bounds as well to ensure the workflow completes reasonably quickly
-          // (in this case, no more than 84 seconds total).
+          // Axios randomly adds an extra 0-20% of jitter to each delay:
+          // https://github.com/softonic/axios-retry/blob/3f9557920b816ec4f692870d89939ae739d7f8ed/src/index.ts#L169
           const firstRetryDelay = retryDelayFn.call(this, 0);
           const secondRetryDelay = retryDelayFn.call(this, 1);
           const thirdRetryDelay = retryDelayFn.call(this, 2);
           return (
-            10000 <= firstRetryDelay &&
-            firstRetryDelay <= 12000 &&
-            20000 <= secondRetryDelay &&
-            secondRetryDelay <= 24000 &&
-            40000 <= thirdRetryDelay &&
-            thirdRetryDelay <= 48000
+            2000 <= firstRetryDelay &&
+            firstRetryDelay <= 2400 &&
+            4000 <= secondRetryDelay &&
+            secondRetryDelay <= 4800 &&
+            8000 <= thirdRetryDelay &&
+            thirdRetryDelay <= 9600
           );
         }),
         shouldResetTimeout: true,
