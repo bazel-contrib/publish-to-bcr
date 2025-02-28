@@ -67,6 +67,8 @@ async function main() {
       return;
     }
 
+    core.setOutput('module-name', cliOutput.moduleName);
+
     await attest(inputs, cliOutput!);
   } catch (error) {
     core.setFailed(error.message);

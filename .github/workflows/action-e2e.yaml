@@ -30,6 +30,7 @@ jobs:
           cd bazel-central-registry
           git init
       - name: Create entry
+        id: create_entry
         uses: ./this
         with:
           tag: v1.0.0
@@ -39,6 +40,14 @@ jobs:
           local-registry: bazel-central-registry
       - name: Test entry content
         run: this/e2e/action/test-happy-path-content.sh
+      - name: Test output
+        run: |
+          set -o errexit -o nounset -o pipefail -o xtrace
+
+          if [[ "${{ steps.create_entry.outputs.module-name }}" != "versioned" ]]; then
+            echo "Expected output module-name to be 'versioned' but it was '${{ steps.create_entry.outputs.module-name }}'"
+            exit 1
+          fi
   test-github-repository-default:
     # Test that the `github-repository` input defaults to ${{ github.repository }}
     # indirectly by checking the resulting subtituted source.json file in the entry.
