@@ -23,6 +23,7 @@ export class ArtifactDownloadError extends Error {
  * An artifact that can be downloaded and have its integrity hash computed.
  */
 export class Artifact {
+  public static readonly MAX_RETRIES = 3;
   private _diskPath: string | null = null;
   public constructor(public readonly url: string) {}
 
@@ -66,10 +67,14 @@ export class Artifact {
     const writer = fs.createWriteStream(dest, { flags: 'w' });
 
     // Retry the request in case the artifact is still being uploaded.
-    // Exponential backoff with 3 retries and a delay factor of 10 seconds
-    // gives you at least 70 seconds to upload a release archive.
     axiosRetry(axios, {
-      retries: 3,
+      onRetry(retryCount, error, _requestConfig) {
+        console.error(`Failed to download artifact; ${error.message}`);
+        console.error(
+          `Retry atempt ${retryCount} / ${Artifact.MAX_RETRIES}...`
+        );
+      },
+      retries: Artifact.MAX_RETRIES,
       retryDelay: exponentialDelay,
       shouldResetTimeout: true,
       retryCondition: defaultRetryPlus404,
@@ -130,8 +135,8 @@ function exponentialDelay(
   retryCount: number,
   error: AxiosError | undefined
 ): number {
-  // Default delay factor is 10 seconds, but can be overridden for testing.
-  const delayFactor = Number(process.env.BACKOFF_DELAY_FACTOR) || 10_000;
+  // Default delay factor is 2 seconds, but can be overridden for testing.
+  const delayFactor = Number(process.env.BACKOFF_DELAY_FACTOR) || 2000;
   return axiosRetry.exponentialDelay(retryCount, error, delayFactor);
 }
 
