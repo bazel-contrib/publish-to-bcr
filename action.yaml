@@ -47,6 +47,9 @@ inputs:
     description: 'Directory containing BCR release template files: metadata.template.json, source.template.json, presubmit.yaml, patches/. Equivalent to the .bcr directory required by the legacy GitHub app.'
     required: false
     default: ''
+outputs:
+  module-name:
+    description: Name of the module from MODULE.bazel
 runs:
   using: 'node20'
   main: 'dist/action/index.js'
