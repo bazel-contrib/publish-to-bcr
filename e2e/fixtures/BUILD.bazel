@@ -3,69 +3,75 @@ load(":fixture.bzl", "fixture_archive")
 
 fixture_archive(
     name = "attestations",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = "attestations-1.0.0",
 )
 
 fixture_archive(
     name = "empty-prefix",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = None,
 )
 
 fixture_archive(
     name = "fixed-releaser",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = "fixed-releaser-1.0.0",
 )
 
 fixture_archive(
     name = "multi-module",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = "multi-module-1.0.0",
 )
 
 fixture_archive(
     name = "multi-module_invalid_prefix",
-    archive = "tar",
+    archive = "tar.gz",
     fixture = "multi-module",
     prefix = "invalid-prefix",
 )
 
 fixture_archive(
     name = "no-prefix",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = None,
 )
 
 fixture_archive(
     name = "tarball",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = "tarball-1.0.0",
 )
 
 fixture_archive(
+    name = "tarball-xz",
+    archive = "tar.xz",
+    prefix = "tarball-xz-1.0.0",
+)
+
+fixture_archive(
     name = "unversioned",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = "unversioned-1.0.0",
 )
 
 fixture_archive(
     name = "versioned",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = "versioned-1.0.0",
 )
 
 fixture_archive(
     name = "versioned_invalid_prefix",
-    archive = "tar",
+    archive = "tar.gz",
     fixture = "versioned",
     prefix = "invalid-prefix",
 )
 
 fixture_archive(
     name = "zero-versioned",
-    archive = "tar",
+    archive = "tar.gz",
     prefix = "zero-versioned-1.0.0",
 )
 

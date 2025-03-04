@@ -17,6 +17,7 @@ ts_project(
         "//e2e/fixtures:unversioned",
         "//e2e/fixtures:versioned",
         "//e2e/fixtures:versioned_invalid_prefix",
+        "//e2e/fixtures:tarball-xz",
         "//e2e/fixtures:zero-versioned",
         "//e2e/fixtures:zip",
         # e2e tests run a cloud function emulator which runs on the

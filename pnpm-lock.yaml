@@ -149,6 +149,9 @@ devDependencies:
   babel-jest:
     specifier: ^29.7.0
     version: 29.7.0(@babel/core@7.26.0)
+  babel-plugin-transform-import-meta:
+    specifier: ^2.3.2
+    version: 2.3.2(@babel/core@7.26.0)
   eslint:
     specifier: ^9.18.0
     version: 9.18.0
@@ -3029,6 +3032,16 @@ packages:
     dependencies:
       '@babel/core': 7.26.0
       '@babel/helper-define-polyfill-provider': 0.6.3(@babel/core@7.26.0)
+    dev: true
+
+  /babel-plugin-transform-import-meta@2.3.2(@babel/core@7.26.0):
+    resolution: {integrity: sha512-902o4GiQqI1GqAXfD5rEoz0PJamUfJ3VllpdWaNsFTwdaNjFSFHawvBO+cp5K2j+g2h3bZ4lnM1Xb6yFYGihtA==}
+    peerDependencies:
+      '@babel/core': ^7.10.0
+    dependencies:
+      '@babel/core': 7.26.0
+      '@babel/template': 7.25.9
+      tslib: 2.8.1
     dev: true
 
   /babel-preset-current-node-syntax@1.1.0(@babel/core@7.26.0):

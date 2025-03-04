@@ -1,0 +1,13 @@
+{
+  "homepage": "https://github.com/testorg/tarball-xz",
+  "maintainers": [
+    {
+      "name": "Foo McBar",
+      "email": "foo@test.org",
+      "github": "foobar"
+    }
+  ],
+  "repository": ["github:testorg/tarball-xz"],
+  "versions": [],
+  "yanked_versions": {}
+}
