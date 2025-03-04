@@ -270,9 +270,7 @@ module(
 modules/attestations/1.0.0/attestations.json
 ----------------------------------------------------
 {
-    "types": [
-        "https://slsa.dev/provenance/v1"
-    ],
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
     "attestations": {
         "source.json": {
             "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/source.json.intoto.jsonl",
@@ -282,7 +280,7 @@ modules/attestations/1.0.0/attestations.json
             "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/MODULE.bazel.intoto.jsonl",
             "integrity": "sha256-IXNI7+fdDXNXwbhf/tYlRHWg6g0SzZLi3Va2bnDfEM0="
         },
-        "attestations-v1.0.0.tar.gz.intoto.jsonl": {
+        "attestations-v1.0.0.tar.gz": {
             "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/attestations-v1.0.0.tar.gz.intoto.jsonl",
             "integrity": "sha256-F8+mmnlCygeJk5x/E89lVtxmXvxyfzUe/vb+3cmrTGs="
         }
@@ -309,7 +307,7 @@ bcr_test_module:
 modules/attestations/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-8Mp0OnyZi6oZkiRyG+7AJ6aKho6Z3FfjVdeO/j+2ZPg=",
+    "integrity": "sha256-5ZEMl5xVJYkHciAiRrnDsJfacYasGal+3G4gIwvClbI=",
     "strip_prefix": "attestations-1.0.0",
     "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/attestations-v1.0.0.tar.gz"
 }
