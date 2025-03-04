@@ -114,7 +114,7 @@ mock_attestation() {
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
     swap_attestation_url "${TEMPLATES_DIR}/attestations.template.json" "source.json" "file://$(realpath "${SOURCE_ATTESTATION}")"
     swap_attestation_url "${TEMPLATES_DIR}/attestations.template.json" "MODULE.bazel" "file://$(realpath "${MODULE_ATTESTATION}")"
-    swap_attestation_url "${TEMPLATES_DIR}/attestations.template.json" "{REPO}-{TAG}.tar.gz.intoto.jsonl" "file://$(realpath "${ARCHIVE_ATTESTATION}")"
+    swap_attestation_url "${TEMPLATES_DIR}/attestations.template.json" "{REPO}-{TAG}.tar.gz" "file://$(realpath "${ARCHIVE_ATTESTATION}")"
 
     run "${NODE_BIN}" "${CLI_BIN}" create-entry --local-registry "${REGISTRY_PATH}" --templates-dir "${TEMPLATES_DIR}" --module-version 1.0.0 --github-repository owner/attestations --tag v1.0.0
 
