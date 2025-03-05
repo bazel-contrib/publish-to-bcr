@@ -13,7 +13,6 @@ ts_project(
         "//:node_modules/@actions/exec",
         "//:node_modules/@types/node",
         "//src/application/cli",
-        "//src/domain",
     ],
 )
 

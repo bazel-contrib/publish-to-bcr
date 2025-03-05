@@ -1,9 +1,9 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
 import * as ghAttest from '@actions/attest';
 
-import { computeIntegrityHash } from '../../domain/integrity-hash';
 import { CreateEntryCommandOutput } from '../cli/create-entry-command';
 import { Inputs } from './main';
 
@@ -51,11 +51,19 @@ async function attestArtifact(
   dest: string,
   ghToken: string
 ) {
+  // The digest must be a hex-encoded value
+  // https://github.com/actions/toolkit/tree/main/packages/attest#usage
+  const hash = crypto.createHash('sha256');
+  hash.update(fs.readFileSync(artifactPath));
+  const digest = hash.digest('hex');
+
   const attestation = await ghAttest.attestProvenance({
     subjects: [
       {
         name: artifactName,
-        digest: { sha256: computeIntegrityHash(artifactPath) },
+        digest: {
+          sha256: digest,
+        },
       },
     ],
     token: ghToken,
