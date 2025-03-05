@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 import yaml from 'yaml';
 
@@ -19,6 +20,16 @@ export class InvalidConfigurationFileError extends Error {
 
 export class Configuration {
   public static readonly DEFAULT_MODULE_ROOTS = ['.'];
+
+  public static loadFromDirectory(directory: string): Configuration {
+    let configPath = path.join(directory, 'config.yaml');
+
+    if (!fs.existsSync(configPath)) {
+      configPath = path.join(directory, 'config.yml');
+    }
+
+    return Configuration.fromFile(configPath);
+  }
 
   public static fromFile(filepath: string): Configuration {
     if (!fs.existsSync(filepath)) {
@@ -61,14 +72,19 @@ export class Configuration {
     config.moduleRoots =
       config.moduleRoots || Configuration.DEFAULT_MODULE_ROOTS;
 
-    return new Configuration(config.moduleRoots, config.fixedReleaser);
+    return new Configuration(
+      filepath,
+      config.moduleRoots,
+      config.fixedReleaser
+    );
   }
 
   public static defaults(): Configuration {
-    return new Configuration(Configuration.DEFAULT_MODULE_ROOTS);
+    return new Configuration(null, Configuration.DEFAULT_MODULE_ROOTS);
   }
 
   private constructor(
+    public readonly filepath: string | null,
     public readonly moduleRoots: string[],
     public readonly fixedReleaser?: FixedReleaser
   ) {}

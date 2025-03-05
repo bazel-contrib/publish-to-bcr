@@ -100,6 +100,35 @@ mock_attestation() {
     assert_file_exists "${ENTRY_PATH}/1.0.0/presubmit.yml"
 }
 
+@test 'multi-module entry' {
+    FIXTURE="e2e/fixtures/multi-module"
+    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
+    TEMPLATES_DIR="${FIXTURE}/.bcr"
+    RELEASE_ARCHIVE="e2e/fixtures/multi-module-multi-module-1.0.0.tar.gz"
+
+    swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
+    swap_source_url "${TEMPLATES_DIR}/submodule/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
+
+    run "${NODE_BIN}" "${CLI_BIN}" create-entry --local-registry "${REGISTRY_PATH}" --templates-dir "${TEMPLATES_DIR}" --module-version 1.0.0 --github-repository testorg/multi-module --tag v1.0.0
+
+    assert_success
+
+    ENTRY_PATH="${REGISTRY_PATH}/modules/module"
+
+    assert_file_exists "${ENTRY_PATH}/metadata.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/MODULE.bazel"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/source.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/presubmit.yml"
+
+    ENTRY_PATH="${REGISTRY_PATH}/modules/submodule"
+
+    assert_file_exists "${ENTRY_PATH}/metadata.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/MODULE.bazel"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/source.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/presubmit.yml"
+}
+
 @test 'create entry with attestations' {
     FIXTURE="e2e/fixtures/attestations"
     cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
@@ -154,7 +183,7 @@ mock_attestation() {
     ENTRY_PATH="${REGISTRY_PATH}/modules/versioned/1.0.0"
 
     ACTUAL=$("${jq}" <<< ${STDOUT} .)
-    EXPECTED=$("${jq}" --null-input "{moduleName: \"versioned\", entryPath: \"${ENTRY_PATH}\"}")
+    EXPECTED=$("${jq}" --null-input "{\"modules\": [{\"name\": \"versioned\", entryPath: \"${ENTRY_PATH}\"}]}")
 
     assert_equal "${EXPECTED}" "${ACTUAL}"
 }

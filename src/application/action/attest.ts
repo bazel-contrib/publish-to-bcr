@@ -18,18 +18,23 @@ export async function attest(
     if (!inputs.ghToken) {
       throw new Error('gh-token must be set to produce attestations');
     }
-    await attestEntryFiles(
-      cliOutput.entryPath,
-      inputs.attestationsDest,
-      inputs.ghToken
-    );
+
+    for (const module of cliOutput.modules) {
+      await attestEntryFiles(
+        module.entryPath,
+        inputs.attestationsDest,
+        inputs.ghToken,
+        cliOutput.modules.length > 1 ? module.name : null
+      );
+    }
   }
 }
 
 async function attestEntryFiles(
   entryPath: string,
   attestationsDest: string,
-  ghToken: string
+  ghToken: string,
+  prefix: string | null
 ) {
   if (!fs.existsSync(attestationsDest)) {
     fs.mkdirSync(attestationsDest, { recursive: true });
@@ -39,7 +44,10 @@ async function attestEntryFiles(
     await attestArtifact(
       artifact,
       path.join(entryPath, artifact),
-      attestationsDest,
+      path.join(
+        attestationsDest,
+        `${prefix !== null ? `${prefix}.` : ''}${artifact}.intoto.jsonl`
+      ),
       ghToken
     );
   }
@@ -69,9 +77,5 @@ async function attestArtifact(
     token: ghToken,
   });
 
-  fs.writeFileSync(
-    path.join(dest, `${artifactName}.intoto.jsonl`),
-    JSON.stringify(attestation.bundle),
-    'utf-8'
-  );
+  fs.writeFileSync(dest, JSON.stringify(attestation.bundle), 'utf-8');
 }
