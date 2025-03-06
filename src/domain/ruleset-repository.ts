@@ -293,24 +293,6 @@ export class RulesetRepository extends Repository {
     return this._attestationsTemplate[moduleRoot];
   }
 
-  public get configFilePath(): string {
-    let configPath = path.resolve(
-      this.diskPath,
-      RulesetRepository.BCR_TEMPLATE_DIR,
-      'config.yaml'
-    );
-
-    if (!fs.existsSync(configPath)) {
-      configPath = path.resolve(
-        this.diskPath,
-        RulesetRepository.BCR_TEMPLATE_DIR,
-        'config.yml'
-      );
-    }
-
-    return configPath;
-  }
-
   public get config(): Configuration {
     return this._config;
   }
@@ -344,7 +326,9 @@ function validatePresubmitFile(
 
 function loadConfiguration(rulesetRepo: RulesetRepository): Configuration {
   try {
-    return Configuration.fromFile(rulesetRepo.configFilePath);
+    return Configuration.loadFromDirectory(
+      path.join(rulesetRepo.diskPath, RulesetRepository.BCR_TEMPLATE_DIR)
+    );
   } catch (e) {
     if (e instanceof MissingConfigurationFileError) {
       return Configuration.defaults();

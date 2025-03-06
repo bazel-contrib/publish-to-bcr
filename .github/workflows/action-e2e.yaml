@@ -44,8 +44,8 @@ jobs:
         run: |
           set -o errexit -o nounset -o pipefail -o xtrace
 
-          if [[ "${{ steps.create_entry.outputs.module-name }}" != "versioned" ]]; then
-            echo "Expected output module-name to be 'versioned' but it was '${{ steps.create_entry.outputs.module-name }}'"
+          if [[ "${{ steps.create_entry.outputs.module-names }}" != "versioned" ]]; then
+            echo "Expected output module-names to be 'versioned' but it was '${{ steps.create_entry.outputs.module-name }}'"
             exit 1
           fi
   test-github-repository-default:
@@ -105,3 +105,38 @@ jobs:
 
           [ -f attestations/MODULE.bazel.intoto.jsonl ]
           [ -f attestations/source.json.intoto.jsonl ]
+  test-multi-module-attestations:
+    # Test that attestation files are given a prefixed name when multiple modules are published
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: this
+      - name: Setup test fixture
+        run: this/e2e/action/setup-test-fixture.sh multi-module multi-module-1.0.0
+      - name: Create registry
+        run: |
+          mkdir -p bazel-central-registry/modules
+          cd bazel-central-registry
+          git init
+      - name: Create entry
+        uses: ./this
+        with:
+          attest: true
+          attestations-dest: attestations
+          tag: v1.0.0
+          module-version: 1.0.0
+          github-repository: testorg/multi-module
+          templates-dir: this/e2e/fixtures/multi-module/.bcr
+          local-registry: bazel-central-registry
+      - name: Test attestations exist
+        run: |-
+          set -o errexit -o nounset -o pipefail -o xtrace
+
+          [ -f attestations/module.MODULE.bazel.intoto.jsonl ]
+          [ -f attestations/module.source.json.intoto.jsonl ]
+          [ -f attestations/submodule.MODULE.bazel.intoto.jsonl ]
+          [ -f attestations/submodule.source.json.intoto.jsonl ]

@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 import { Injectable } from '@nestjs/common';
 import chalk from 'chalk';
 import path from 'path';
@@ -10,6 +12,11 @@ import {
   AttestationsTemplateError,
   UnsubstitutedAttestationVarsError,
 } from '../../domain/attestations-template.js';
+import {
+  Configuration,
+  InvalidConfigurationFileError,
+  MissingConfigurationFileError,
+} from '../../domain/configuration.js';
 import {
   CreateEntryService,
   VersionAlreadyPublishedError,
@@ -32,8 +39,10 @@ import { SubstitutableVar } from '../../domain/substitution.js';
 import { CreateEntryArgs } from './yargs.js';
 
 export interface CreateEntryCommandOutput {
-  moduleName: string;
-  entryPath: string;
+  modules: {
+    name: string;
+    entryPath: string;
+  }[];
 }
 
 @Injectable()
@@ -42,78 +51,111 @@ export class CreateEntryCommand {
 
   public async handle(args: ArgumentsCamelCase<CreateEntryArgs>) {
     console.error(chalk.green.bold.underline('Publish to BCR'));
-    console.error(`Loading template files from ${args.templatesDir}`);
 
-    const sourceTemplatePath = path.join(
-      args.templatesDir,
-      'source.template.json'
+    const configuration = this.loadConfigurationFromDirectoryOrDefault(
+      args.templatesDir
     );
-    const attestationsTemplatePath = path.join(
-      args.templatesDir,
-      'attestations.template.json'
-    );
-    try {
-      const metadataTemplate = new MetadataFile(
-        path.join(args.templatesDir, 'metadata.template.json')
-      );
-      const sourceTemplate = new SourceTemplate(sourceTemplatePath);
-      const attestationsTemplate = AttestationsTemplate.tryLoad(
-        attestationsTemplatePath
-      );
-      const presubmitPath = path.join(args.templatesDir, 'presubmit.yml');
-      const patchesPath = path.join(args.templatesDir, 'patches');
-
-      const substitutions = {
-        ...ghRepoSubstitutions(args.githubRepository),
-        ...(args.tag ? { TAG: args.tag } : {}),
-      };
-      sourceTemplate.substitute(substitutions);
-      if (attestationsTemplate) {
-        attestationsTemplate.substitute(substitutions);
-      }
-
+    if (configuration.moduleRoots.length > 1) {
       console.error(
-        `Creating entry for module version ${args.moduleVersion} in ${args.localRegistry}`
+        `Detected multiple module roots: ${JSON.stringify(configuration.moduleRoots)}`
       );
-
-      const { moduleName } = await this.createEntryService.createEntryFiles(
-        metadataTemplate,
-        sourceTemplate,
-        presubmitPath,
-        patchesPath,
-        args.localRegistry,
-        args.moduleVersion,
-        attestationsTemplate
-      );
-
-      console.error(
-        `Successfully created entry for ${moduleName}@${args.moduleVersion}`
-      );
-
-      this.prettyPrintEntryFiles(
-        args.localRegistry,
-        moduleName,
-        args.moduleVersion
-      );
-
-      console.log(
-        JSON.stringify(
-          {
-            moduleName,
-            entryPath: path.join(
-              args.localRegistry,
-              'modules',
-              moduleName,
-              args.moduleVersion
-            ),
-          } as CreateEntryCommandOutput,
-          undefined,
-          4
-        )
-      );
-    } catch (e) {
-      this.handleErrorAndExit(sourceTemplatePath, attestationsTemplatePath, e);
     }
+
+    const moduleNames: string[] = [];
+    const moduleEntryPaths: string[] = [];
+    for (const moduleRoot of configuration.moduleRoots) {
+      console.error(
+        `\nLoading template files from ${path.normalize(path.join(args.templatesDir, moduleRoot))}`
+      );
+
+      const sourceTemplatePath = path.join(
+        args.templatesDir,
+        moduleRoot,
+        'source.template.json'
+      );
+      const attestationsTemplatePath = path.join(
+        args.templatesDir,
+        moduleRoot,
+        'attestations.template.json'
+      );
+      try {
+        const metadataTemplate = new MetadataFile(
+          path.join(args.templatesDir, moduleRoot, 'metadata.template.json')
+        );
+        const sourceTemplate = new SourceTemplate(sourceTemplatePath);
+        const attestationsTemplate = AttestationsTemplate.tryLoad(
+          attestationsTemplatePath
+        );
+        const presubmitPath = path.join(
+          args.templatesDir,
+          moduleRoot,
+          'presubmit.yml'
+        );
+        const patchesPath = path.join(args.templatesDir, moduleRoot, 'patches');
+
+        const substitutions = {
+          ...ghRepoSubstitutions(args.githubRepository),
+          ...(args.tag ? { TAG: args.tag } : {}),
+        };
+        sourceTemplate.substitute(substitutions);
+        if (attestationsTemplate) {
+          attestationsTemplate.substitute(substitutions);
+        }
+
+        console.error(
+          `Creating entry for module version ${args.moduleVersion} in ${args.localRegistry}`
+        );
+
+        const { moduleName } = await this.createEntryService.createEntryFiles(
+          metadataTemplate,
+          sourceTemplate,
+          presubmitPath,
+          patchesPath,
+          args.localRegistry,
+          args.moduleVersion,
+          attestationsTemplate
+        );
+
+        console.error(
+          `Successfully created entry for ${moduleName}@${args.moduleVersion}`
+        );
+
+        moduleNames.push(moduleName);
+        moduleEntryPaths.push(
+          path.join(
+            args.localRegistry,
+            'modules',
+            moduleName,
+            args.moduleVersion
+          )
+        );
+      } catch (e) {
+        this.handleErrorAndExit(
+          sourceTemplatePath,
+          attestationsTemplatePath,
+          e
+        );
+      }
+    }
+
+    this.prettyPrintEntryFiles(
+      args.localRegistry,
+      moduleNames,
+      args.moduleVersion
+    );
+
+    console.log(
+      JSON.stringify(
+        {
+          modules: moduleNames.map((_, i) => ({
+            name: moduleNames[i],
+            entryPath: moduleEntryPaths[i],
+          })),
+        } as CreateEntryCommandOutput,
+        undefined,
+        2
+      )
+    );
 
     return Promise.resolve(null);
   }
@@ -207,28 +249,57 @@ export class CreateEntryCommand {
 
   private prettyPrintEntryFiles(
     localRegistry: string,
-    moduleName: string,
+    moduleNames: string[],
     moduleVersion: string
   ) {
     const metadata = new MetadataFile(
-      path.join(localRegistry, 'modules', moduleName, 'metadata.json')
+      path.join(localRegistry, 'modules', moduleNames[0], 'metadata.json')
     );
 
-    const entryTree = treeNodeCli(
-      path.join(localRegistry, 'modules', moduleName),
-      {
-        exclude: metadata.versions
+    const allModules = fs.readdirSync(path.join(localRegistry, 'modules'));
+
+    const entryTree = treeNodeCli(path.join(localRegistry, 'modules'), {
+      exclude: [
+        ...metadata.versions
           .filter((v) => v !== moduleVersion)
-          .map((v) => new RegExp(v.replaceAll('.', '\\.'))),
-      }
-    );
+          .map(
+            (v) =>
+              new RegExp(
+                `${moduleNames.join('|')}${path.sep}${v.replaceAll('.', '\\.')}`
+              )
+          ),
+        ...allModules
+          .filter((m) => !moduleNames.includes(m))
+          .map((m) => new RegExp(m)),
+      ],
+    });
 
-    console.error('Entry files created or modified in');
-    console.error(
-      chalk.blue(
-        `${path.join(localRegistry, 'modules')}${path.sep}${entryTree}`
-      )
-    );
+    console.error('\nEntry files created or modified in');
+    console.error(chalk.blue(`${localRegistry}${path.sep}${entryTree}`));
+  }
+
+  private loadConfigurationFromDirectoryOrDefault(
+    directory: string
+  ): Configuration {
+    try {
+      const configuration = Configuration.loadFromDirectory(directory);
+      console.error(`Loaded configuration from ${configuration.filepath}`);
+      return configuration;
+    } catch (e) {
+      if (e instanceof MissingConfigurationFileError) {
+        console.error(
+          `Did not find configuration file in ${directory}; setting defaults`
+        );
+        return Configuration.defaults();
+      } else if (e instanceof InvalidConfigurationFileError) {
+        console.error(
+          `Invalid configuration file in ${directory}: ${e.message}`
+        );
+        process.exit(1);
+      }
+
+      throw e;
+    }
   }
 }
 

@@ -169,7 +169,7 @@ bcr_test_module:
 modules/module/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-GIERNCByLpef3PWA31F/50ECIeCXV3jcieI/pv1uovg=",
+    "integrity": "sha256-futnmCx8nl4tIw5yGYoH71w4K3fUet2eXjb/ek4cIKU=",
     "strip_prefix": "multi-module-1.0.0",
     "url": "https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz"
 }
@@ -223,7 +223,7 @@ bcr_test_module:
 modules/submodule/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-GIERNCByLpef3PWA31F/50ECIeCXV3jcieI/pv1uovg=",
+    "integrity": "sha256-futnmCx8nl4tIw5yGYoH71w4K3fUet2eXjb/ek4cIKU=",
     "strip_prefix": "multi-module-1.0.0/submodule",
     "url": "https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz"
 }

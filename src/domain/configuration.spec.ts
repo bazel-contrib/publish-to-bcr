@@ -7,6 +7,10 @@ import { Configuration, InvalidConfigurationFileError } from './configuration';
 jest.mock('node:fs');
 
 describe('Configuration', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('defaults', () => {
     test('sets module roots to single root', () => {
       const config = Configuration.defaults();
@@ -21,11 +25,34 @@ describe('Configuration', () => {
     });
   });
 
+  describe('loadFromDirectory', () => {
+    test('loads config.yml from the directory', () => {
+      jest
+        .spyOn(Configuration, 'fromFile')
+        .mockReturnValue(Configuration.defaults());
+      mockConfig('dir/config.yml', '');
+      Configuration.loadFromDirectory('dir');
+
+      expect(Configuration.fromFile).toHaveBeenCalledWith('dir/config.yml');
+    });
+
+    test('loads config.yaml from the directory', () => {
+      jest
+        .spyOn(Configuration, 'fromFile')
+        .mockReturnValue(Configuration.defaults());
+      mockConfig('dir/config.yaml', '');
+      Configuration.loadFromDirectory('dir');
+
+      expect(Configuration.fromFile).toHaveBeenCalledWith('dir/config.yaml');
+    });
+  });
+
   describe('fromFile', () => {
     test('empty file loads defaults', () => {
       mockConfig('config.yml', '');
       const config = Configuration.fromFile('config.yml');
-      expect(config).toEqual(Configuration.defaults());
+      expect(config.fixedReleaser).toBeUndefined();
+      expect(config.moduleRoots).toEqual(['.']);
     });
 
     test('loads a fixedReleaser', () => {

@@ -249,21 +249,6 @@ describe('presubmitPath', () => {
   });
 });
 
-describe('configFilePath', () => {
-  test('gets path to the config.yml file', async () => {
-    mockRulesetFiles();
-    const rulesetRepo = await RulesetRepository.create('foo', 'bar', 'main');
-
-    expect(rulesetRepo.configFilePath).toEqual(
-      path.join(
-        rulesetRepo.diskPath,
-        RulesetRepository.BCR_TEMPLATE_DIR,
-        'config.yml'
-      )
-    );
-  });
-});
-
 describe('sourceTemplatePath', () => {
   test('gets path to the source.template.json file', async () => {
     mockRulesetFiles();

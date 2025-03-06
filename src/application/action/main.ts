@@ -67,7 +67,10 @@ async function main() {
       return;
     }
 
-    core.setOutput('module-name', cliOutput.moduleName);
+    core.setOutput(
+      'module-names',
+      cliOutput.modules.map((m) => m.name).join(',')
+    );
 
     await attest(inputs, cliOutput!);
   } catch (error) {
