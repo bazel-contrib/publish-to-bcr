@@ -1,0 +1,229 @@
+# Reusable workflow that can be referenced by repositories in their `.github/workflows/publish.yaml`.
+#
+# This workflow uses an Action within this repo to generate a BCR entry for
+# a tagged release, uploads attestations for the generated source.json and MODULE.bazel files to the release,
+# and opens up a pull request against the Bazel Central Registry (https://github.com/bazelbuild/bazel-central-registry).
+#
+# The workflow requires the following permissions to be set on the invoking job:
+#
+# permissions:
+#   id-token: write        # Needed to attest provenance
+#   attestations: write    # Needed to attest provenance
+#   contents: write        # Needed to upload release files
+#
+# The workflow additionally requires a Classic Personal Access Token (PAT) to be supplied in the `publish_token`
+# input. The PAT is necessary to push to your BCR fork as well as to open up a pull request against a registry.
+# At the moment, fine-grained PATs are not supported because they cannot open pull requests against public 
+# repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600.
+#
+# The module repository must contain a .bcr folder containing Publish to BCR templates.
+# See https://github.com/bazel-contrib/publish-to-bcr/tree/main/templates.
+#
+# Repositories containing multiple modules that are versioned together will have all modules included in
+# the published entry. This is controlled via the `moduleRoots` property in .bcr/config.yml.
+
+on:
+  # Make this workflow reusable, see
+  # https://github.blog/2022-02-10-using-reusable-workflows-github-actions
+  workflow_call:
+    inputs:
+      tag_name:
+        required: true
+        description: The git tag identifying the release the publish to a Bazel registry.
+        type: string
+      registry_fork:
+        required: true
+        description: The Bazel registry fork to push to when opening up a pull request, e.g. "mycompany/bazel-central-registry"
+        type: string
+      registry:
+        description: The Bazel registry to open up a pull request against. Defaults to the Bazel Central Registry.
+        default: bazelbuild/bazel-central-registry
+        type: string
+      repository:
+        description: The Bazel module repository to publish an entry for. Defaults the the repository the action runs in.
+        default: ${{ github.repository }}
+        type: string
+      registry_branch:
+        description: The branch of the Bazel registry to open a PR against. Defaults to main.
+        default: main
+        type: string
+      templates_ref:
+        description: |
+          The git ref to read BCR templates (.bcr folder) rather than reading them from `tag_name`.
+          Use this to republish a release whose templates had errors.
+        type: string
+    secrets:
+      publish_token:
+        required: true
+        description: A Personal Access Token (PAT) used for pushing to a registry fork and opening up a pull request.
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the module repository
+      uses: actions/checkout@v4.2.2
+      with:
+        ref: ${{ inputs.templates_ref || inputs.tag_name }}
+        repository: ${{ inputs.repository }}
+        path: this
+
+    - name: Checkout BCR
+      uses: actions/checkout@v4.2.2
+      with:
+        repository: ${{ inputs.registry }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        path: bazel-central-registry
+
+    # Get version from the tag, stripping any v-prefix
+    - name: Write release version
+      env:
+        TAG: ${{ inputs.tag_name }}
+      run: |
+        VERSION=${TAG#v}
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    # Remove any pre-existing attestations.template.json files so that the following (dummy) entry
+    # creation for generating attestations will succeed without trying to substitute and verify
+    # existing attestations. Any existing templates will be restored when the final entry is created.
+    - name: Remove attestations.template.json
+      working-directory: this/.bcr
+      run: find . -type f -name 'attestations.template.json' -delete
+
+    # Create an initial entry so that we can attest the generated source.json and MODULE.bazel
+    # files. These are needed to solve a chicken and egg problem where the attestations are referenced
+    # by attestations.template.json entry file, which is included in the entry published later on.
+    # This entry will be discarded.
+    - name: Create entry
+      id: create-entry
+      uses: ./
+      with:
+        attest: true
+        attestations-dest: attestations
+        tag: ${{ inputs.tag_name }}
+        module-version: ${{ env.VERSION }}
+        local-registry: bazel-central-registry
+        templates-dir: this/.bcr
+
+    # Upload the attestations to the release. This will override attestations that
+    # were already uploaded on a previous run.
+    - name: Upload attestations to release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: attestations/*
+        repository: ${{ inputs.repository }}
+        tag_name: ${{ inputs.tag_name }}
+
+    # Publish to BCR can run substitutions on an attestations.template.json file. Add a default
+    # template here rather than requiring users to add one the module repo's .bcr templates folder.
+    - name: Create attestations template
+      working-directory: this/.bcr
+      # Ideally this would be in its own file, but it's not currently trivial to source files from a
+      # reusable workflow in a different repository:
+      # https://github.com/orgs/community/discussions/63863
+      # https://github.com/orgs/community/discussions/18602
+      run: |
+        # Determine whether this is a multi-module repo because it affects the names of the
+        # uploaded attestaton files.
+        if [ -f "config.yml" ]; then
+            readarray -t MODULE_ROOTS < <(cat "config.yml" | yq --unwrapScalar '.moduleRoots.[]')
+        elif [ -f "config.yaml" ]; then
+            readarray -t MODULE_ROOTS < <(cat "config.yaml" | yq --unwrapScalar '.moduleRoots.[]')
+        else
+            MODULE_ROOTS=(".")
+        fi
+
+        # Read comma-delimited module names into an array
+        IFS=',' read -r -a MODULE_NAMES <<< "${{ steps.create-entry.outputs.module-names }}"
+
+        for i in "${!MODULE_ROOTS[@]}"; do 
+            MODULE_ROOT="${MODULE_ROOTS[$i]}"
+            if [ ! -f "${MODULE_ROOT}/attestations.template.json" ]; then
+                # Multi-module repos upload attestations with the module name as a prefix
+                if [ "${#MODULE_ROOTS[@]}" -gt "1" ]; then
+                  PREFIX="${MODULE_NAMES[$i]}."
+                else
+                  PREFIX=""
+                fi
+                RELEASE_ARCHIVE_URL=$(cat "${MODULE_ROOT}/source.template.json" | jq --raw-output '.url')
+                cat <<EOF >"${MODULE_ROOT}/attestations.template.json"
+        {
+            "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+            "attestations": {
+                "source.json": {
+                    "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/${PREFIX}source.json.intoto.jsonl",
+                    "integrity": ""
+                },
+                "MODULE.bazel": {
+                    "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/${PREFIX}MODULE.bazel.intoto.jsonl",
+                    "integrity": ""
+                },
+                "$(basename ${RELEASE_ARCHIVE_URL})": {
+                    "url": "${RELEASE_ARCHIVE_URL}.intoto.jsonl",
+                    "integrity": ""
+                }
+            }
+        }
+        EOF
+            fi
+        done
+
+    - name: Discard previous entry
+      working-directory: bazel-central-registry
+      run: git clean -ffxd
+
+    # Create the final BCR entry that we will publish
+    - name: Create entry with attestations.json
+      id: create-entry-with-att
+      uses: ./
+      with:
+        tag: ${{ inputs.tag_name }}
+        module-version: ${{ env.VERSION }}
+        local-registry: bazel-central-registry
+        templates-dir: this/.bcr
+    
+    - name: Set PR details
+      id: set-pr-details
+      run: |
+        BRANCH_NAME="$(echo "${{ steps.create-entry-with-att.outputs.module-names }}" | sed "s/,/_/")-${{ inputs.tag_name }}"
+
+        # Read comma-delimited module names into an array
+        IFS=',' read -r -a MODULE_NAMES <<< "${{ steps.create-entry.outputs.module-names }}"
+        if [ "${#MODULE_NAMES[@]}" -gt "1" ]; then
+          COMMIT_MSG="Publish {${{ steps.create-entry-with-att.outputs.module-names }}}@${{ env.VERSION }}"
+          PR_TITLE="Publish {${{ steps.create-entry-with-att.outputs.module-names }}}@${{ env.VERSION }}"
+        else
+          COMMIT_MSG="Publish ${{ steps.create-entry-with-att.outputs.module-names }}@${{ env.VERSION }}"
+          PR_TITLE="Publish ${{ steps.create-entry-with-att.outputs.module-names }}@${{ env.VERSION }}"
+        fi
+
+        echo "Branch name: ${BRANCH_NAME}"
+        echo "Commit message: ${COMMIT_MSG}"
+        echo "PR title: ${PR_TITLE}"
+        
+        echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+        echo "commit_msg=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+        echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
+
+    - name: Create Pull Request
+      id: create-pull-request
+      uses: peter-evans/create-pull-request@v7
+      with:
+        token: ${{ secrets.publish_token }}
+        path: bazel-central-registry
+        commit-message: ${{ steps.set-pr-details.outputs.commit_msg }}
+        base: ${{ inputs.registry_branch }}
+        branch: ${{ steps.set-pr-details.outputs.branch_name }}
+        push-to-fork: ${{ inputs.registry_fork }}
+        title: ${{ steps.set-pr-details.outputs.pr_title }}
+        body: |
+          Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
+
+          _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
+        maintainer-can-modify: true
+
+    - uses: peter-evans/enable-pull-request-automerge@v3
+      with:
+        token: ${{ secrets.publish_token }}
+        pull-request-number: ${{ steps.create-pull-request.outputs.pull-request-number }}
+        repository: ${{ inputs.registry }}
