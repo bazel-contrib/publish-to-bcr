@@ -103,7 +103,7 @@ jobs:
     # This entry will be discarded.
     - name: Create entry
       id: create-entry
-      uses: publish-to-bcr
+      uses: ./publish-to-bcr
       with:
         attest: true
         attestations-dest: attestations
@@ -182,7 +182,7 @@ jobs:
     # Create the final BCR entry that we will publish
     - name: Create entry with attestations.json
       id: create-entry-with-att
-      uses: publish-to-bcr
+      uses: ./publish-to-bcr
       with:
         tag: ${{ inputs.tag_name }}
         module-version: ${{ env.VERSION }}
