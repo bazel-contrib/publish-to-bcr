@@ -57,12 +57,19 @@ jobs:
       # GitHub repository which is a fork of the upstream where the Pull Request will be opened.
       registry_fork: aspect-build/bazel-central-registry
     permissions:
-      contents: write  # allow creating a PR
+      contents: write  # allow appending new attestation files to the release
     secrets:
+      # Necessary to push to the BCR fork, and to open a pull request against a registry
       publish_token: ${{ secrets.PUBLISH_TOKEN }}
 ```
 
 3. Create a Personal Access Token
+
+Create a "Classic" PAT, see [documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
+
+> [!NOTE]  
+> At the moment, fine-grained PATs are not supported because they cannot open pull requests against public 
+> repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600.
 
 Save it as `PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
 
