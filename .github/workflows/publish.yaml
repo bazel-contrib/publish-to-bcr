@@ -77,8 +77,8 @@ jobs:
     - name: Checkout Publish-to-BCR
       uses: actions/checkout@v4.2.2
       with:
-        repository: ${{ github.repository }}
-        ref: ${{ github.ref }}
+        repository: bazel-contrib/publish-to-bcr
+        ref: ${{ github.job_workflow_sha}}
         path: publish-to-bcr
 
     # Get version from the tag, stripping any v-prefix
