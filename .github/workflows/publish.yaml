@@ -97,8 +97,9 @@ jobs:
     - name: Create entry
       id: create-entry
       # Ideally this should reference the action at the matching SHA with the reusable workflow.
-      # Frustrating: there doesn't seem to be a variable that tells us the repo/ref of this
-      # re-usable workflow that the user provided.
+      # However all the context is the caller repo (like this workflow is inlined)
+      # https://github.com/orgs/community/discussions/18602
+      # https://github.com/orgs/community/discussions/63863
       uses: bazel-contrib/publish-to-bcr@fa7d3c8ad241c2c0cde639eb2225be55816e9565
       with:
         attest: true

@@ -57,7 +57,9 @@ jobs:
       # GitHub repository which is a fork of the upstream where the Pull Request will be opened.
       registry_fork: aspect-build/bazel-central-registry
     permissions:
-      contents: write  # allow appending new attestation files to the release
+      attestations: write
+      contents: write
+      id-token: write
     secrets:
       # Necessary to push to the BCR fork, and to open a pull request against a registry
       publish_token: ${{ secrets.PUBLISH_TOKEN }}
