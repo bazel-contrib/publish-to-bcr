@@ -228,8 +228,14 @@ jobs:
           _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
         maintainer-can-modify: true
 
-    - uses: peter-evans/enable-pull-request-automerge@v3
-      with:
-        token: ${{ secrets.publish_token }}
-        pull-request-number: ${{ steps.create-pull-request.outputs.pull-request-number }}
-        repository: ${{ inputs.registry }}
+    # TODO(alexeagle): enable when/if it works with upstream
+    # Error looks like:
+    # Run peter-evans/enable-pull-request-automerge@v3
+    #   Run echo merge-method=$(echo "merge" | tr '[:upper:]' '[:lower:]') >> $GITHUB_OUTPUT
+    #   Run gh pr merge -R "bazelbuild/bazel-central-registry" --merge --auto "4060"
+    #   GraphQL: Merge method merge commits are not allowed on this repository (enablePullRequestAutoMerge)
+    # - uses: peter-evans/enable-pull-request-automerge@v3
+    #   with:
+    #     token: ${{ secrets.publish_token }}
+    #     pull-request-number: ${{ steps.create-pull-request.outputs.pull-request-number }}
+    #     repository: ${{ inputs.registry }}

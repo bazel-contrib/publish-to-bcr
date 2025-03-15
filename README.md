@@ -69,6 +69,8 @@ jobs:
 
 Create a "Classic" PAT, see [documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
 
+It requires "workflow" and "repo" permissions.
+
 > [!NOTE]  
 > At the moment, fine-grained PATs are not supported because they cannot open pull requests against public 
 > repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600.
