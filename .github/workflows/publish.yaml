@@ -174,7 +174,9 @@ jobs:
 
     - name: Discard previous entry
       working-directory: bazel-central-registry
-      run: git clean -ffxd
+      run: |
+            git checkout -- ./
+            git clean -ffxd
 
     # Create the final BCR entry that we will publish
     - name: Create entry with attestations.json
