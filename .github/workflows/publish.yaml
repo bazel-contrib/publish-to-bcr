@@ -74,6 +74,13 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         path: bazel-central-registry
 
+    - name: Checkout Publish-to-BCR
+      uses: actions/checkout@v4.2.2
+      with:
+        repository: ${{ github.repository }}
+        ref: ${{ github.ref }}
+        path: publish-to-bcr
+
     # Get version from the tag, stripping any v-prefix
     - name: Write release version
       env:
@@ -96,7 +103,7 @@ jobs:
     # This entry will be discarded.
     - name: Create entry
       id: create-entry
-      uses: ./
+      uses: publish-to-bcr
       with:
         attest: true
         attestations-dest: attestations
@@ -175,7 +182,7 @@ jobs:
     # Create the final BCR entry that we will publish
     - name: Create entry with attestations.json
       id: create-entry-with-att
-      uses: ./
+      uses: publish-to-bcr
       with:
         tag: ${{ inputs.tag_name }}
         module-version: ${{ env.VERSION }}
