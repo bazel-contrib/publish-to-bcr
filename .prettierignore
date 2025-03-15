@@ -2,4 +2,3 @@ dist/*
 pnpm-lock.yaml
 templates/.bcr
 templates/README.md
-.github/workflows/publish.yaml
