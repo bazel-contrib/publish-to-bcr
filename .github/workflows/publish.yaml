@@ -130,9 +130,9 @@ jobs:
         # Determine whether this is a multi-module repo because it affects the names of the
         # uploaded attestaton files.
         if [ -f "config.yml" ]; then
-            readarray -t MODULE_ROOTS < <(cat "config.yml" | yq --unwrapScalar '.moduleRoots.[]')
+            readarray -t MODULE_ROOTS < <(cat "config.yml" | yq --unwrapScalar '.moduleRoots.[] // "."')
         elif [ -f "config.yaml" ]; then
-            readarray -t MODULE_ROOTS < <(cat "config.yaml" | yq --unwrapScalar '.moduleRoots.[]')
+            readarray -t MODULE_ROOTS < <(cat "config.yaml" | yq --unwrapScalar '.moduleRoots.[] // "."')
         else
             MODULE_ROOTS=(".")
         fi
