@@ -81,7 +81,7 @@
     "mockttp": "^3.10.0",
     "portfinder": "^1.0.32",
     "prettier": "3.4.2",
-    "typescript": "5.6.3",
+    "typescript": "5.8.2",
     "typescript-eslint": "^8.15.0"
   },
   "pnpm": {
