@@ -229,6 +229,6 @@ jobs:
         maintainer-can-modify: true
 
     - name: Enable auto-merge (squash)
-      run: gh pr merge -R "${{ inputs.repository }}" --squash --auto "${{ steps.create-pull-request.outputs.pull-request-number }}"
+      run: gh pr merge -R "${{ inputs.registry }}" --squash --auto "${{ steps.create-pull-request.outputs.pull-request-number }}"
       env:
         GH_TOKEN: ${{ secrets.publish_token }}
