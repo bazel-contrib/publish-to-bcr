@@ -40,12 +40,21 @@ jobs:
           local-registry: bazel-central-registry
       - name: Test entry content
         run: this/e2e/action/test-happy-path-content.sh
-      - name: Test output
+      - name: Test outputs
         run: |
           set -o errexit -o nounset -o pipefail -o xtrace
 
-          if [[ "${{ steps.create_entry.outputs.module-names }}" != "versioned" ]]; then
-            echo "Expected output module-names to be 'versioned' but it was '${{ steps.create_entry.outputs.module-name }}'"
+          EXPECTED="versioned"
+          ACTUAL="${{ steps.create_entry.outputs.module-names }}"
+          if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
+            echo "Expected output module-names to be '${EXPECTED}' but it was '${ACTUAL}'"
+            exit 1
+          fi
+
+          EXPECTED="Publish versioned@1.0.0"
+          ACTUAL="${{ steps.create_entry.outputs.short-description }}"
+          if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
+            echo "Expected output short-description to be '${EXPECTED}' but it was '${ACTUAL}'"
             exit 1
           fi
   test-github-repository-default:
@@ -105,8 +114,8 @@ jobs:
 
           [ -f attestations/MODULE.bazel.intoto.jsonl ]
           [ -f attestations/source.json.intoto.jsonl ]
-  test-multi-module-attestations:
-    # Test that attestation files are given a prefixed name when multiple modules are published
+  test-multi-module:
+    # Tests a multi-module publish
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -123,6 +132,7 @@ jobs:
           cd bazel-central-registry
           git init
       - name: Create entry
+        id: create_entry
         uses: ./this
         with:
           attest: true
@@ -132,6 +142,7 @@ jobs:
           github-repository: testorg/multi-module
           templates-dir: this/e2e/fixtures/multi-module/.bcr
           local-registry: bazel-central-registry
+      # Test that attestation files are given a prefixed name when multiple modules are published
       - name: Test attestations exist
         run: |-
           set -o errexit -o nounset -o pipefail -o xtrace
@@ -140,3 +151,20 @@ jobs:
           [ -f attestations/module.source.json.intoto.jsonl ]
           [ -f attestations/submodule.MODULE.bazel.intoto.jsonl ]
           [ -f attestations/submodule.source.json.intoto.jsonl ]
+      - name: Test outputs
+        run: |-
+          set -o errexit -o nounset -o pipefail -o xtrace
+
+          EXPECTED="module,submodule"
+          ACTUAL="${{ steps.create_entry.outputs.module-names }}"
+          if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
+            echo "Expected output module-names to be '${EXPECTED}' but it was '${ACTUAL}'"
+            exit 1
+          fi
+
+          EXPECTED="Publish {module,submodule}@1.0.0"
+          ACTUAL="${{ steps.create_entry.outputs.short-description }}"
+          if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
+            echo "Expected output short-description to be '${EXPECTED}' but it was '${ACTUAL}'"
+            exit 1
+          fi
