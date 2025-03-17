@@ -187,10 +187,6 @@ jobs:
         module-version: ${{ env.VERSION }}
         local-registry: bazel-central-registry
         templates-dir: this/.bcr
-    
-    - name: Set Branch Name
-      id: set-branch-name
-      run: echo "branch_name=$(echo "" >> $GITHUB_OUTPUT
 
     - name: Create Pull Request
       id: create-pull-request
