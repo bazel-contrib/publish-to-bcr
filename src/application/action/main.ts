@@ -67,9 +67,11 @@ async function main() {
       return;
     }
 
+    const moduleNames = cliOutput.modules.map((m) => m.name).join(',');
+    core.setOutput('module-names', moduleNames);
     core.setOutput(
-      'module-names',
-      cliOutput.modules.map((m) => m.name).join(',')
+      'short-description',
+      `Publish ${cliOutput.modules.length > 1 ? '{' : ''}${moduleNames}${cliOutput.modules.length > 1 ? '}' : ''}@${inputs.moduleVersion}`
     );
 
     await attest(inputs, cliOutput!);

@@ -50,6 +50,8 @@ inputs:
 outputs:
   module-names:
     description: Name(s) of the module(s) from MODULE.bazel, comma-separated
+  short-description:
+    description: A short, single-line description of the operation, e.g. "Publish foo_module@1.2.3".
 runs:
   using: 'node20'
   main: 'dist/action/index.js'
