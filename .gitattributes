@@ -1,3 +1,5 @@
 pnpm-lock.yaml linguist-generated
 dist/cli/index.js linguist-generated
 dist/action/index.js linguist-generated
+# This file contains here-doc syntax which yamlfmt gets wrong
+.github/workflows/publish.yaml rules-lint-ignored
