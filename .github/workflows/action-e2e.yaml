@@ -45,7 +45,7 @@ jobs:
           set -o errexit -o nounset -o pipefail -o xtrace
 
           if [[ "${{ steps.create_entry.outputs.module-names }}" != "versioned" ]]; then
-            echo "Expected output module-names to be 'versioned' but it was '${{ steps.create_entry.outputs.module-name }}'"
+            echo "Expected output module-names to be 'versioned' but it was '${{ steps.create_entry.outputs.module-names }}'"
             exit 1
           fi
   test-github-repository-default:

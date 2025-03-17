@@ -48,8 +48,8 @@ inputs:
     required: false
     default: ''
 outputs:
-  module-name:
-    description: Name of the module from MODULE.bazel
+  module-names:
+    description: Name(s) of the module(s) from MODULE.bazel, comma-separated
 runs:
   using: 'node20'
   main: 'dist/action/index.js'

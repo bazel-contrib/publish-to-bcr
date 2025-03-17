@@ -100,7 +100,7 @@ jobs:
       # However all the context is the caller repo (like this workflow is inlined)
       # https://github.com/orgs/community/discussions/18602
       # https://github.com/orgs/community/discussions/63863
-      uses: bazel-contrib/publish-to-bcr@fa7d3c8ad241c2c0cde639eb2225be55816e9565
+      uses: bazel-contrib/publish-to-bcr@7536ae394ec8d4c3535902964a2366655fcd8cb9
       with:
         attest: true
         attestations-dest: attestations
@@ -181,35 +181,16 @@ jobs:
     # Create the final BCR entry that we will publish
     - name: Create entry with attestations.json
       id: create-entry-with-att
-      uses: bazel-contrib/publish-to-bcr@fa7d3c8ad241c2c0cde639eb2225be55816e9565
+      uses: bazel-contrib/publish-to-bcr@7536ae394ec8d4c3535902964a2366655fcd8cb9
       with:
         tag: ${{ inputs.tag_name }}
         module-version: ${{ env.VERSION }}
         local-registry: bazel-central-registry
         templates-dir: this/.bcr
     
-    - name: Set PR details
-      id: set-pr-details
-      run: |
-        BRANCH_NAME="$(echo "${{ steps.create-entry-with-att.outputs.module-names }}" | sed "s/,/_/")-${{ inputs.tag_name }}"
-
-        # Read comma-delimited module names into an array
-        IFS=',' read -r -a MODULE_NAMES <<< "${{ steps.create-entry.outputs.module-names }}"
-        if [ "${#MODULE_NAMES[@]}" -gt "1" ]; then
-          COMMIT_MSG="Publish {${{ steps.create-entry-with-att.outputs.module-names }}}@${{ env.VERSION }}"
-          PR_TITLE="Publish {${{ steps.create-entry-with-att.outputs.module-names }}}@${{ env.VERSION }}"
-        else
-          COMMIT_MSG="Publish ${{ steps.create-entry-with-att.outputs.module-names }}@${{ env.VERSION }}"
-          PR_TITLE="Publish ${{ steps.create-entry-with-att.outputs.module-names }}@${{ env.VERSION }}"
-        fi
-
-        echo "Branch name: ${BRANCH_NAME}"
-        echo "Commit message: ${COMMIT_MSG}"
-        echo "PR title: ${PR_TITLE}"
-        
-        echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-        echo "commit_msg=${COMMIT_MSG}" >> $GITHUB_OUTPUT
-        echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
+    - name: Set Branch Name
+      id: set-branch-name
+      run: echo "branch_name=$(echo "" >> $GITHUB_OUTPUT
 
     - name: Create Pull Request
       id: create-pull-request
@@ -217,11 +198,11 @@ jobs:
       with:
         token: ${{ secrets.publish_token }}
         path: bazel-central-registry
-        commit-message: ${{ steps.set-pr-details.outputs.commit_msg }}
+        commit-message: ${{ steps.create-entry-with-att.outputs.short-description }}
         base: ${{ inputs.registry_branch }}
-        branch: ${{ steps.set-pr-details.outputs.branch_name }}
+        branch: ${{ steps.create-entry-with-att.outputs.module-names }}-${{ inputs.tag_name }}
         push-to-fork: ${{ inputs.registry_fork }}
-        title: ${{ steps.set-pr-details.outputs.pr_title }}
+        title: ${{ steps.create-entry-with-att.outputs.short-description }}
         body: |
           Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
 
