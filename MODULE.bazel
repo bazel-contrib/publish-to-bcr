@@ -9,7 +9,7 @@ bazel_dep(
     version = "8.0.0",
 )
 bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "rules_multitool", version = "0.15.0")
+bazel_dep(name = "rules_multitool", version = "1.0.0")
 bazel_dep(name = "rules_nodejs", version = "6.3.3")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 bazel_dep(name = "rules_xz", version = "1.0.1")
