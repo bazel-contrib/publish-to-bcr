@@ -1,12 +1,9 @@
 name: Release
-
 on:
   release:
     types: [released]
-
 permissions:
   contents: write
-
 jobs:
   upload:
     runs-on: ubuntu-latest

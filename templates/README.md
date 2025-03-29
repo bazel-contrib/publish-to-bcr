@@ -128,14 +128,11 @@ which do not have a stable checksum over time and will fail integrity checks.
 
 ```yaml
 name: Release
-
 on:
   release:
     types: [released]
-
 permissions:
   contents: write
-
 jobs:
   upload:
     runs-on: ubuntu-latest
