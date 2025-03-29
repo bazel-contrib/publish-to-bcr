@@ -9,7 +9,7 @@ For more information about the files that make up a BCR entry, see the [Bzlmod U
 
 ---
 
-### [metadata.template.json](.bcr/metadata.template.json)
+### [.bcr/metadata.template.json](.bcr/metadata.template.json)
 
 Insert your ruleset's homepage and fill out the list of maintainers. Replace `OWNER/REPO` with your repository's
 canonical name. Leave `versions` alone as this will be filled automatically.
@@ -37,7 +37,7 @@ _Note_: Maintainers will be emailed if a release fails.
 
 ---
 
-### [presubmit.yml](.bcr/presubmit.yml)
+### [.bcr/presubmit.yml](.bcr/presubmit.yml)
 
 Use the provided presubmit.yml file or replace it with your own. It should contain
 essential build and test targets that are used to sanity check a module version.
@@ -65,29 +65,42 @@ bcr_test_module:
 
 ---
 
-### [source.template.json](.bcr/source.template.json)
+### [.bcr/source.template.json](.bcr/source.template.json)
 
 The app will automatically substitute in values for `{REPO}`, `{VERSION}`, `{OWNER}`, and `{TAG}`
 corresponding to your ruleset repository and the release.
 
-Check that the `strip_prefix` and `url` follow the correct format for your ruleset's release
-archive.  If your repository relies on GitHub-generated source archives, then use
-`{REPO}-{VERSION}`. If your repository builds its own release archive, you probably do not have a
-prefix to be stripped. So, set `strip_prefix` to an empty string.
+The `integrity` hash will automatically be filled out by the app. Leave it empty.
 
-The `integrity` hash will automatically be filled out by the app.
+Check that the `strip_prefix` and `url` follow the correct format for your ruleset's release
+archive. The values the template comes with correspond to the archives produced by the
+release-tgz.yml workflow shown below.
 
 ```jsonc
 {
   "integrity": "", // <-- Leave this alone
   "strip_prefix": "{REPO}-{VERSION}",
-  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.tar.gz"
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{VERSION}.tar.gz"
+}
+```
+
+Instead of publishing release archives using release-tgz.yml it is possible to rely on
+GitHub-generated source archives. This is strongly discouraged because these are not generated in a
+stable way over time, so checksums intermittently change. Any time this happens, all your old
+releases will instantly become unusable because the `integrity` values checked into the
+bazel-central-registry repo will be stale.
+
+```jsonc
+{
+  "integrity": "",
+  "strip_prefix": "{REPO}-{VERSION}",
+  "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz" // strongly discouraged
 }
 ```
 
 ---
 
-### (Optional) [config.yml](.bcr/config.yml)
+### (Optional) [.bcr/config.yml](.bcr/config.yml)
 
 A configuration file to override default behaviour of the app.
 
@@ -102,3 +115,41 @@ fixedReleaser:
 | fixedReleaser | GitHub username and email to use as the author for BCR commits. Set this if you want a single user to always be the author of BCR entries regardless of who cut the release. |
 | moduleRoots | List of relative paths to Bazel modules within the repository. Set this if your MODULE.bazel file is not in the root directory, or if you want to publish multiple modules to the BCR. Defaults to `["."]`. Each module root must have a corresponding set of template files (metadata.template.json, source.template.json, presubmit.yml) under `.bcr` with the same relative path as the module. For example, if `moduleRoots` is `[".", "sub/module"]`, then there must be separate sets of template files under `.bcr` and `.bcr/sub/module`.  |
 
+---
+
+### (Optional) [.github/workflows/release-tgz.yml](.github/workflows/release-tgz.yml)
+
+This GitHub Actions workflow uploads a source archive with a stable checksum for each new release
+you publish. When you push a tag and publish a release for that tag, the workflow adds the source
+archive as an artifact under that release.
+
+Using a workflow like this is preferred over relying on GitHub's lazily generated source archives,
+which do not have a stable checksum over time and will fail integrity checks.
+
+```yaml
+name: Release
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine version from tag name
+        id: vars
+        run: echo version="${tag_name#v}" >> $GITHUB_OUTPUT
+        env:
+          tag_name: ${{github.event.release.tag_name}}
+      - name: Package sources into tar.gz
+        run: git ls-tree -r -z --name-only HEAD | tar --null --files-from=- --transform="flags=r;s:^:${{github.event.repository.name}}-${{steps.vars.outputs.version}}/:" --sort=name --mtime=2030-01-01T00:00:00Z --owner=0 --group=0 --numeric-owner --create --gzip --file=${{github.event.repository.name}}-${{steps.vars.outputs.version}}.tar.gz
+      - name: Upload release archive
+        run: gh release upload ${{github.event.release.tag_name}} ${{github.event.repository.name}}-${{steps.vars.outputs.version}}.tar.gz
+        env:
+          GH_TOKEN: ${{github.token}}
+```
