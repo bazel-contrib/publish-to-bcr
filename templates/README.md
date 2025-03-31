@@ -18,13 +18,16 @@ _Note_: Maintainers will be emailed if a release fails.
 
 ```jsonc
 {
-  "homepage": "INSERT_YOUR_HOMEPAGE", // <-- Edit this
+  "homepage": "YOUR_HOMEPAGE", // <-- Edit this
   "maintainers": [
     {
       // <-- And this
-      "name": "INSERT_YOUR_NAME",
-      "email": "INSERT_YOUR_EMAIL",
-      "github": "INSERT_YOUR_GITHUB_USERNAME"
+      "name": "YOUR_NAME",
+      "email": "YOUR_EMAIL",
+      "github": "YOUR_GITHUB_USERNAME",
+      // To find your numeric user ID:
+      // curl https://api.github.com/users/YOUR_USERNAME | jq .id
+      "github_user_id": "YOUR_GITHUB_ID_NUMBER"
     }
   ],
   "repository": [
