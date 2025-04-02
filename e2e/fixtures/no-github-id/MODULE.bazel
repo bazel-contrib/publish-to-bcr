@@ -1,0 +1,4 @@
+module(
+    name = "no-github-id",
+    version = "1.0.0",
+)

@@ -33,6 +33,12 @@ fixture_archive(
 )
 
 fixture_archive(
+    name = "no-github-id",
+    archive = "tar.gz",
+    prefix = "no-github-id-1.0.0",
+)
+
+fixture_archive(
     name = "no-prefix",
     archive = "tar.gz",
     prefix = None,

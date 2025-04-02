@@ -27,15 +27,17 @@ import { ModuleFile } from './module-file';
 import { ReleaseArchive } from './release-archive';
 import { Repository } from './repository';
 import { RulesetRepository } from './ruleset-repository';
+import { UserService } from './user';
 
 let createEntryService: CreateEntryService;
+let mockUserService: UserService;
 let mockGitClient: Mocked<GitClient>;
 
 jest.mock('../infrastructure/git');
-jest.mock('../infrastructure/github');
 jest.mock('./integrity-hash');
 jest.mock('./release-archive');
 jest.mock('./artifact');
+jest.mock('./user');
 jest.mock('node:fs');
 jest.mock('exponential-backoff');
 
@@ -94,7 +96,8 @@ beforeEach(() => {
 
   mockGitClient = mocked(new GitClient());
   mocked(computeIntegrityHash).mockReturnValue(`sha256-${randomUUID()}`);
-  createEntryService = new CreateEntryService();
+  mockUserService = new UserService({} as any);
+  createEntryService = new CreateEntryService(mockUserService);
 });
 
 afterEach(() => {
@@ -529,6 +532,74 @@ describe('createEntryFiles', () => {
       expect(JSON.parse(writtenMetadataContent).yanked_versions).toEqual({
         '1.0.0': 'has a bug',
       });
+    });
+
+    test('populates github user ids if missing from maintainers', async () => {
+      mockRulesetFiles({
+        metadataMissingMaintainerGitHubId: true,
+      });
+
+      const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
+      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      mocked(mockUserService.getUser).mockResolvedValue({ id: 5678 } as any);
+
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        version
+      );
+
+      expect(mockUserService.getUser).toHaveBeenCalledWith('foo-user');
+
+      const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
+        (call) => (call[0] as string).includes('metadata.json')
+      );
+      const writtenMetadataContent = writeMetadataCall[1] as string;
+      expect(
+        JSON.parse(writtenMetadataContent).maintainers[0].github_user_id
+      ).toEqual(5678);
+    });
+
+    test('does not fail if it cannot populate the github user id', async () => {
+      mockRulesetFiles({
+        metadataMissingMaintainerGitHubId: true,
+      });
+
+      const tag = 'v1.2.3';
+      const version = RulesetRepository.getVersionFromTag(tag);
+      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      mocked(mockUserService.getUser).mockRejectedValue(new Error());
+
+      await bcrRepo.shallowCloneAndCheckout('main');
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        version
+      );
+
+      expect(mockUserService.getUser).toHaveBeenCalledWith('foo-user');
+
+      const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
+        (call) => (call[0] as string).includes('metadata.json')
+      );
+      const writtenMetadataContent = writeMetadataCall[1] as string;
+      expect(
+        JSON.parse(writtenMetadataContent).maintainers[0].github_user_id
+      ).toBeUndefined();
     });
   });
 
@@ -1258,6 +1329,7 @@ export function mockRulesetFiles(
     metadataHomepage?: string;
     metadataVersions?: string[];
     metadataYankedVersions?: Record<string, string>;
+    metadataMissingMaintainerGitHubId?: boolean;
     sourceUrl?: string;
     sourceStripPrefix?: string;
     moduleRoot?: string;
@@ -1302,6 +1374,7 @@ export function mockRulesetFiles(
         versions: options.metadataVersions,
         yankedVersions: options.metadataYankedVersions,
         homepage: options.metadataHomepage,
+        missingMaintainerGitHubId: options.metadataMissingMaintainerGitHubId,
       });
       if (options.patches) {
         for (const patch of Object.keys(options.patches)) {

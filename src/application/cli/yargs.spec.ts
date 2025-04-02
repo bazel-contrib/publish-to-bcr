@@ -11,7 +11,9 @@ describe('createParser', () => {
   let parser: Argv<ApplicationArgs>;
 
   beforeEach(() => {
-    parser = createParser(new CreateEntryCommand(new CreateEntryService()));
+    parser = createParser(
+      new CreateEntryCommand(new CreateEntryService({} as any))
+    );
   });
 
   test('displays --help', async () => {

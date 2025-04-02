@@ -14,6 +14,7 @@ import {
 } from './module-file.js';
 import { ReleaseArchive } from './release-archive.js';
 import { SourceTemplate } from './source-template.js';
+import { UserService } from './user.js';
 
 export class VersionAlreadyPublishedError extends UserFacingError {
   public constructor(
@@ -32,6 +33,8 @@ export class PatchModuleError extends UserFacingError {
 
 @Injectable()
 export class CreateEntryService {
+  public constructor(private userService: UserService) {}
+
   public async createEntryFiles(
     metadataTemplate: MetadataFile,
     sourceTemplate: SourceTemplate,
@@ -68,7 +71,7 @@ export class CreateEntryService {
         fs.mkdirSync(bcrEntryPath);
       }
 
-      updateMetadataFile(
+      await this.updateMetadataFile(
         moduleFile.moduleName,
         metadataTemplate,
         bcrEntryPath,
@@ -203,33 +206,52 @@ export class CreateEntryService {
       );
     }
   }
-}
 
-function updateMetadataFile(
-  moduleName: string,
-  metadataTemplate: MetadataFile,
-  bcrEntryPath: string,
-  version: string
-) {
-  // Ignore any versions in the template metadata file since the
-  // canonical source for released and yanked versions exists in
-  // the metadata file stored in the Bazel Central Registry.
-  metadataTemplate.clearVersions();
-  metadataTemplate.clearYankedVersions();
+  private async updateMetadataFile(
+    moduleName: string,
+    metadataTemplate: MetadataFile,
+    bcrEntryPath: string,
+    version: string
+  ) {
+    // Ignore any versions in the template metadata file since the
+    // canonical source for released and yanked versions exists in
+    // the metadata file stored in the Bazel Central Registry.
+    metadataTemplate.clearVersions();
+    metadataTemplate.clearYankedVersions();
 
-  const destPath = path.join(bcrEntryPath, 'metadata.json');
-  if (fs.existsSync(destPath)) {
-    const bcrMetadata = new MetadataFile(destPath);
+    await this.updateMaintainerIdsIfMissing(metadataTemplate);
 
-    if (bcrMetadata.hasVersion(version)) {
-      throw new VersionAlreadyPublishedError(moduleName, version);
+    const destPath = path.join(bcrEntryPath, 'metadata.json');
+    if (fs.existsSync(destPath)) {
+      const bcrMetadata = new MetadataFile(destPath);
+
+      if (bcrMetadata.hasVersion(version)) {
+        throw new VersionAlreadyPublishedError(moduleName, version);
+      }
+
+      // Add all versions from the BCR metadata
+      metadataTemplate.addVersions(...bcrMetadata.versions);
+      metadataTemplate.addYankedVersions(bcrMetadata.yankedVersions);
     }
 
-    // Add all versions from the BCR metadata
-    metadataTemplate.addVersions(...bcrMetadata.versions);
-    metadataTemplate.addYankedVersions(bcrMetadata.yankedVersions);
+    metadataTemplate.addVersions(version);
+    metadataTemplate.save(destPath);
   }
 
-  metadataTemplate.addVersions(version);
-  metadataTemplate.save(destPath);
+  private updateMaintainerIdsIfMissing(metadata: MetadataFile): Promise<void> {
+    return Promise.all(
+      metadata.maintainers
+        .filter((m) => !!m.github && !m.github_user_id)
+        .map((m) =>
+          this.userService
+            .getUser(m.github)
+            .then((u) => metadata.updateMaintainerUserId(m.github!, u.id))
+            .catch(() =>
+              console.error(
+                `Warning: failed to fetch github user id for ${m.github}; not auto-populating the maintainer's github_user_id`
+              )
+            )
+        )
+    ).then();
+  }
 }

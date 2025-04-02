@@ -985,6 +985,56 @@ describe('e2e tests', () => {
 
     expect(emailSnapshot(messages[0])).toMatchSnapshot();
   });
+
+  test('[snapshot] ruleset with maintainer github id missing', async () => {
+    const repo = Fixture.NoGitHubId;
+    const tag = 'v1.0.0';
+    const maintainer: Partial<User> = {
+      name: 'Foo McBar',
+      email: 'foo@test.org',
+      login: 'foobar',
+      id: 5678,
+    };
+    await setupLocalRemoteRulesetRepo(repo, tag, releaser);
+
+    fakeGitHub.mockUser(releaser);
+    fakeGitHub.mockUser(maintainer);
+    fakeGitHub.mockRepository(testOrg, repo);
+    fakeGitHub.mockRepository(
+      testOrg,
+      'bazel-central-registry',
+      'bazelbuild',
+      'bazel-central-registry'
+    );
+    const installationId = fakeGitHub.mockAppInstallation(testOrg, repo);
+    fakeGitHub.mockAppInstallation(testOrg, 'bazel-central-registry');
+
+    const releaseArchive = releaseArchivePath(
+      repo,
+      'no-github-id-1.0.0',
+      'tar.gz'
+    );
+    await fakeGitHub.mockReleaseArtifact(
+      `/${testOrg}/${repo}/archive/refs/tags/${tag}.tar.gz`,
+      releaseArchive
+    );
+
+    const response = await publishReleaseEvent(
+      cloudFunctions.getBaseUrl(),
+      secrets.webhookSecret,
+      installationId,
+      {
+        owner: testOrg,
+        repo,
+        tag,
+        releaser,
+      }
+    );
+    expect(response.status).toEqual(200);
+
+    const snapshot = await rollupEntryFiles();
+    expect(snapshot).toMatchSnapshot();
+  });
 });
 
 /**

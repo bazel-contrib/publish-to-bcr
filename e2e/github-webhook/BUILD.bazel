@@ -12,6 +12,7 @@ ts_project(
         "//e2e/fixtures:fixed-releaser",
         "//e2e/fixtures:multi-module",
         "//e2e/fixtures:multi-module_invalid_prefix",
+        "//e2e/fixtures:no-github-id",
         "//e2e/fixtures:no-prefix",
         "//e2e/fixtures:tarball",
         "//e2e/fixtures:unversioned",

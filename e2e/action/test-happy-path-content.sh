@@ -11,7 +11,8 @@ cat > "${EXPECTED_PATH}/metadata.json" <<- EOF
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -31,7 +32,7 @@ module(
 EOF
 cat > "${EXPECTED_PATH}/1.0.0/source.json" <<- EOF
 {
-    "integrity": "sha256-t39EUhiPjM65oWhYtLQ2dq4fWDU/oQ0L/DNBvYkNfyk=",
+    "integrity": "sha256-eLJUZjOh+76IBFAfzeh/4WHDIneTz/JE2I3omT4EVng=",
     "strip_prefix": "versioned-1.0.0",
     "url": "file:///home/runner/work/publish-to-bcr/publish-to-bcr/archive.tar.gz"
 }

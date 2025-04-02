@@ -4,7 +4,10 @@ import { Octokit } from '@octokit/rest';
 import { EmitterWebhookEvent } from '@octokit/webhooks';
 
 import { Repository } from '../../domain/repository.js';
-import { GitHubClient } from '../../infrastructure/github.js';
+import {
+  getUnauthorizedOctokit,
+  GitHubClient,
+} from '../../infrastructure/github.js';
 import { SecretsClient } from '../../infrastructure/secrets.js';
 import {
   createAppAuthorizedOctokit,
@@ -75,4 +78,11 @@ export const BCR_GITHUB_CLIENT_PROVIDER: Provider = {
     return githubClient;
   },
   inject: ['bcrAppOctokit'],
+};
+
+export const UNAUTHENTICATED_GITHUB_CLIENT_PROVIDER: Provider = {
+  provide: 'unauthedGitHubClient',
+  useFactory(): GitHubClient {
+    return new GitHubClient(getUnauthorizedOctokit());
+  },
 };
