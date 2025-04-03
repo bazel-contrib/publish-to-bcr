@@ -29,7 +29,7 @@ bcr_test_module:
 modules/no-prefix/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-dQqjftp7Dsw51+wKoZ7ylYLcU8/OAB82bEhRLVbG5oE=",
+    "integrity": "sha256-3LbHkX0YFvd+Sz64nmh0n8WVucTtVOkL7j1G4/ls6ak=",
     "url": "https://github.com/testorg/no-prefix/archive/refs/tags/v1.0.0.tar.gz"
 }
 
@@ -42,7 +42,8 @@ modules/no-prefix/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -111,7 +112,7 @@ bcr_test_module:
 modules/empty-prefix/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-3NScfj5InW4kWFD7tHN7nrHo7XirCeZwpEZmUGEumP4=",
+    "integrity": "sha256-kBbcw2ItTtTxMcFX1Itaorj6JmnH8LIH3VirbThpBCM=",
     "strip_prefix": "",
     "url": "https://github.com/testorg/empty-prefix/archive/refs/tags/v1.0.0.tar.gz"
 }
@@ -125,7 +126,8 @@ modules/empty-prefix/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -169,7 +171,7 @@ bcr_test_module:
 modules/module/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-futnmCx8nl4tIw5yGYoH71w4K3fUet2eXjb/ek4cIKU=",
+    "integrity": "sha256-lUvbwG4uSSDvAt5hjiHbhRZxw+wvsVScvhaP06BDrnM=",
     "strip_prefix": "multi-module-1.0.0",
     "url": "https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz"
 }
@@ -183,7 +185,8 @@ modules/module/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -223,7 +226,7 @@ bcr_test_module:
 modules/submodule/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-futnmCx8nl4tIw5yGYoH71w4K3fUet2eXjb/ek4cIKU=",
+    "integrity": "sha256-lUvbwG4uSSDvAt5hjiHbhRZxw+wvsVScvhaP06BDrnM=",
     "strip_prefix": "multi-module-1.0.0/submodule",
     "url": "https://github.com/testorg/multi-module/releases/download/v1.0.0.tar.gz"
 }
@@ -237,12 +240,14 @@ modules/submodule/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         },
         {
             "name": "Moo Cow",
             "email": "moo@test.org",
-            "github": "moocow"
+            "github": "moocow",
+            "github_user_id": 5678
         }
     ],
     "repository": [
@@ -307,7 +312,7 @@ bcr_test_module:
 modules/attestations/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-5ZEMl5xVJYkHciAiRrnDsJfacYasGal+3G4gIwvClbI=",
+    "integrity": "sha256-GRw83omVIuUIgWWGw4GjkydWlaUqVxeMit0IgpVQNvw=",
     "strip_prefix": "attestations-1.0.0",
     "url": "https://github.com/testorg/attestations/releases/download/v1.0.0/attestations-v1.0.0.tar.gz"
 }
@@ -321,11 +326,71 @@ modules/attestations/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
         "github:testorg/attestations"
+    ],
+    "versions": [
+        "1.0.0"
+    ],
+    "yanked_versions": {}
+}
+
+"
+`;
+
+exports[`e2e tests [snapshot] ruleset with maintainer github id missing 1`] = `
+"----------------------------------------------------
+modules/no-github-id/1.0.0/MODULE.bazel
+----------------------------------------------------
+module(
+    name = "no-github-id",
+    version = "1.0.0",
+)
+
+----------------------------------------------------
+modules/no-github-id/1.0.0/presubmit.yml
+----------------------------------------------------
+bcr_test_module:
+  module_path: "e2e/bzlmod"
+  matrix:
+    platform: ["debian10", "macos", "ubuntu2004", "windows"]
+    bazel: [6.x, 7.x]
+  tasks:
+    run_tests:
+      name: "Run test module"
+      platform: \${{ platform }}
+      bazel: \${{ bazel }}
+      test_targets:
+        - "//..."
+
+----------------------------------------------------
+modules/no-github-id/1.0.0/source.json
+----------------------------------------------------
+{
+    "integrity": "sha256-Ez9/1Ws/Y3YFRZ0pkV/M4+FgYKZmOiFbF/Sp8qGvJ6g=",
+    "strip_prefix": "no-github-id-1.0.0",
+    "url": "https://github.com/testorg/no-github-id/archive/refs/tags/v1.0.0.tar.gz"
+}
+
+----------------------------------------------------
+modules/no-github-id/metadata.json
+----------------------------------------------------
+{
+    "homepage": "https://github.com/testorg/no-github-id",
+    "maintainers": [
+        {
+            "name": "Foo McBar",
+            "email": "foo@test.org",
+            "github": "foobar",
+            "github_user_id": 5678
+        }
+    ],
+    "repository": [
+        "github:testorg/no-github-id"
     ],
     "versions": [
         "1.0.0"
@@ -365,7 +430,7 @@ bcr_test_module:
 modules/tarball-xz/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-eWwOFAbPPUNnjch/AWrX8Uu8i108b7KdueVSdlODUKU=",
+    "integrity": "sha256-IxaaXKQlTajZ7/Wn7LPYavov0/LbviqGvqcHGLiMn/Q=",
     "strip_prefix": "tarball-xz-1.0.0",
     "url": "https://github.com/testorg/tarball-xz/archive/refs/tags/v1.0.0.tar.xz"
 }
@@ -379,7 +444,8 @@ modules/tarball-xz/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -423,7 +489,7 @@ bcr_test_module:
 modules/tarball/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-5X+xhTuA7pDj/Quebu0vy2HjbV6i9+VCtx07nvDDs2c=",
+    "integrity": "sha256-D3k3zOxTCcMFc7oEW9yXkYTvQfl58tji8tZeuSZBGco=",
     "strip_prefix": "tarball-1.0.0",
     "url": "https://github.com/testorg/tarball/archive/refs/tags/v1.0.0.tar.gz"
 }
@@ -437,7 +503,8 @@ modules/tarball/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -493,7 +560,7 @@ bcr_test_module:
 modules/unversioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-YsOZo9xaEOEyz4PXwg3Bh3wp+48ASs5FloVLvCEUI4s=",
+    "integrity": "sha256-oHmuth7V/wkkiWzYlZZtrpbEeBPWwGyv9D+tbiH4lYQ=",
     "strip_prefix": "unversioned-1.0.0",
     "url": "https://github.com/testorg/unversioned/archive/refs/tags/v1.0.0.tar.gz",
     "patches": {
@@ -511,7 +578,8 @@ modules/unversioned/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -555,7 +623,7 @@ bcr_test_module:
 modules/versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-Fro7OplVkXGdnElWFH/ZOyVL804wFRgSIGgV8nSXfZc=",
+    "integrity": "sha256-7Y5N+DsDA2+m4e1sEhY8dPldh6/KsL8R9xxRSfpimC8=",
     "strip_prefix": "versioned-1.0.0",
     "url": "https://github.com/testorg/versioned/archive/refs/tags/v1.0.0.tar.gz"
 }
@@ -569,7 +637,8 @@ modules/versioned/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -626,7 +695,7 @@ bcr_test_module:
 modules/zero-versioned/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-YKWSPs0/a2wizrjaMcotdksAjltxqUMKj4Ut4ZquXms=",
+    "integrity": "sha256-Q6OaCcYZ6gRIwAjMiaXxkofJH5u9tNKipB4PYHqyW5k=",
     "strip_prefix": "zero-versioned-1.0.0",
     "url": "https://github.com/testorg/zero-versioned/archive/refs/tags/v1.0.0.tar.gz",
     "patches": {
@@ -644,7 +713,8 @@ modules/zero-versioned/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [
@@ -688,7 +758,7 @@ bcr_test_module:
 modules/zip/1.0.0/source.json
 ----------------------------------------------------
 {
-    "integrity": "sha256-8u04c7Lk1psMKzFgnN3yysw93jvWp4RnqGGW/9n/+Jk=",
+    "integrity": "sha256-ehVs7IjSE3VJ74xy/8i96maQdRUlB1TmH3lsIYVRcks=",
     "strip_prefix": "zip-1.0.0",
     "url": "https://github.com/testorg/zip/archive/refs/tags/v1.0.0.zip"
 }
@@ -702,7 +772,8 @@ modules/zip/metadata.json
         {
             "name": "Foo McBar",
             "email": "foo@test.org",
-            "github": "foobar"
+            "github": "foobar",
+            "github_user_id": 1234
         }
     ],
     "repository": [

@@ -14,6 +14,7 @@ export enum Fixture {
   EmptyPrefix = 'empty-prefix',
   FixedReleaser = 'fixed-releaser',
   MultiModule = 'multi-module',
+  NoGitHubId = 'no-github-id',
   NoPrefix = 'no-prefix',
   Tarball = 'tarball',
   TarballXz = 'tarball-xz',

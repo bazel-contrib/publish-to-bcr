@@ -110,21 +110,28 @@ export function fakeMetadataFile(
     homepage?: string;
     malformed?: boolean;
     missingVersions?: boolean;
+    missingMaintainerGitHubId?: boolean;
   } = {}
 ): string {
   if (options.malformed) {
     return `{"foo":`;
   }
+  const maintainers = [
+    {
+      email: 'json@bearded.ca',
+      github: 'foo-user',
+      name: 'Json Bearded',
+      ...(!options.missingMaintainerGitHubId
+        ? {
+            github_user_id: 1234,
+          }
+        : {}),
+    },
+  ];
   return `\
     {
       "homepage": "${options.homepage || 'https://docs.aspect.dev/bazel-lib'}",
-      "maintainers": [
-        {
-          "email": "json@bearded.ca",
-          "github": "bazel-contrib",
-          "name": "Json Bearded"
-        }
-      ],
+      "maintainers": ${JSON.stringify(maintainers)},
       ${
         options.missingVersions
           ? ''

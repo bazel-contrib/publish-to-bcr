@@ -107,7 +107,7 @@ export class GitHubClient {
     return client;
   }
 
-  public constructor(private readonly octokit: Octokit) {}
+  public constructor(private readonly octokit?: Octokit) {}
 
   public async listRepositoriesForUser(owner: string): Promise<Repository[]> {
     // This endpoint works for org owners as well as user owners

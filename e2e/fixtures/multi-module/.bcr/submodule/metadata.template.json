@@ -4,12 +4,14 @@
     {
       "name": "Foo McBar",
       "email": "foo@test.org",
-      "github": "foobar"
+      "github": "foobar",
+      "github_user_id": 1234
     },
     {
       "name": "Moo Cow",
       "email": "moo@test.org",
-      "github": "moocow"
+      "github": "moocow",
+      "github_user_id": 5678
     }
   ],
   "repository": ["github:testorg/multi-module"],

@@ -12,7 +12,7 @@ export interface User {
 @Injectable()
 export class UserService {
   constructor(
-    @Inject('rulesetRepoGitHubClient') private githubClient: GitHubClient
+    @Inject('unauthedGitHubClient') private githubClient: GitHubClient
   ) {}
 
   public static isGitHubActionsBot(user: User): boolean {

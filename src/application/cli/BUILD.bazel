@@ -9,6 +9,7 @@ ts_project(
         "app.module.ts",
         "create-entry-command.ts",
         "main.ts",
+        "providers.ts",
         "yargs.ts",
     ],
     visibility = [
@@ -24,6 +25,7 @@ ts_project(
         "//:node_modules/tree-node-cli",
         "//:node_modules/yargs",
         "//src/domain",
+        "//src/infrastructure",
     ],
 )
 

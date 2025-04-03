@@ -18,6 +18,7 @@ export interface Maintainer {
   name: string;
   email?: string;
   github?: string;
+  github_user_id?: number; // https://github.com/bazelbuild/bazel-central-registry/pull/4191
 }
 
 export class MetadataFile {
@@ -71,6 +72,12 @@ export class MetadataFile {
 
   public get maintainers(): readonly Maintainer[] {
     return (this.metadata.maintainers || []) as Maintainer[];
+  }
+
+  public updateMaintainerUserId(github: string, githubUserId: number) {
+    this.metadata.maintainers.find(
+      (m: Maintainer) => !!m.github && m.github === github
+    )!.github_user_id = githubUserId;
   }
 
   public get versions(): readonly string[] {
