@@ -5,7 +5,11 @@ import extractZip from 'extract-zip';
 import tar from 'tar';
 
 import { decompress as decompressXz } from '../infrastructure/xzdec/xzdec.js';
-import { Artifact, ArtifactDownloadError } from './artifact.js';
+import {
+  Artifact,
+  ArtifactDownloadError,
+  DownloadOptions,
+} from './artifact.js';
 import { UserFacingError } from './error.js';
 import { ModuleFile } from './module-file.js';
 
@@ -50,12 +54,13 @@ export class ReleaseArchive {
   ];
   public static async fetch(
     url: string,
-    stripPrefix: string
+    stripPrefix: string,
+    options: DownloadOptions
   ): Promise<ReleaseArchive> {
     const artifact = new Artifact(url);
 
     try {
-      await artifact.download();
+      await artifact.download(options);
     } catch (e) {
       if (e instanceof ArtifactDownloadError) {
         throw new ArchiveDownloadError(e.url, e.statusCode);

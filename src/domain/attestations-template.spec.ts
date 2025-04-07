@@ -4,7 +4,7 @@ import fs from 'node:fs';
 
 import { mocked } from 'jest-mock';
 
-import { Artifact, ArtifactDownloadError } from './artifact';
+import { Artifact, ArtifactDownloadError, DownloadOptions } from './artifact';
 import {
   AttestationDownloadError,
   AttestationsTemplate,
@@ -244,6 +244,10 @@ describe('AttestationsTemplate', () => {
   });
 
   describe('computeIntegrityHashes', () => {
+    const options: DownloadOptions = {
+      backoffDelayFactor: 2000,
+    };
+
     test('downloads each attestation', async () => {
       const template = AttestationsTemplate.tryLoad(ATTESTATIONS_TEMPLATE_PATH);
       template.substitute({
@@ -251,7 +255,7 @@ describe('AttestationsTemplate', () => {
         REPO: 'bar',
         TAG: 'v1.0.0',
       });
-      await template.computeIntegrityHashes();
+      await template.computeIntegrityHashes(options);
 
       const artifacts = mocked(Artifact).mock.instances;
       expect(artifacts.length).toEqual(3);
@@ -312,7 +316,7 @@ describe('AttestationsTemplate', () => {
         REPO: 'bar',
         TAG: 'v1.0.0',
       });
-      await template.computeIntegrityHashes();
+      await template.computeIntegrityHashes(options);
 
       const artifacts = mocked(Artifact).mock.instances;
       expect(artifacts.length).toEqual(3);
@@ -347,7 +351,7 @@ describe('AttestationsTemplate', () => {
         TAG: 'v1.0.0',
       });
 
-      await expect(template.computeIntegrityHashes()).rejects.toThrow(
+      await expect(template.computeIntegrityHashes(options)).rejects.toThrow(
         AttestationDownloadError
       );
     });

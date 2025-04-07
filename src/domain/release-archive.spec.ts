@@ -7,7 +7,7 @@ import tar from 'tar';
 
 import { fakeModuleFile } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
-import { Artifact, ArtifactDownloadError } from './artifact';
+import { Artifact, ArtifactDownloadError, DownloadOptions } from './artifact';
 import {
   ArchiveDownloadError,
   MissingModuleFileError,
@@ -38,6 +38,10 @@ const mockArtifact = {
   diskPath: null as string,
 };
 
+const options: DownloadOptions = {
+  backoffDelayFactor: 2000,
+};
+
 beforeEach(() => {
   mocked(fs.readFileSync).mockReturnValue(
     fakeModuleFile({ moduleName: 'rules_foo', version: '1.2.3' })
@@ -59,7 +63,8 @@ describe('fetch', () => {
   test('downloads the archive', async () => {
     const archive = await ReleaseArchive.fetch(
       RELEASE_ARCHIVE_URL,
-      STRIP_PREFIX
+      STRIP_PREFIX,
+      options
     );
 
     expect(Artifact).toHaveBeenCalledWith(RELEASE_ARCHIVE_URL);
@@ -72,7 +77,7 @@ describe('fetch', () => {
     );
 
     const thrownError = await expectThrownError(
-      () => ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX),
+      () => ReleaseArchive.fetch(RELEASE_ARCHIVE_URL, STRIP_PREFIX, options),
       ArchiveDownloadError
     );
 
@@ -91,7 +96,8 @@ describe('extractModuleFile', () => {
   test('complains when it encounters an unsupported archive format', async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       'https://foo.bar/rules-foo-v1.2.3.deb',
-      STRIP_PREFIX
+      STRIP_PREFIX,
+      options
     );
 
     await expect(releaseArchive.extractModuleFile()).rejects.toThrow(
@@ -102,7 +108,8 @@ describe('extractModuleFile', () => {
   test('extracts contents next to the tarball archive', async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       'https://foo.bar/rules-foo-v1.2.3.tar.gz',
-      STRIP_PREFIX
+      STRIP_PREFIX,
+      options
     );
     await releaseArchive.extractModuleFile();
 
@@ -115,7 +122,8 @@ describe('extractModuleFile', () => {
   test('loads the extracted MODULE.bazel file', async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       RELEASE_ARCHIVE_URL,
-      STRIP_PREFIX
+      STRIP_PREFIX,
+      options
     );
     await releaseArchive.extractModuleFile();
 
@@ -130,7 +138,8 @@ describe('extractModuleFile', () => {
   test('returns a module file representation', async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       RELEASE_ARCHIVE_URL,
-      STRIP_PREFIX
+      STRIP_PREFIX,
+      options
     );
     const moduleFile = await releaseArchive.extractModuleFile();
 
@@ -141,7 +150,8 @@ describe('extractModuleFile', () => {
   test('throws when MODULE.bazel cannot be found in the release archive', async () => {
     const releaseArchive = await ReleaseArchive.fetch(
       RELEASE_ARCHIVE_URL,
-      STRIP_PREFIX
+      STRIP_PREFIX,
+      options
     );
 
     mocked(fs.existsSync).mockReturnValue(false);

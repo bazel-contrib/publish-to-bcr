@@ -1,9 +1,10 @@
 import fs, { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { createTwoFilesPatch, parsePatch } from 'diff';
 
+import { DownloadOptions } from './artifact.js';
 import { AttestationsTemplate } from './attestations-template.js';
 import { UserFacingError } from './error.js';
 import { computeIntegrityHash } from './integrity-hash.js';
@@ -33,7 +34,11 @@ export class PatchModuleError extends UserFacingError {
 
 @Injectable()
 export class CreateEntryService {
-  public constructor(private userService: UserService) {}
+  public constructor(
+    private readonly userService: UserService,
+    @Inject('artifactDownloadOptions')
+    private readonly artifactDownloadOptions: DownloadOptions
+  ) {}
 
   public async createEntryFiles(
     metadataTemplate: MetadataFile,
@@ -50,7 +55,8 @@ export class CreateEntryService {
     console.error(`Fetching release archive ${sourceTemplate.url}`);
     const releaseArchive = await ReleaseArchive.fetch(
       sourceTemplate.url,
-      sourceTemplate.stripPrefix
+      sourceTemplate.stripPrefix,
+      this.artifactDownloadOptions
     );
 
     try {
@@ -105,7 +111,9 @@ export class CreateEntryService {
       if (attestationsTemplate) {
         attestationsTemplate.substitute({ VERSION: version });
         attestationsTemplate.validateFullySubstituted();
-        await attestationsTemplate.computeIntegrityHashes();
+        await attestationsTemplate.computeIntegrityHashes(
+          this.artifactDownloadOptions
+        );
         attestationsTemplate.save(
           path.join(bcrVersionEntryPath, 'attestations.json')
         );
