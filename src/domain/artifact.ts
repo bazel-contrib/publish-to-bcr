@@ -19,6 +19,10 @@ export class ArtifactDownloadError extends Error {
   }
 }
 
+export interface DownloadOptions {
+  backoffDelayFactor: number;
+}
+
 /**
  * An artifact that can be downloaded and have its integrity hash computed.
  */
@@ -27,7 +31,7 @@ export class Artifact {
   private _diskPath: string | null = null;
   public constructor(public readonly url: string) {}
 
-  public async download(): Promise<void> {
+  public async download(options: DownloadOptions): Promise<void> {
     let url = this.url;
     if (this._diskPath !== null) {
       throw new Error(
@@ -75,7 +79,7 @@ export class Artifact {
         );
       },
       retries: Artifact.MAX_RETRIES,
-      retryDelay: exponentialDelay,
+      retryDelay: exponentialDelay(options.backoffDelayFactor),
       shouldResetTimeout: true,
       retryCondition: defaultRetryPlus404,
     });
@@ -132,12 +136,14 @@ export class Artifact {
 }
 
 function exponentialDelay(
-  retryCount: number,
-  error: AxiosError | undefined
-): number {
-  // Default delay factor is 2 seconds, but can be overridden for testing.
-  const delayFactor = Number(process.env.BACKOFF_DELAY_FACTOR) || 2000;
-  return axiosRetry.exponentialDelay(retryCount, error, delayFactor);
+  backoffDelayFactor: number
+): (retryCount: number, error: AxiosError | undefined) => number {
+  return (retryCount: number, error: AxiosError | undefined) => {
+    // Delay factor can be overridden for testing with env `BACKOFF_DELAY_FACTOR`.
+    const delayFactor =
+      Number(process.env.BACKOFF_DELAY_FACTOR) || backoffDelayFactor;
+    return axiosRetry.exponentialDelay(retryCount, error, delayFactor);
+  };
 }
 
 function defaultRetryPlus404(error: AxiosError): boolean {

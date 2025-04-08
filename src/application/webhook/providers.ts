@@ -3,6 +3,7 @@ import { REQUEST } from '@nestjs/core';
 import { Octokit } from '@octokit/rest';
 import { EmitterWebhookEvent } from '@octokit/webhooks';
 
+import { DownloadOptions } from '../../domain/artifact.js';
 import { Repository } from '../../domain/repository.js';
 import {
   getUnauthorizedOctokit,
@@ -84,5 +85,12 @@ export const UNAUTHENTICATED_GITHUB_CLIENT_PROVIDER: Provider = {
   provide: 'unauthedGitHubClient',
   useFactory(): GitHubClient {
     return new GitHubClient(getUnauthorizedOctokit());
+  },
+};
+
+export const ARTIFACT_DOWNLOAD_OPTIONS: Provider<DownloadOptions> = {
+  provide: 'artifactDownloadOptions',
+  useValue: {
+    backoffDelayFactor: 10_000,
   },
 };

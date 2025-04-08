@@ -12,6 +12,7 @@ import { NotificationsService } from '../notifications.js';
 import { ReleaseEventHandler } from '../release-event-handler.js';
 import {
   APP_OCTOKIT_PROVIDER,
+  ARTIFACT_DOWNLOAD_OPTIONS,
   BCR_APP_OCTOKIT_PROVIDER,
   BCR_GITHUB_CLIENT_PROVIDER,
   RULESET_REPO_GITHUB_CLIENT_PROVIDER,
@@ -31,6 +32,7 @@ import {
     RepositoryService,
     UserService,
     APP_OCTOKIT_PROVIDER,
+    ARTIFACT_DOWNLOAD_OPTIONS,
     BCR_APP_OCTOKIT_PROVIDER,
     RULESET_REPO_GITHUB_CLIENT_PROVIDER,
     BCR_GITHUB_CLIENT_PROVIDER,

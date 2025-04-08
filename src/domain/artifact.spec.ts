@@ -8,7 +8,7 @@ import axiosRetry from 'axios-retry';
 import { mocked } from 'jest-mock';
 
 import { expectThrownError } from '../test/util';
-import { Artifact, ArtifactDownloadError } from './artifact';
+import { Artifact, ArtifactDownloadError, DownloadOptions } from './artifact';
 import { computeIntegrityHash } from './integrity-hash';
 
 jest.mock('node:fs');
@@ -45,10 +45,14 @@ beforeEach(() => {
 });
 
 describe('Artifact', () => {
+  const options: DownloadOptions = {
+    backoffDelayFactor: 2000,
+  };
+
   describe('download', () => {
     test('downloads the artifact', async () => {
       const artifact = new Artifact(ARTIFACT_URL);
-      await artifact.download();
+      await artifact.download(options);
 
       expect(axios.get).toHaveBeenCalledWith(ARTIFACT_URL, {
         responseType: 'stream',
@@ -63,7 +67,7 @@ describe('Artifact', () => {
         jest.requireActual('axios-retry').exponentialDelay
       );
 
-      await artifact.download();
+      await artifact.download(options);
 
       expect(axiosRetry).toHaveBeenCalledWith(axios, {
         retries: 3,
@@ -85,12 +89,12 @@ describe('Artifact', () => {
           const secondRetryDelay = retryDelayFn.call(this, 1);
           const thirdRetryDelay = retryDelayFn.call(this, 2);
           return (
-            2000 <= firstRetryDelay &&
-            firstRetryDelay <= 2400 &&
-            4000 <= secondRetryDelay &&
-            secondRetryDelay <= 4800 &&
-            8000 <= thirdRetryDelay &&
-            thirdRetryDelay <= 9600
+            2 ** 0 * options.backoffDelayFactor <= firstRetryDelay &&
+            firstRetryDelay <= 2 ** 0 * 1.2 * options.backoffDelayFactor &&
+            2 ** 1 * options.backoffDelayFactor <= secondRetryDelay &&
+            secondRetryDelay <= 2 ** 1 * 1.2 * options.backoffDelayFactor &&
+            2 ** 2 * options.backoffDelayFactor <= thirdRetryDelay &&
+            thirdRetryDelay <= 2 ** 2 * 1.2 * options.backoffDelayFactor
           );
         }),
         shouldResetTimeout: true,
@@ -100,7 +104,7 @@ describe('Artifact', () => {
     test('saves the artifact to disk', async () => {
       const artifact = new Artifact(ARTIFACT_URL);
 
-      await artifact.download();
+      await artifact.download(options);
 
       const expectedPath = path.join(TEMP_DIR, TEMP_FOLDER, 'artifact.baz');
       expect(fs.createWriteStream).toHaveBeenCalledWith(expectedPath, {
@@ -120,7 +124,7 @@ describe('Artifact', () => {
     test('sets the diskPath', async () => {
       const artifact = new Artifact(ARTIFACT_URL);
 
-      await artifact.download();
+      await artifact.download(options);
 
       const expectedPath = path.join(TEMP_DIR, TEMP_FOLDER, 'artifact.baz');
       expect(artifact.diskPath).toEqual(expectedPath);
@@ -136,7 +140,7 @@ describe('Artifact', () => {
       });
 
       const thrownError = await expectThrownError(
-        () => artifact.download(),
+        () => artifact.download(options),
         ArtifactDownloadError
       );
 
@@ -157,7 +161,7 @@ describe('Artifact', () => {
 
     test('computes the integrity of the file', async () => {
       const artifact = new Artifact(ARTIFACT_URL);
-      await artifact.download();
+      await artifact.download(options);
 
       const expected = `sha256-${randomUUID()}`;
       mocked(computeIntegrityHash).mockReturnValue(expected);
@@ -172,7 +176,7 @@ describe('Artifact', () => {
   describe('cleanup', () => {
     test('removed the stored file', async () => {
       const artifact = new Artifact(ARTIFACT_URL);
-      await artifact.download();
+      await artifact.download(options);
       const diskPath = artifact.diskPath;
       artifact.cleanup();
 
@@ -181,7 +185,7 @@ describe('Artifact', () => {
 
     test('removes the diskPath', async () => {
       const artifact = new Artifact(ARTIFACT_URL);
-      await artifact.download();
+      await artifact.download(options);
       artifact.cleanup();
 
       expect(() => artifact.diskPath).toThrowWithMessage(

@@ -12,7 +12,9 @@ describe('createParser', () => {
 
   beforeEach(() => {
     parser = createParser(
-      new CreateEntryCommand(new CreateEntryService({} as any))
+      new CreateEntryCommand(
+        new CreateEntryService({} as any, { backoffDelayFactor: 2000 })
+      )
     );
   });
 

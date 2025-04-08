@@ -97,7 +97,9 @@ beforeEach(() => {
   mockGitClient = mocked(new GitClient());
   mocked(computeIntegrityHash).mockReturnValue(`sha256-${randomUUID()}`);
   mockUserService = new UserService({} as any);
-  createEntryService = new CreateEntryService(mockUserService);
+  createEntryService = new CreateEntryService(mockUserService, {
+    backoffDelayFactor: 2000,
+  });
 });
 
 afterEach(() => {

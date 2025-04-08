@@ -1,6 +1,10 @@
 import fs from 'node:fs';
 
-import { Artifact, ArtifactDownloadError } from './artifact.js';
+import {
+  Artifact,
+  ArtifactDownloadError,
+  DownloadOptions,
+} from './artifact.js';
 import { UserFacingError } from './error.js';
 import {
   getUnsubstitutedVars,
@@ -147,7 +151,9 @@ export class AttestationsTemplate {
     }
   }
 
-  public async computeIntegrityHashes(): Promise<void> {
+  public async computeIntegrityHashes(
+    downloadOptions: DownloadOptions
+  ): Promise<void> {
     const urls: string[] = [];
     const keys = Object.keys(this.json.attestations);
 
@@ -159,7 +165,9 @@ export class AttestationsTemplate {
     const artifacts = urls.map((url) => new Artifact(url));
 
     try {
-      await Promise.all(artifacts.map((artifact) => artifact.download()));
+      await Promise.all(
+        artifacts.map((artifact) => artifact.download(downloadOptions))
+      );
     } catch (e) {
       if (e instanceof ArtifactDownloadError) {
         throw new AttestationDownloadError(e.url, e.statusCode);
