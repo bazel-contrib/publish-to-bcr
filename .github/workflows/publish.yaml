@@ -52,6 +52,15 @@ on:
           The git ref to read BCR templates (.bcr folder) rather than reading them from `tag_name`.
           Use this to republish a release whose templates had errors.
         type: string
+      attest:
+        description: |
+          Whether to produce and upload attestations for genrated entry files and create attestations.json.
+          Attestations will be uploaded to the release associated with the `tag_name`.
+
+          If you are not using the reusable release workflow from https://github.com/bazel-contrib/.github/.github/workflows/release_ruleset.yaml
+          to produce attestations, you may want to skip this.
+        default: true
+        type: boolean
     secrets:
       publish_token:
         required: true
@@ -87,6 +96,7 @@ jobs:
     # creation for generating attestations will succeed without trying to substitute and verify
     # existing attestations. Any existing templates will be restored when the final entry is created.
     - name: Remove attestations.template.json
+      if: ${{ inputs.attest }}
       working-directory: this/.bcr
       run: find . -type f -name 'attestations.template.json' -delete
 
@@ -96,6 +106,7 @@ jobs:
     # This entry will be discarded.
     - name: Create entry
       id: create-entry
+      if: ${{ inputs.attest }}
       # Ideally this should reference the action at the matching SHA with the reusable workflow.
       # However all the context is the caller repo (like this workflow is inlined)
       # https://github.com/orgs/community/discussions/18602
@@ -112,6 +123,7 @@ jobs:
     # Upload the attestations to the release. This will override attestations that
     # were already uploaded on a previous run.
     - name: Upload attestations to release
+      if: ${{ inputs.attest }}
       uses: softprops/action-gh-release@v1
       with:
         files: attestations/*
@@ -121,6 +133,7 @@ jobs:
     # Publish to BCR can run substitutions on an attestations.template.json file. Add a default
     # template here rather than requiring users to add one the module repo's .bcr templates folder.
     - name: Create attestations template
+      if: ${{ inputs.attest }}
       working-directory: this/.bcr
       # Ideally this would be in its own file, but it's not currently trivial to source files from a
       # reusable workflow in a different repository:
@@ -173,14 +186,14 @@ jobs:
         done
 
     - name: Discard previous entry
+      if: ${{ inputs.attest }}
       working-directory: bazel-central-registry
       run: |
             git checkout -- ./
             git clean -ffxd
 
-    # Create the final BCR entry that we will publish
-    - name: Create entry with attestations.json
-      id: create-entry-with-att
+    - name: Create final entry
+      id: create-final-entry
       uses: bazel-contrib/publish-to-bcr@b37a76bbb1889377a0d6b9710ed39a7b8cca242b
       with:
         tag: ${{ inputs.tag_name }}
@@ -194,11 +207,11 @@ jobs:
       with:
         token: ${{ secrets.publish_token }}
         path: bazel-central-registry
-        commit-message: ${{ steps.create-entry-with-att.outputs.short-description }}
+        commit-message: ${{ steps.create-final-entry.outputs.short-description }}
         base: ${{ inputs.registry_branch }}
-        branch: ${{ steps.create-entry-with-att.outputs.module-names }}-${{ inputs.tag_name }}
+        branch: ${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}
         push-to-fork: ${{ inputs.registry_fork }}
-        title: ${{ steps.create-entry-with-att.outputs.short-description }}
+        title: ${{ steps.create-final-entry.outputs.short-description }}
         body: |
           Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
 
