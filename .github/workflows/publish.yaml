@@ -217,13 +217,3 @@ jobs:
 
           _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
         maintainer-can-modify: true
-
-    - name: Enable auto-merge (squash)
-      run: gh pr merge -R "${{ inputs.registry }}" --squash --auto "${{ steps.create-pull-request.outputs.pull-request-number }}"
-      env:
-        GH_TOKEN: ${{ secrets.publish_token }}
-      # If the user does not have merge permission on the registry repository, gh reports an error
-      # but we treat the job as successful anyway. The pull request will just need to be reviewed by
-      # a maintainer. The expected error looks like:
-      # GraphQL: ${USER} does not have the correct permissions to execute `EnablePullRequestAutoMerge` (enablePullRequestAutoMerge)
-      continue-on-error: true
