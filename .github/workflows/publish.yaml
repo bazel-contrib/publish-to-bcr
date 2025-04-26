@@ -61,6 +61,16 @@ on:
           to produce attestations, you may want to skip this.
         default: true
         type: boolean
+      draft:
+        description: |
+          Whether to open the pull request as a draft.
+          
+          This is set to true by default because the Bazel Central Registry has a mechanism to auto-approve a PR
+          when marked as ready for review by the author, which is whomever the PAT belongs to. This is a work-around
+          for an author not being able to approve their own PR. If using a bot app as the author, draft can be disbaled
+          because a human author can approve it. See https://github.com/bazel-contrib/publish-to-bcr/issues/261.
+        default: true
+        type: boolean
     secrets:
       publish_token:
         required: true
@@ -217,3 +227,4 @@ jobs:
 
           _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
         maintainer-can-modify: true
+        draft: ${{ inputs.draft }}
