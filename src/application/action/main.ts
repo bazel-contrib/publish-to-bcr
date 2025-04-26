@@ -71,7 +71,7 @@ async function main() {
     core.setOutput('module-names', moduleNames);
     core.setOutput(
       'short-description',
-      `Publish ${cliOutput.modules.length > 1 ? '{' : ''}${moduleNames}${cliOutput.modules.length > 1 ? '}' : ''}@${inputs.moduleVersion}`
+      `${cliOutput.modules.length > 1 ? '{' : ''}${moduleNames}${cliOutput.modules.length > 1 ? '}' : ''}@${inputs.moduleVersion}`
     );
 
     await attest(inputs, cliOutput!);

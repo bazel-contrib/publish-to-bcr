@@ -51,7 +51,7 @@ jobs:
             exit 1
           fi
 
-          EXPECTED="Publish versioned@1.0.0"
+          EXPECTED="versioned@1.0.0"
           ACTUAL="${{ steps.create_entry.outputs.short-description }}"
           if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
             echo "Expected output short-description to be '${EXPECTED}' but it was '${ACTUAL}'"
@@ -162,7 +162,7 @@ jobs:
             exit 1
           fi
 
-          EXPECTED="Publish {module,submodule}@1.0.0"
+          EXPECTED="{module,submodule}@1.0.0"
           ACTUAL="${{ steps.create_entry.outputs.short-description }}"
           if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
             echo "Expected output short-description to be '${EXPECTED}' but it was '${ACTUAL}'"
