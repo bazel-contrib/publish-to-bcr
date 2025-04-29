@@ -62,7 +62,7 @@ jobs:
       id-token: write
     secrets:
       # Necessary to push to the BCR fork, and to open a pull request against a registry
-      publish_token: ${{ secrets.PUBLISH_TOKEN }}
+      publish_token: ${{ secrets.BCR_PUBLISH_TOKEN }}
 ```
 
 3. Create a Personal Access Token
@@ -75,7 +75,10 @@ It requires "workflow" and "repo" permissions.
 > At the moment, fine-grained PATs are not supported because they cannot open pull requests against public 
 > repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600.
 
-Save it as `PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
+Save it as `BCR_PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
+
+> [!TIP]  
+>  See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
 
 ## Publishing multiple modules in the same repo
 
