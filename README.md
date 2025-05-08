@@ -56,10 +56,14 @@ jobs:
       tag_name: ${{ inputs.tag_name }}
       # GitHub repository which is a fork of the upstream where the Pull Request will be opened.
       registry_fork: my-org/bazel-central-registry
+      # see note on Attestation Support
+      attest: true
     permissions:
-      attestations: write
       contents: write
+      # Necessary if attest:true
       id-token: write
+      # Necessary if attest:true
+      attestations: write
     secrets:
       # Necessary to push to the BCR fork, and to open a pull request against a registry
       publish_token: ${{ secrets.PUBLISH_TOKEN }}
@@ -99,6 +103,11 @@ corresponding `source.json` file:
 ```
 
 To patch in a submodule, add the patch to a patches folder under the submodule path `.bcr/[sub/module]/patches` where sub/module is the path to the WORKSPACE folder relative to the repository root.
+
+## Attesation Support
+
+BCR supports the upload of attestations with your build. This workflow will produce them by default but BCR requires that you also release your ruleset using the [bazel-contrib release_ruleset](https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml) workflow. Source archive attestations produced in other ways will currently be rejected by BCR. If you are not using the release_ruleset, you will want
+to set `attest: false`
 
 ## Reporting issues
 
