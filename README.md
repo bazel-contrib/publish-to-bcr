@@ -104,7 +104,7 @@ corresponding `source.json` file:
 
 To patch in a submodule, add the patch to a patches folder under the submodule path `.bcr/[sub/module]/patches` where sub/module is the path to the WORKSPACE folder relative to the repository root.
 
-## Attesation Support
+## Attesation support
 
 BCR supports the upload of attestations with your build. This workflow will produce them by default but BCR requires that you also release your ruleset using the [bazel-contrib release_ruleset](https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml) workflow. Source archive attestations produced in other ways will currently be rejected by BCR. If you are not using the release_ruleset, you will want
 to set `attest: false`
