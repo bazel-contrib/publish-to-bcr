@@ -22,12 +22,12 @@ _Note_: Maintainers will be emailed if a release fails.
   "maintainers": [
     {
       // <-- And this
-      "name": "YOUR_NAME",
-      "email": "YOUR_EMAIL",
-      "github": "YOUR_GITHUB_USERNAME",
+      "name": "<YOUR_NAME>",
+      "email": "<YOUR_EMAIL>",
+      "github": "<YOUR_GITHUB_USERNAME>",
       // To find your numeric user ID:
       // curl https://api.github.com/users/YOUR_USERNAME | jq .id
-      "github_user_id": "YOUR_GITHUB_ID_NUMBER"
+      "github_user_id": <YOUR_GITHUB_ID_NUMBER>
     }
   ],
   "repository": [
