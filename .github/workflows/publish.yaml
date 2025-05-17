@@ -212,20 +212,47 @@ jobs:
         local-registry: bazel-central-registry
         templates-dir: this/.bcr
 
-    - name: Create Pull Request
-      id: create-pull-request
-      uses: peter-evans/create-pull-request@v7
-      with:
-        token: ${{ secrets.publish_token }}
-        path: bazel-central-registry
-        commit-message: ${{ steps.create-final-entry.outputs.short-description }}
-        base: ${{ inputs.registry_branch }}
-        branch: ${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}
-        push-to-fork: ${{ inputs.registry_fork }}
-        title: ${{ steps.create-final-entry.outputs.short-description }}
-        body: |
-          Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
+    - name: Push to fork
+      working-directory: bazel-central-registry
+      run: |
+        set -o errexit -o nounset -o pipefail
 
-          _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
-        maintainer-can-modify: true
-        draft: ${{ inputs.draft }}
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git remote add authed-fork https://x-access-token:${{ secrets.publish_token }}@github.com/${{ inputs.registry_fork }}.git`
+
+        BRANCH="${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}"
+        git checkout -b "${BRANCH}"
+        git add .
+        git commit -m "${{ steps.create-final-entry.outputs.short-description }}"
+        git push authed-fork "${BRANCH}"
+
+    - name: Open pull request
+      working-directory: bazel-central-registry
+      run: |
+        set -o errexit -o nounset -o pipefail
+
+        REGISTRY_FORK="${{ inputs.registry_fork }}"
+        FORK_OWNER="${REGISTRY_FORK%%/*}"
+        BRANCH="${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}"
+        DRAFT="${{ inputs.draft }}"
+
+        read -r -d '' BODY << EOF
+        Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
+
+        _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
+        EOF
+
+        ARGS=(
+          --repo ${{ inputs.registry }}
+          --base main
+          --head "${FORK_OWNER}:${BRANCH}"
+          --title "${{ steps.create-final-entry.outputs.short-description }}"
+          --body "${BODY}"
+        )
+
+        if [[ "${DRAFT}" == "true" ]]; then
+          ARGS+=( --draft )
+        fi
+
+        gh pr create "${ARGS[@]}"
