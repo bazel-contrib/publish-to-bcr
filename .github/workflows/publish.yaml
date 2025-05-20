@@ -13,7 +13,7 @@
 #
 # The workflow additionally requires a Classic Personal Access Token (PAT) to be supplied in the `publish_token`
 # input. The PAT is necessary to push to your BCR fork as well as to open up a pull request against a registry.
-# At the moment, fine-grained PATs are not supported because they cannot open pull requests against public 
+# At the moment, fine-grained PATs are not supported because they cannot open pull requests against public
 # repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600.
 #
 # The module repository must contain a .bcr folder containing Publish to BCR templates.
@@ -64,7 +64,7 @@ on:
       draft:
         description: |
           Whether to open the pull request as a draft.
-          
+
           This is set to true by default because the Bazel Central Registry has a mechanism to auto-approve a PR
           when marked as ready for review by the author, which is whomever the PAT belongs to. This is a work-around
           for an author not being able to approve their own PR.
@@ -86,6 +86,7 @@ jobs:
         ref: ${{ inputs.templates_ref || inputs.tag_name }}
         repository: ${{ inputs.repository }}
         path: this
+        persist-credentials: false
 
     - name: Checkout BCR
       uses: actions/checkout@v4.2.2
@@ -93,6 +94,7 @@ jobs:
         repository: ${{ inputs.registry }}
         token: ${{ secrets.GITHUB_TOKEN }}
         path: bazel-central-registry
+        persist-credentials: false
 
     # Get version from the tag, stripping any v-prefix
     - name: Write release version
@@ -164,7 +166,7 @@ jobs:
         # Read comma-delimited module names into an array
         IFS=',' read -r -a MODULE_NAMES <<< "${{ steps.create-entry.outputs.module-names }}"
 
-        for i in "${!MODULE_ROOTS[@]}"; do 
+        for i in "${!MODULE_ROOTS[@]}"; do
             MODULE_ROOT="${MODULE_ROOTS[$i]}"
             if [ ! -f "${MODULE_ROOT}/attestations.template.json" ]; then
                 # Multi-module repos upload attestations with the module name as a prefix
@@ -212,20 +214,80 @@ jobs:
         local-registry: bazel-central-registry
         templates-dir: this/.bcr
 
-    - name: Create Pull Request
-      id: create-pull-request
-      uses: peter-evans/create-pull-request@v7
-      with:
-        token: ${{ secrets.publish_token }}
-        path: bazel-central-registry
-        commit-message: ${{ steps.create-final-entry.outputs.short-description }}
-        base: ${{ inputs.registry_branch }}
-        branch: ${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}
-        push-to-fork: ${{ inputs.registry_fork }}
-        title: ${{ steps.create-final-entry.outputs.short-description }}
-        body: |
-          Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
+    - name: Push to fork
+      working-directory: bazel-central-registry
+      run: |
+        set -o errexit -o nounset -o pipefail
 
-          _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
-        maintainer-can-modify: true
-        draft: ${{ inputs.draft }}
+        # Set committer to the GitHub Actions bot
+        # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        # Use an authorized remote url to push to the fork
+        git remote add authed-fork https://x-access-token:${{ secrets.publish_token }}@github.com/${{ inputs.registry_fork }}.git
+
+        BRANCH="${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}"
+        git checkout -b "${BRANCH}"
+        git add .
+        git commit -m "${{ steps.create-final-entry.outputs.short-description }}"
+        git push --force authed-fork "${BRANCH}"
+
+    - name: Open pull request
+      working-directory: bazel-central-registry
+      run: |
+        set -o errexit -o nounset -o pipefail
+
+        REGISTRY_FORK="${{ inputs.registry_fork }}"
+        FORK_OWNER="${REGISTRY_FORK%%/*}"
+        BRANCH="${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}"
+        TITLE="${{ steps.create-final-entry.outputs.short-description }}"
+        DRAFT="${{ inputs.draft }}"
+        MAINTAINER_CAN_MODIFY=true
+        BODY=$(cat <<END
+        Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
+
+        _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
+        END
+        )
+
+        REQUEST_BODY=$(jq --null-input \
+          --arg title "${TITLE}" \
+          --arg body "${BODY}" \
+          --arg head "${FORK_OWNER}:${BRANCH}" \
+          --arg base main \
+          --argjson draft "${DRAFT}" \
+          --argjson maintainer_can_modify "${MAINTAINER_CAN_MODIFY}" \
+          '{title: $title, body: $body, head: $head, base: $base, maintainer_can_modify: $maintainer_can_modify, draft: $draft}')
+
+        # Make a request to the GitHub API directly rather than using the gh cli
+        # because authorizing with the cli using `gh auth login --with-token` requires
+        # additional permissions on the PAT.
+        # API docs: https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#create-a-pull-request
+        RESPONSE_BODY=$(mktemp)
+        RESPONSE_CODE=$(curl \
+          --location \
+          --silent \
+          --output "${RESPONSE_BODY}" \
+          --write-out "%{http_code}" \
+          --request POST \
+          --header "Accept: application/vnd.github+json" \
+          --header "Authorization: Bearer ${{ secrets.publish_token }}" \
+          --header "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/${{ inputs.registry }}/pulls \
+          --data "${REQUEST_BODY}"
+        )
+
+        if [[ "${RESPONSE_CODE}" == 201 ]]; then
+          PULL_REQUEST_URL=$(jq --raw-output .html_url <"${RESPONSE_BODY}")
+          echo "Created pull request ${PULL_REQUEST_URL}"
+        elif [[ "${RESPONSE_CODE}" == 422 && "$(jq -r ".errors[0].message" <"${RESPONSE_BODY}")" == *"already exists"* ]]; then
+          echo "A pull request for branch ${BRANCH} on ${REGISTRY_FORK} already exists."
+        else
+          echo "Failed to create pull request; received status ${RESPONSE_CODE}"
+          cat "${RESPONSE_BODY}"
+          rm "${RESPONSE_BODY}"
+          exit 1
+        fi
+
+        rm "${RESPONSE_BODY}"
