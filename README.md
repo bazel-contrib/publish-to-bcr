@@ -49,7 +49,7 @@ on:
 2. Reference the reusable workflow in your `publish` job (replacing the `[version]` placeholder).
 
 ```yaml
-jobs:    
+jobs:
   publish:
     uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@[version]
     with:
@@ -75,13 +75,15 @@ Create a "Classic" PAT, see [documentation](https://docs.github.com/en/authentic
 
 It requires "workflow" and "repo" permissions.
 
-> [!NOTE]  
-> At the moment, fine-grained PATs are not supported because they cannot open pull requests against public 
-> repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600.
+> [!NOTE]
+> At the moment, fine-grained PATs are not _fully_ supported because they cannot open pull requests against public
+> repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600. To use a fine-grained
+> PAT without opening a pull request, set `open_pull_request` to `false`. This will run a step outputting a URL to create
+> the pull request manually. The fine-grained PAT should be created for the owner of the registry fork.
 
 Save it as `BCR_PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
 
-> [!TIP]  
+> [!TIP]
 >  See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
 
 ## Publishing multiple modules in the same repo

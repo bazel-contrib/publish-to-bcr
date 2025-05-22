@@ -27,6 +27,18 @@ on:
   # https://github.blog/2022-02-10-using-reusable-workflows-github-actions
   workflow_call:
     inputs:
+      open_pull_request:
+        description: |
+          Whether to open a pull request against the registry after pushing an entry
+          to the registry fork. When disabled, a step will run outputting a URL to
+          manually create the pull request.
+
+          This should typically be left enabled but can be disabled to support a
+          fine-grained access token as the `publish_token` secret. Fine-grained PATs
+          do not currently support opening pull requests against public repos.
+          See https://github.com/github/roadmap/issues/600.
+        default: true
+        type: boolean
       tag_name:
         required: true
         description: The git tag identifying the release the publish to a Bazel registry.
@@ -215,6 +227,7 @@ jobs:
         templates-dir: this/.bcr
 
     - name: Push to fork
+      id: push-to-fork
       working-directory: bazel-central-registry
       run: |
         set -o errexit -o nounset -o pipefail
@@ -233,29 +246,38 @@ jobs:
         git commit -m "${{ steps.create-final-entry.outputs.short-description }}"
         git push --force authed-fork "${BRANCH}"
 
+        echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+
+    - name: Prepare PR variables
+      id: pr-vars
+      run: |
+        set -o errexit -o nounset -o pipefail
+
+        TITLE="${{ steps.create-final-entry.outputs.short-description }}"
+        echo "title=${TITLE}" >> $GITHUB_OUTPUT
+
+        echo "body<<EOF" >> $GITHUB_OUTPUT
+        echo -e "Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}\n" >> $GITHUB_OUTPUT
+        echo "_Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
     - name: Open pull request
+      if: ${{ inputs.open_pull_request }}
       working-directory: bazel-central-registry
       run: |
         set -o errexit -o nounset -o pipefail
 
         REGISTRY_FORK="${{ inputs.registry_fork }}"
         FORK_OWNER="${REGISTRY_FORK%%/*}"
-        BRANCH="${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}"
-        TITLE="${{ steps.create-final-entry.outputs.short-description }}"
+        BRANCH="${{ steps.push-to-fork.outputs.branch }}"
         DRAFT="${{ inputs.draft }}"
         MAINTAINER_CAN_MODIFY=true
-        BODY=$(cat <<END
-        Release: https://github.com/${{ inputs.repository }}/releases/tag/${{ inputs.tag_name }}
-
-        _Automated by [Publish to BCR](https://github.com/bazel-contrib/publish-to-bcr)_
-        END
-        )
 
         REQUEST_BODY=$(jq --null-input \
-          --arg title "${TITLE}" \
-          --arg body "${BODY}" \
+          --arg title "${{ steps.pr-vars.outputs.title }}" \
+          --arg body "${{ steps.pr-vars.outputs.body }}" \
           --arg head "${FORK_OWNER}:${BRANCH}" \
-          --arg base main \
+          --arg base ${{ inputs.registry_branch }} \
           --argjson draft "${DRAFT}" \
           --argjson maintainer_can_modify "${MAINTAINER_CAN_MODIFY}" \
           '{title: $title, body: $body, head: $head, base: $base, maintainer_can_modify: $maintainer_can_modify, draft: $draft}')
@@ -291,3 +313,20 @@ jobs:
         fi
 
         rm "${RESPONSE_BODY}"
+
+    - name: Open pull request manually
+      if: ${{ !inputs.open_pull_request }}
+      run: |
+        set -o errexit -o nounset -o pipefail
+
+        REGISTRY_FORK="${{ inputs.registry_fork }}"
+        FORK_OWNER="${REGISTRY_FORK%%/*}"
+        FORK_REPO="${REGISTRY_FORK##*/}"
+        TITLE=$(jq --raw-input --raw-output @uri <<<"${{ steps.pr-vars.outputs.title }}")
+        BODY=$(jq --raw-input --raw-output --slurp @uri <<<"${{ steps.pr-vars.outputs.body }}")
+
+        echo "Skipped creating a pull request because create_pull_request is false."
+        echo -e "Create the pull request manually by visiting:"
+
+        # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/using-query-parameters-to-create-a-pull-request
+        echo "https://github.com/${{ inputs.registry }}/compare/${{ inputs.registry_branch }}...${FORK_OWNER}:${FORK_REPO}:${{ steps.push-to-fork.outputs.branch }}?title=${TITLE}&body=${BODY}&quick_pull=1"
