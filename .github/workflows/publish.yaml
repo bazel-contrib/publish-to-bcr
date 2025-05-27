@@ -234,8 +234,13 @@ jobs:
 
         # Set committer to the GitHub Actions bot
         # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        COMMITTER_NAME="github-actions[bot]"
+        COMMITTER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+
+        # Set the author to the actor of this workflow. Use the github-provided
+        # noreply email address: https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address.
+        AUTHOR_NAME="${{ github.actor }}"
+        AUTHOR_EMAIL="${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
         # Use an authorized remote url to push to the fork
         git remote add authed-fork https://x-access-token:${{ secrets.publish_token }}@github.com/${{ inputs.registry_fork }}.git
@@ -243,7 +248,12 @@ jobs:
         BRANCH="${{ steps.create-final-entry.outputs.module-names }}-${{ inputs.tag_name }}"
         git checkout -b "${BRANCH}"
         git add .
-        git commit -m "${{ steps.create-final-entry.outputs.short-description }}"
+        git -c "author.name=${AUTHOR_NAME}" \
+          -c "author.email=${AUTHOR_EMAIL}" \
+          -c "committer.name=${COMMITTER_NAME}" \
+          -c "committer.email=${COMMITTER_EMAIL}" \
+          commit \
+          -m "${{ steps.create-final-entry.outputs.short-description }}"
         git push --force authed-fork "${BRANCH}"
 
         echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
