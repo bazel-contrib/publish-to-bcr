@@ -84,6 +84,26 @@ on:
           See https://github.com/bazel-contrib/publish-to-bcr/issues/261.
         default: true
         type: boolean
+      author_name:
+        description: |
+          TODO.
+        default: ${{ github.actor }}
+        type: string
+      author_email:
+        description: |
+          TODO.
+        default: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+        type: string
+      committer_name:
+        description: |
+          TODO.
+        default: "github-actions[bot]"
+        type: string
+      committer_email:
+        description: |
+          TODO.
+        default: "41898282+github-actions[bot]@users.noreply.github.com"
+        type: string
     secrets:
       publish_token:
         required: true
