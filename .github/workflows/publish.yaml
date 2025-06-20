@@ -237,8 +237,8 @@ jobs:
       env:
         # Set the author to the actor of this workflow. Use the github-provided
         # noreply email address: https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address.
-        AUTHOR_NAME: ${{ github.actor }}
-        AUTHOR_EMAIL: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+        AUTHOR_NAME: "EngFlow GitHub Automation"
+        AUTHOR_EMAIL: "engflow-github-automation+public@engflow.com"
       run: |
         set -o errexit -o nounset -o pipefail
 
