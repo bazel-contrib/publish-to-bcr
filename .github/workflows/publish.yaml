@@ -264,8 +264,8 @@ jobs:
 
         # Set committer to the GitHub Actions bot
         # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-        COMMITTER_NAME="github-actions[bot]"
-        COMMITTER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+        COMMITTER_NAME=${{ inputs.committer_name }}
+        COMMITTER_EMAIL=${{ inputs.committer_email }}
 
         # Use an authorized remote url to push to the fork
         git remote add authed-fork https://x-access-token:${{ secrets.publish_token }}@github.com/${REGISTRY_FORK}.git
