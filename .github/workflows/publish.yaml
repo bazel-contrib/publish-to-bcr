@@ -94,6 +94,9 @@ on:
           TODO.
         default: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
         type: string
+
+      # Set committer to the GitHub Actions bot
+      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
       committer_name:
         description: |
           TODO.
@@ -262,8 +265,6 @@ jobs:
       run: |
         set -o errexit -o nounset -o pipefail
 
-        # Set committer to the GitHub Actions bot
-        # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
         COMMITTER_NAME=${{ inputs.committer_name }}
         COMMITTER_EMAIL=${{ inputs.committer_email }}
 
