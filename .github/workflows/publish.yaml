@@ -86,12 +86,12 @@ on:
         type: boolean
       author_name:
         description: |
-          The AUTHOR_NAME to be used by git in the push-to-fork step to push into REGISTRY_FORK.
+          Commit author name for the BCR entry. Defaults to the actor running the GitHub Actions workflow.
         default: ${{ github.actor }}
         type: string
       author_email:
         description: |
-          The AUTHOR_EMAIL to be used by git in the push-to-fork step to push into REGISTRY_FORK.
+          Commit author email for the BCR entry. Defaults to the actor running the GitHub Actions workflow.
         default: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
         type: string
       # Set committer to the GitHub Actions bot. 
@@ -99,14 +99,12 @@ on:
       # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
       committer_name:
         description: |
-          The COMMITTER_NAME to be used by git in the push-to-fork step to push into REGISTRY_FORK.
-          Use the default value if you're pushing to https://github.com/bazelbuild/bazel-central-registry
+          Name of the git committer. Defaults to the GitHub Action bot's name.
         default: "github-actions[bot]"
         type: string
       committer_email:
         description: |
-          The COMMITTER_EMAIL to be used by git in the push-to-fork step to push into REGISTRY_FORK.
-          Use the default value if you're pushing to https://github.com/bazelbuild/bazel-central-registry
+          Email of the git committer. Defaults to the GitHub Action bot's email.
         default: "41898282+github-actions[bot]@users.noreply.github.com"
         type: string
     secrets:
