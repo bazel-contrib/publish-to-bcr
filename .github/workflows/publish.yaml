@@ -262,11 +262,10 @@ jobs:
         # noreply email address: https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address.
         AUTHOR_NAME: ${{ inputs.author_name }}
         AUTHOR_EMAIL: ${{ inputs.author_email }}
+        COMMITTER_NAME: ${{ inputs.committer_name }}
+        COMMITTER_EMAIL: ${{ inputs.committer_email }}
       run: |
         set -o errexit -o nounset -o pipefail
-
-        COMMITTER_NAME=${{ inputs.committer_name }}
-        COMMITTER_EMAIL=${{ inputs.committer_email }}
 
         # Use an authorized remote url to push to the fork
         git remote add authed-fork https://x-access-token:${{ secrets.publish_token }}@github.com/${REGISTRY_FORK}.git
