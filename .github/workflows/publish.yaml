@@ -84,6 +84,28 @@ on:
           See https://github.com/bazel-contrib/publish-to-bcr/issues/261.
         default: true
         type: boolean
+      author_name:
+        description: |
+          Commit author name for the BCR entry. Defaults to the actor running the GitHub Actions workflow.
+        default: ${{ github.actor }}
+        type: string
+      author_email:
+        description: |
+          Commit author email for the BCR entry. Defaults to the actor running the GitHub Actions workflow.
+        default: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+        type: string
+      # Default the committer to the GitHub Actions bot
+      # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
+      committer_name:
+        description: |
+          Name of the git committer. Defaults to the GitHub Action bot's name.
+        default: "github-actions[bot]"
+        type: string
+      committer_email:
+        description: |
+          Email of the git committer. Defaults to the GitHub Action bot's email.
+        default: "41898282+github-actions[bot]@users.noreply.github.com"
+        type: string
     secrets:
       publish_token:
         required: true
@@ -237,15 +259,12 @@ jobs:
       env:
         # Set the author to the actor of this workflow. Use the github-provided
         # noreply email address: https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address.
-        AUTHOR_NAME: ${{ github.actor }}
-        AUTHOR_EMAIL: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+        AUTHOR_NAME: ${{ inputs.author_name }}
+        AUTHOR_EMAIL: ${{ inputs.author_email }}
+        COMMITTER_NAME: ${{ inputs.committer_name }}
+        COMMITTER_EMAIL: ${{ inputs.committer_email }}
       run: |
         set -o errexit -o nounset -o pipefail
-
-        # Set committer to the GitHub Actions bot
-        # https://github.com/orgs/community/discussions/26560#discussioncomment-3531273
-        COMMITTER_NAME="github-actions[bot]"
-        COMMITTER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
 
         # Use an authorized remote url to push to the fork
         git remote add authed-fork https://x-access-token:${{ secrets.publish_token }}@github.com/${REGISTRY_FORK}.git
