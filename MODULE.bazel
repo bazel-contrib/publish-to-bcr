@@ -4,6 +4,7 @@ bazel_dep(name = "aspect_rules_jest", version = "0.22.0")
 bazel_dep(name = "aspect_rules_js", version = "2.1.2")
 bazel_dep(name = "aspect_rules_lint", version = "1.0.8")
 bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
+bazel_dep(name = "bazelrc-preset.bzl", version = "0.4.2", dev_dependency = True)
 bazel_dep(
     name = "buildifier_prebuilt",
     version = "8.0.0",
@@ -12,9 +13,16 @@ bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "rules_multitool", version = "1.0.0")
 bazel_dep(name = "rules_nodejs", version = "6.3.3")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "rules_shell", version = "0.5.0")
 bazel_dep(name = "rules_xz", version = "1.0.1")
 bazel_dep(name = "toolchains_llvm", version = "1.4.0")
 bazel_dep(name = "xz", version = "5.4.5.bcr.5")
+
+git_override(
+    module_name = "bazelrc-preset.bzl",
+    commit = "a39cd2b88c5fd62819340b3ded5463c8a60a2830",
+    remote = "https://github.com/bazel-contrib/bazelrc-preset.bzl",
+)
 
 bazel_lib = use_extension("@aspect_bazel_lib//lib:extensions.bzl", "toolchains")
 bazel_lib.bats()
