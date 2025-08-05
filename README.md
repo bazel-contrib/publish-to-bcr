@@ -85,6 +85,7 @@ Save it as `BCR_PUBLISH_TOKEN` in your repository or org, under _Settings > Secr
 
 > [!TIP]
 >  See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
+> Example workflows are also included in the Bazel [rules template](https://github.com/bazel-contrib/rules-template/tree/main/.github/workflows).
 
 ## Publishing multiple modules in the same repo
 
