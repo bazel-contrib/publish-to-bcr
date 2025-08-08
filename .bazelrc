@@ -1,10 +1,4 @@
-# Import Aspect bazelrc presets
-import %workspace%/.aspect/bazelrc/bazel8.bazelrc
-import %workspace%/.aspect/bazelrc/convenience.bazelrc
-import %workspace%/.aspect/bazelrc/correctness.bazelrc
-import %workspace%/.aspect/bazelrc/debug.bazelrc
-import %workspace%/.aspect/bazelrc/javascript.bazelrc
-import %workspace%/.aspect/bazelrc/performance.bazelrc
+import %workspace%/tools/preset.bazelrc
 
 # honor the setting of `skipLibCheck` in the tsconfig.json file
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
