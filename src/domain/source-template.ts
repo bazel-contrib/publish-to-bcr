@@ -62,7 +62,7 @@ export class SourceTemplate {
   public substitute(
     vars: Partial<Record<SubstitutableVar, string>>
   ): SourceTemplate {
-    for (const prop of ['url', 'strip_prefix'].filter(
+    for (const prop of ['docs_url', 'url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
       this.sourceJson[prop] = substituteVars(
@@ -76,7 +76,7 @@ export class SourceTemplate {
 
   public validateFullySubstituted(): void {
     const unsubstituted = new Set<SubstitutableVar>();
-    for (const prop of ['url', 'strip_prefix'].filter(
+    for (const prop of ['docs_url', 'url', 'strip_prefix'].filter(
       (prop) => prop in this.sourceJson
     )) {
       getUnsubstitutedVars(this.sourceJson[prop] as string).forEach((v) =>
