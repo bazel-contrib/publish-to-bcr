@@ -105,6 +105,33 @@ describe('substitute', () => {
     );
     expect(jsonContent.strip_prefix).toEqual('bar-1.2.3');
   });
+
+  test('substitutes docs_url', () => {
+    mockSourceFile({
+      content: `\
+{
+  "integrity": "",
+  "strip_prefix": "{REPO}-{VERSION}",
+  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.tar.gz",
+  "docs_url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}/{REPO}-{TAG}.docs.tar.gz"
+}`,
+    });
+    const sourceTemplate = new SourceTemplate('source.template.json');
+    sourceTemplate.substitute({
+      OWNER: 'foo',
+      REPO: 'bar',
+      TAG: 'v1.2.3',
+      VERSION: '1.2.3',
+    });
+    sourceTemplate.save('source.json');
+
+    const jsonContent = JSON.parse(
+      mocked(fs.writeFileSync).mock.calls[0][1] as string
+    );
+    expect(jsonContent.docs_url).toEqual(
+      'https://github.com/foo/bar/releases/download/v1.2.3/bar-v1.2.3.docs.tar.gz'
+    );
+  });
 });
 
 describe('validateFullySubstituted', () => {
