@@ -10,9 +10,7 @@ terraform(name = "terraform")
 
 sh_library(
     name = "shell",
-    srcs = [
-        "tool.sh",
-    ],
+    srcs = ["tool.sh"],
 )
 
 exports_files(
