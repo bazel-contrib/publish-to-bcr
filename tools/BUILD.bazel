@@ -4,10 +4,7 @@ load(":terraform.bzl", "terraform")
 
 package(default_visibility = ["//visibility:public"])
 
-bazelrc_preset(
-    name = "preset",
-    strict = True,  # Enable this to opt-in to flags that are flipped in the upcoming major release
-)
+bazelrc_preset(name = "preset")
 
 terraform(name = "terraform")
 
