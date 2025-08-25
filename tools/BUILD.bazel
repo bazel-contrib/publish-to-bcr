@@ -1,14 +1,16 @@
+load("@bazelrc-preset.bzl", "bazelrc_preset")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load(":terraform.bzl", "terraform")
 
 package(default_visibility = ["//visibility:public"])
+
+bazelrc_preset(name = "preset")
 
 terraform(name = "terraform")
 
 sh_library(
     name = "shell",
-    srcs = [
-        "tool.sh",
-    ],
+    srcs = ["tool.sh"],
 )
 
 exports_files(
