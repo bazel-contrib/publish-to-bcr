@@ -5,3 +5,6 @@ common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 
 # Use "tsc" as the transpiler when ts_project has no `transpiler` set.
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+# FIXME: we'll have to conform with this strict flag eventually
+common --noincompatible_auto_exec_groups

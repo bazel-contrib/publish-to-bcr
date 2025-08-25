@@ -1,4 +1,5 @@
 """Terraform tool runnable target with optional data deps that will be built before run"""
+
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 def terraform(name, data = [], **kwargs):
