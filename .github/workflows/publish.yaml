@@ -106,6 +106,13 @@ on:
           Email of the git committer. Defaults to the GitHub Action bot's email.
         default: "41898282+github-actions[bot]@users.noreply.github.com"
         type: string
+      tag_prefix:
+        description: |
+          The prefix to remove from the tag name to calculate the version.
+          For example, with prefix 'v' and tag 'v1.2.3', the version becomes '1.2.3'.
+          With prefix 'bazel-v' and tag 'bazel-v1.2.3', the version becomes '1.2.3'.
+        default: "v"
+        type: string
     secrets:
       publish_token:
         required: true
@@ -135,12 +142,13 @@ jobs:
         path: bazel-central-registry
         persist-credentials: false
 
-    # Get version from the tag, stripping any v-prefix
+    # Get version from the tag, stripping the specified prefix
     - name: Write release version
       env:
         TAG: ${{ inputs.tag_name }}
+        PREFIX: ${{ inputs.tag_prefix }}
       run: |
-        VERSION=${TAG#v}
+        VERSION=${TAG#$PREFIX}
         echo Version: $VERSION
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
