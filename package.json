@@ -4,7 +4,7 @@
   "type": "module",
   "main": "./application/webhook/index.js",
   "engines": {
-    "node": "^20",
+    "node": "^22.0.0",
     "pnpm": "^8"
   },
   "scripts": {
