@@ -347,6 +347,7 @@ jobs:
         if [[ "${RESPONSE_CODE}" == 201 ]]; then
           PULL_REQUEST_URL=$(jq --raw-output .html_url <"${RESPONSE_BODY}")
           echo "Created pull request ${PULL_REQUEST_URL}"
+          echo "${PULL_REQUEST_URL}" >> $GITHUB_STEP_SUMMARY
         elif [[ "${RESPONSE_CODE}" == 422 && "$(jq -r ".errors[0].message" <"${RESPONSE_BODY}")" == *"already exists"* ]]; then
           echo "A pull request for branch ${BRANCH} on ${REGISTRY_FORK} already exists."
         else
