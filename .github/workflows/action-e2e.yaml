@@ -84,6 +84,8 @@ jobs:
   test-attestations:
     # Test that attestations are created when `attest` is set to true
     runs-on: ubuntu-latest
+    # Attestations cannot be used from a fork https://github.com/actions/attest-build-provenance/issues/99
+    if: ${{ github.repository == 'bazel-contrib/publish-to-bcr' }}
     permissions:
       id-token: write
       attestations: write
@@ -117,6 +119,8 @@ jobs:
   test-multi-module:
     # Tests a multi-module publish
     runs-on: ubuntu-latest
+    # Attestations cannot be used from a fork https://github.com/actions/attest-build-provenance/issues/99
+    if: ${{ github.repository == 'bazel-contrib/publish-to-bcr' }}
     permissions:
       id-token: write
       attestations: write
