@@ -1,0 +1,29 @@
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: bazel-contrib/publish-to-bcr/.github/actions/bcr-presubmit-sync@bcr_ci
+  bcr:
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      matrix:
+        platform:
+          - macos-latest
+          - ubuntu-22.04
+        bazel: ["9.*", "8.x", "7.x"]
+        module_path:
+          - "examples"
+    steps:
+      - uses: actions/checkout@v5
+      - run: bazel test //...
+        working-directory: ${{ matrix.module_path }}
+        env:
+          USE_BAZEL_VERSION: ${{ matrix.bazel }}
