@@ -1,0 +1,21 @@
+# Translate .bcr/presubmit.yml to a GitHub Actions workflow.
+.on.pull_request.branches[0] = "main"
+| .on.push.branches[0] = "main"
+| .jobs.verify.runs-on = "ubuntu-latest"
+| .jobs.verify.steps[0].uses = "actions/checkout@v5"
+| .jobs.verify.steps[1].uses = "bazel-contrib/publish-to-bcr/.github/actions/bcr-presubmit-sync@bcr_ci"
+| .jobs.bcr.runs-on = "${{ matrix.platform }}"
+| .jobs.bcr.strategy.matrix.platform = (
+    .bcr_test_module.matrix.platform | map(
+      sub("macos", "macos-latest")
+      | sub("ubuntu2004", "ubuntu-22.04")
+    )
+  )
+| .jobs.bcr.strategy.matrix.bazel = .bcr_test_module.matrix.bazel
+# FIXME: there may be multiple module_path in the .bcr/presubmit.yml
+| .jobs.bcr.strategy.matrix.module_path[0] = .bcr_test_module.module_path
+| .jobs.bcr.steps[0].uses = "actions/checkout@v5"
+| .jobs.bcr.steps[1].run = "bazel test " + (.bcr_test_module.tasks.run_tests.test_targets | join(" "))
+| .jobs.bcr.steps[1].working-directory = "${{ matrix.module_path }}"
+| .jobs.bcr.steps[1].env.USE_BAZEL_VERSION = "${{ matrix.bazel }}"
+| del(.bcr_test_module)

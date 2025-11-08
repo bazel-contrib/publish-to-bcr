@@ -1,0 +1,29 @@
+name: Verify BCR Presubmit matches GitHub Actions
+description: Fail the build if these two yaml files are out of sync
+runs:
+  using: composite
+  steps:
+    - id: translate
+      name: Translate BCR workflow
+      shell: bash
+      run: |
+        set -euo pipefail
+        output_file="${RUNNER_TEMP:-$(mktemp -d)}/bcr-presubmit.generated.yaml"
+        yq --from-file ${{github.action_path}}"/filter.yq" \
+          ".bcr/presubmit.yml" -P > "$output_file"
+        echo "generated=$output_file" >> "$GITHUB_OUTPUT"
+    - name: Verify committed workflow is up to date
+      shell: bash
+      run: |
+        set -euo pipefail
+        generated="${{ steps.translate.outputs.generated }}"
+        target=".github/workflows/bcr-presubmit.yaml"
+        if ! [ -f "$target" ]; then
+          echo "::error::File $target does not exist."
+          exit 1
+        fi
+        if ! cmp -s "$generated" "$target"; then
+          echo "::error::Files $target and generated version differ:"
+          git --no-pager diff --no-index -- "$target" "$generated" || true
+          exit 1
+        fi
