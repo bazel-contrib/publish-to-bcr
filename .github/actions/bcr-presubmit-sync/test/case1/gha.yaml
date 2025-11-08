@@ -7,12 +7,15 @@ on:
       - main
 jobs:
   verify:
+    # Ensures this workflow stays in sync with .bcr/presubmit.yml via bcr-presubmit-sync.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: bazel-contrib/publish-to-bcr/.github/actions/bcr-presubmit-sync@bcr_ci
   bcr:
     runs-on: ${{ matrix.platform }}
+    needs:
+      - verify
     strategy:
       matrix:
         platform:

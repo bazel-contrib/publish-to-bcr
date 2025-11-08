@@ -8,8 +8,10 @@
       {"uses": "bazel-contrib/publish-to-bcr/.github/actions/bcr-presubmit-sync@bcr_ci"}
     ]
   }
+| .jobs.verify head_comment = "Ensures this workflow stays in sync with .bcr/presubmit.yml via bcr-presubmit-sync."
 | .jobs.bcr = {
     "runs-on": "${{ matrix.platform }}",
+    "needs": ["verify"],
     "strategy": {
       "matrix": {
         "platform": (

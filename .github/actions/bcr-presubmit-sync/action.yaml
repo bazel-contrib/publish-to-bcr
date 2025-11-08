@@ -1,5 +1,9 @@
 name: Verify BCR Presubmit matches GitHub Actions
 description: Fail the build if these two yaml files are out of sync
+inputs:
+  github_workflow_path:
+    description: 'Path to the GitHub Actions workflow to verify'
+    default: .github/workflows/bcr-presubmit.yaml
 runs:
   using: composite
   steps:
@@ -17,7 +21,7 @@ runs:
       run: |
         set -euo pipefail
         generated="${{ steps.translate.outputs.generated }}"
-        target=".github/workflows/bcr-presubmit.yaml"
+        target="${{ inputs.github_workflow_path }}"
         if ! [ -f "$target" ]; then
           echo "::error::File $target does not exist."
           exit 1

@@ -10,5 +10,8 @@ bcr_test_module:
       name: "Run test module"
       platform: ${{ platform }}
       bazel: ${{ bazel }}
+      build_targets:
+        - //some/build:targets
+        - -//but/not:this_one
       test_targets:
         - "//..."
