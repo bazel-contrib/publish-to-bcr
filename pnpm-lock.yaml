@@ -79,8 +79,8 @@ dependencies:
     specifier: ^9.15.0
     version: 9.15.0(encoding@0.1.13)
   nodemailer:
-    specifier: ^6.7.8
-    version: 6.9.16
+    specifier: ^7.0.0
+    version: 7.0.11
   reflect-metadata:
     specifier: ^0.2.2
     version: 0.2.2
@@ -6190,6 +6190,12 @@ packages:
   /nodemailer@6.9.16:
     resolution: {integrity: sha512-psAuZdTIRN08HKVd/E8ObdV6NO7NTBY3KsC30F7M4H1OnmLCUNaS56FpYxyb26zWLSyYF9Ozch9KYHhHegsiOQ==}
     engines: {node: '>=6.0.0'}
+    dev: true
+
+  /nodemailer@7.0.11:
+    resolution: {integrity: sha512-gnXhNRE0FNhD7wPSCGhdNh46Hs6nm+uTyg+Kq0cZukNQiYdnCsoQjodNP9BQVG9XrcK/v6/MgpAPBUFyzh9pvw==}
+    engines: {node: '>=6.0.0'}
+    dev: false
 
   /normalize-package-data@2.5.0:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
