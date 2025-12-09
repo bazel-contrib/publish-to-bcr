@@ -20,6 +20,12 @@ fixture_archive(
 )
 
 fixture_archive(
+    name = "missing-module-name",
+    archive = "tar.gz",
+    prefix = "missing-module-name-1.0.0",
+)
+
+fixture_archive(
     name = "multi-module",
     archive = "tar.gz",
     prefix = "multi-module-1.0.0",

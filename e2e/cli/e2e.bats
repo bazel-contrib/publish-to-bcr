@@ -5,7 +5,7 @@ bats_load_library "bats-support"
 setup() {
     export REGISTRY_PATH="${TEST_TMPDIR}/bazel-central-registry"
     mkdir -p "${REGISTRY_PATH}/modules"
-    
+
     export jq="../${JQ_BIN#"external/"}"
 }
 
@@ -168,6 +168,29 @@ mock_attestation() {
     assert_failure
 
     assert_output --partial 'Did you forget to pass --github-repository to substitute the OWNER and REPO variables?'
+}
+
+@test 'missing module name' {
+    FIXTURE="e2e/fixtures/missing-module-name"
+    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
+    TEMPLATES_DIR="${FIXTURE}/.bcr"
+    RELEASE_ARCHIVE="e2e/fixtures/missing-module-name-missing-module-name-1.0.0.tar.gz"
+
+    swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
+
+    run "${NODE_BIN}" "${CLI_BIN}" \
+        create-entry \
+        --local-registry "${REGISTRY_PATH}" \
+        --templates-dir "${TEMPLATES_DIR}" \
+        --module-version 1.0.0 \
+        --github-repository testorg/missing-module-name \
+        --tag v1.0.0
+
+    assert_failure
+
+    assert_output --partial "Failed to parse module name from"
+    assert_output --partial "/MODULE.bazel"
 }
 
 @test 'outputs json blob with info about entry to stdout' {

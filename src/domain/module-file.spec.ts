@@ -4,7 +4,7 @@ import { createTwoFilesPatch, parsePatch } from 'diff';
 import { mocked } from 'jest-mock';
 
 import { fakeModuleFile } from '../test/mock-template-files';
-import { ModuleFile, PatchModuleError } from './module-file';
+import { ModuleFile, ModuleNameError, PatchModuleError } from './module-file';
 
 jest.mock('node:fs');
 
@@ -33,6 +33,27 @@ describe('moduleName', () => {
 
     const moduleFile = new ModuleFile('MODULE.bazel');
     expect(moduleFile.moduleName).toEqual('rules_foo.bar-moo_123_-cow');
+  });
+
+  test('throws when the module name is missing', () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(
+    version = "1.0.0",
+)`);
+    expect(() => new ModuleFile('MODULE.bazel').moduleName).toThrow(
+      ModuleNameError
+    );
+  });
+
+  test('throws when the module name is empty', () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+  module(
+      name = "",
+      version = "1.0.0",
+  )`);
+    expect(() => new ModuleFile('MODULE.bazel').moduleName).toThrow(
+      ModuleNameError
+    );
   });
 });
 
