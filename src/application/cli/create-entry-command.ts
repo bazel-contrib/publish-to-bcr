@@ -23,6 +23,7 @@ import {
 } from '../../domain/create-entry.js';
 import { MetadataFile } from '../../domain/metadata-file.js';
 import { MetadataFileError } from '../../domain/metadata-file.js';
+import { ModuleNameError } from '../../domain/module-file.js';
 import {
   ArchiveDownloadError,
   MissingModuleFileError,
@@ -208,6 +209,8 @@ export class CreateEntryCommand {
       console.error(
         `The release archive is missing a MODULE.bazel file! This file is needed to form a BCR entry.`
       );
+    } else if (e instanceof ModuleNameError) {
+      console.error(e.message);
     } else if (e instanceof VersionAlreadyPublishedError) {
       console.error(
         `The local registry already has version ${e.version} of module ${e.moduleName}. Aborting.`

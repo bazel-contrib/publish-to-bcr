@@ -8,18 +8,27 @@ export class PatchModuleError extends Error {
   }
 }
 
+export class ModuleNameError extends Error {
+  public constructor(public readonly path: string) {
+    super(`Failed to parse module name from ${path}`);
+  }
+}
+
 export class ModuleFile {
   private moduleContent: string;
 
-  constructor(filePath: string) {
-    this.moduleContent = fs.readFileSync(filePath, 'utf8');
+  constructor(private filePath: string) {
+    this.moduleContent = fs.readFileSync(this.filePath, 'utf8');
   }
 
   public get moduleName(): string {
     // See https://cs.opensource.google/bazel/bazel/+/master:src/main/java/com/google/devtools/build/lib/cmdline/RepositoryName.java
     const regex = /module\([^)]*?name\s*=\s*"([a-z]([a-z0-9._-]*[a-z0-9])?)"/s;
-    const name = this.moduleContent.match(regex)[1];
-    return name;
+    const matches = this.moduleContent.match(regex);
+    if (matches === null) {
+      throw new ModuleNameError(this.filePath);
+    }
+    return matches[1];
   }
 
   public get version(): string | undefined {
