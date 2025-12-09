@@ -29,7 +29,7 @@ dependencies:
     version: 10.4.15(reflect-metadata@0.2.2)(rxjs@7.8.1)
   '@nestjs/core':
     specifier: ^10.3.9
-    version: 10.4.15(@nestjs/common@10.4.15)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1)
+    version: 10.4.20(@nestjs/common@10.4.15)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1)
   '@octokit/auth-app':
     specifier: ^4.0.4
     version: 4.0.13(encoding@0.1.13)
@@ -2700,8 +2700,8 @@ packages:
       uid: 2.0.2
     dev: false
 
-  /@nestjs/core@10.4.15(@nestjs/common@10.4.15)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1):
-    resolution: {integrity: sha512-UBejmdiYwaH6fTsz2QFBlC1cJHM+3UDeLZN+CiP9I1fRv2KlBZsmozGLbV5eS1JAVWJB4T5N5yQ0gjN8ZvcS2w==}
+  /@nestjs/core@10.4.20(@nestjs/common@10.4.15)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1):
+    resolution: {integrity: sha512-kRdtyKA3+Tu70N3RQ4JgmO1E3LzAMs/eppj7SfjabC7TgqNWoS4RLhWl4BqmsNVmjj6D5jgfPVtHtgYkU3AfpQ==}
     peerDependencies:
       '@nestjs/common': ^10.0.0
       '@nestjs/microservices': ^10.0.0
