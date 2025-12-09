@@ -127,7 +127,7 @@ devDependencies:
     version: 29.5.14
   '@types/mailparser':
     specifier: ^3.4.4
-    version: 3.4.5
+    version: 3.4.6
   '@types/node':
     specifier: ^18.6.2
     version: 18.19.130
@@ -2914,8 +2914,8 @@ packages:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
     dev: false
 
-  /@types/mailparser@3.4.5:
-    resolution: {integrity: sha512-EPERBp7fLeFZh7tS2X36MF7jawUx3Y6/0rXciZah3CTYgwLi3e0kpGUJ6FOmUabgzis/U1g+3/JzrVWbWIOGjg==}
+  /@types/mailparser@3.4.6:
+    resolution: {integrity: sha512-wVV3cnIKzxTffaPH8iRnddX1zahbYB1ZEoAxyhoBo3TBCBuK6nZ8M8JYO/RhsCuuBVOw/DEN/t/ENbruwlxn6Q==}
     dependencies:
       '@types/node': 18.19.130
       iconv-lite: 0.6.3
