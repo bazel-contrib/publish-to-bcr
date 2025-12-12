@@ -113,13 +113,23 @@ on:
           With prefix 'bazel-v' and tag 'bazel-v1.2.3', the version becomes '1.2.3'.
         default: "v"
         type: string
+      environment:
+        type: string
+        description: |
+          Name of the deployment environment to use for secrets. Deployment environments cannot be
+          directly passed to reusable workflows: https://github.com/actions/runner/issues/1490.
+        required: false
+        default: "" # Default to no environment
     secrets:
       publish_token:
         required: true
-        description: A Personal Access Token (PAT) used for pushing to a registry fork and opening up a pull request.
+        description: |
+          A Personal Access Token (PAT) used for pushing to a registry fork and opening up a pull request.
+          If a deployment environment is used, the secret will be referenced from the environment.
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     env:
       REGISTRY_BRANCH: ${{ inputs.registry_branch }}
       REGISTRY: ${{ inputs.registry }}

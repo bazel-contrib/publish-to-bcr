@@ -82,6 +82,8 @@ It requires "workflow" and "repo" permissions.
 > the pull request manually. The fine-grained PAT should be created for the owner of the registry fork.
 
 Save it as `BCR_PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
+Alternatively, create a GitHub Actions deployment [environment](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) and save the secret there, then set the name of the environment
+in the `environment` input of the reusable workflow.
 
 > [!TIP]
 >  See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
