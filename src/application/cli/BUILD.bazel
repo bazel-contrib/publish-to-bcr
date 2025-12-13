@@ -50,6 +50,7 @@ esbuild(
         "inject": ["src/application/cjs-shim.js"],
     },
     entry_point = "main.js",
+    esbuild_log_level = "info",
     external = [
         "class-transformer",
         "class-validator",
@@ -58,7 +59,7 @@ esbuild(
         "@nestjs/microservices",
         "@nestjs/platform-express",
     ],
-    minify = True,
+    minify = False,
     output = "index.js",
     platform = "node",
     sourcemap = "inline",
