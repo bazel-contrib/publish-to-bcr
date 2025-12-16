@@ -120,8 +120,8 @@ devDependencies:
     specifier: ^5.0.2
     version: 5.2.3
   '@types/imapflow':
-    specifier: 1.0.19
-    version: 1.0.19
+    specifier: 1.0.189
+    version: 1.0.189
   '@types/jest':
     specifier: ^29.5.14
     version: 29.5.14
@@ -3728,10 +3728,11 @@ packages:
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
     dev: false
 
-  /@types/imapflow@1.0.19:
-    resolution: {integrity: sha512-U48VZXe4XYhS3AFNI+4ougW8OXI4VaKjyF0nGXgVzIN8SPs9lh2LPNRM0HmIM+hUTw60l7MHgbQO8hsf+Q4U5w==}
+  /@types/imapflow@1.0.189:
+    resolution: {integrity: sha512-3I/9/rKYd4+p4tAkQ3sRtTu2EazHzvruzwgpjpM6ZLx8YHjUyqPv3rBEg5wabVWuuX7/+yHULYROQz5cgALX0g==}
+    deprecated: This is a stub types definition. imapflow provides its own type definitions, so you do not need this installed.
     dependencies:
-      '@types/node': 18.19.130
+      imapflow: 1.0.177
     dev: true
 
   /@types/istanbul-lib-coverage@2.0.6:
