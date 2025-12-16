@@ -1,7 +1,9 @@
 """Makes tool macros for terraform et al"""
 
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
 def make_tool(tool, target, data = [], **kwargs):
-    native.sh_binary(
+    sh_binary(
         name = tool,
         srcs = ["//tools:tool.sh"],
         args = select({

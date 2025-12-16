@@ -17,6 +17,6 @@ repos:
         entry: bazel run //:format
         files: .*
   - repo: https://github.com/keith/pre-commit-buildifier
-    rev: 8.0.0
+    rev: 8.2.1
     hooks:
       - id: buildifier-lint
