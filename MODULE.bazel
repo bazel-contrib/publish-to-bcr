@@ -9,7 +9,7 @@ bazel_dep(name = "bazelrc-preset.bzl", version = "1.2.0", dev_dependency = True)
 
 bazel_dep(
     name = "buildifier_prebuilt",
-    version = "8.0.0",
+    version = "8.2.1.1",
 )
 bazel_dep(name = "platforms", version = "0.0.11")
 bazel_dep(name = "rules_multitool", version = "1.0.0")
