@@ -26,10 +26,10 @@ dependencies:
     version: 5.6.0(encoding@0.1.13)
   '@nestjs/common':
     specifier: ^10.3.9
-    version: 10.4.20(reflect-metadata@0.2.2)(rxjs@7.8.1)
+    version: 10.4.20(reflect-metadata@0.2.2)(rxjs@7.8.2)
   '@nestjs/core':
     specifier: ^10.3.9
-    version: 10.4.20(@nestjs/common@10.4.20)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1)
+    version: 10.4.20(@nestjs/common@10.4.20)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
   '@octokit/auth-app':
     specifier: ^4.0.4
     version: 4.0.13(encoding@0.1.13)
@@ -85,8 +85,8 @@ dependencies:
     specifier: ^0.2.2
     version: 0.2.2
   rxjs:
-    specifier: 7.8.1
-    version: 7.8.1
+    specifier: 7.8.2
+    version: 7.8.2
   simple-git:
     specifier: ^3.16.0
     version: 3.27.0
@@ -2684,7 +2684,7 @@ packages:
     engines: {node: '>=8'}
     dev: false
 
-  /@nestjs/common@10.4.20(reflect-metadata@0.2.2)(rxjs@7.8.1):
+  /@nestjs/common@10.4.20(reflect-metadata@0.2.2)(rxjs@7.8.2):
     resolution: {integrity: sha512-hxJxZF7jcKGuUzM9EYbuES80Z/36piJbiqmPy86mk8qOn5gglFebBTvcx7PWVbRNSb4gngASYnefBj/Y2HAzpQ==}
     peerDependencies:
       class-transformer: '*'
@@ -2700,12 +2700,12 @@ packages:
       file-type: 20.4.1
       iterare: 1.2.1
       reflect-metadata: 0.2.2
-      rxjs: 7.8.1
+      rxjs: 7.8.2
       tslib: 2.8.1
       uid: 2.0.2
     dev: false
 
-  /@nestjs/core@10.4.20(@nestjs/common@10.4.20)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.1):
+  /@nestjs/core@10.4.20(@nestjs/common@10.4.20)(encoding@0.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2):
     resolution: {integrity: sha512-kRdtyKA3+Tu70N3RQ4JgmO1E3LzAMs/eppj7SfjabC7TgqNWoS4RLhWl4BqmsNVmjj6D5jgfPVtHtgYkU3AfpQ==}
     peerDependencies:
       '@nestjs/common': ^10.0.0
@@ -2722,13 +2722,13 @@ packages:
       '@nestjs/websockets':
         optional: true
     dependencies:
-      '@nestjs/common': 10.4.20(reflect-metadata@0.2.2)(rxjs@7.8.1)
+      '@nestjs/common': 10.4.20(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nuxtjs/opencollective': 0.3.2(encoding@0.1.13)
       fast-safe-stringify: 2.1.1
       iterare: 1.2.1
       path-to-regexp: 3.3.0
       reflect-metadata: 0.2.2
-      rxjs: 7.8.1
+      rxjs: 7.8.2
       tslib: 2.8.1
       uid: 2.0.2
     transitivePeerDependencies:
@@ -7783,8 +7783,8 @@ packages:
       queue-microtask: 1.2.3
     dev: true
 
-  /rxjs@7.8.1:
-    resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
+  /rxjs@7.8.2:
+    resolution: {integrity: sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==}
     dependencies:
       tslib: 2.8.1
     dev: false
