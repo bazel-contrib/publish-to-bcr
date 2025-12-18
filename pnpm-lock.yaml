@@ -89,7 +89,7 @@ dependencies:
     version: 7.8.2
   simple-git:
     specifier: ^3.16.0
-    version: 3.27.0
+    version: 3.30.0
   source-map-support:
     specifier: ^0.5.21
     version: 0.5.21
@@ -2677,7 +2677,7 @@ packages:
   /@kwsites/file-exists@1.1.1:
     resolution: {integrity: sha512-m9/5YGR18lIwxSFDwfE3oA7bWuq9kdau6ugN4H2rJeyhFQZcG9AgSHkQtSD15a8WvTgfz9aikZMrKPHvbpqFiw==}
     dependencies:
-      debug: 4.4.0
+      debug: 4.4.3
     dev: false
 
   /@kwsites/promise-deferred@1.1.1:
@@ -8138,12 +8138,12 @@ packages:
     engines: {node: '>=14'}
     dev: false
 
-  /simple-git@3.27.0:
-    resolution: {integrity: sha512-ivHoFS9Yi9GY49ogc6/YAi3Fl9ROnF4VyubNylgCkA+RVqLaKWnDSzXOVzya8csELIaWaYNutsEuAhZrtOjozA==}
+  /simple-git@3.30.0:
+    resolution: {integrity: sha512-q6lxyDsCmEal/MEGhP1aVyQ3oxnagGlBDOVSIB4XUVLl1iZh0Pah6ebC9V4xBap/RfgP2WlI8EKs0WS0rMEJHg==}
     dependencies:
       '@kwsites/file-exists': 1.1.1
       '@kwsites/promise-deferred': 1.1.1
-      debug: 4.4.0
+      debug: 4.4.3
     dev: false
 
   /sisteransi@1.0.5:
