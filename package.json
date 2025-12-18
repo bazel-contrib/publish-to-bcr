@@ -43,7 +43,7 @@
     "rxjs": "7.8.2",
     "simple-git": "^3.16.0",
     "source-map-support": "^0.5.21",
-    "tar": "^6.2.0",
+    "tar": "^7.0.0",
     "tree-node-cli": "^1.6.0",
     "yaml": "^2.1.1",
     "yargs": "~17.7.2"
