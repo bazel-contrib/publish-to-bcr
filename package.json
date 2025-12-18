@@ -58,7 +58,7 @@
     "@types/jest": "^29.5.14",
     "@types/mailparser": "^3.4.4",
     "@types/node": "^18.6.2",
-    "@types/nodemailer": "^6.4.5",
+    "@types/nodemailer": "^7.0.0",
     "@types/source-map-support": "^0.5.4",
     "@types/yargs": "^17.0.32",
     "@types/tar": "^6.1.10",
