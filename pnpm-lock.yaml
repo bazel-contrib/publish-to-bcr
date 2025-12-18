@@ -101,7 +101,7 @@ dependencies:
     version: 1.6.0
   yaml:
     specifier: ^2.1.1
-    version: 2.7.0
+    version: 2.8.2
   yargs:
     specifier: ~17.7.2
     version: 17.7.2
@@ -8863,9 +8863,9 @@ packages:
     engines: {node: '>=18'}
     dev: false
 
-  /yaml@2.7.0:
-    resolution: {integrity: sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA==}
-    engines: {node: '>= 14'}
+  /yaml@2.8.2:
+    resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
+    engines: {node: '>= 14.6'}
     hasBin: true
     dev: false
 
