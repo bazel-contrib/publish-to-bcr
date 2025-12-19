@@ -78,7 +78,7 @@
     "jest-extended": "^7.0.0",
     "jest-mock": "^29.7.0",
     "mailparser": "3.9.1",
-    "mockttp": "^3.10.0",
+    "mockttp": "^4.0.0",
     "portfinder": "^1.0.32",
     "prettier": "3.7.4",
     "typescript": "5.9.3",
