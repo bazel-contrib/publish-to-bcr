@@ -181,7 +181,7 @@ jobs:
       # However all the context is the caller repo (like this workflow is inlined)
       # https://github.com/orgs/community/discussions/18602
       # https://github.com/orgs/community/discussions/63863
-      uses: bazel-contrib/publish-to-bcr@ff2c5e3fe8c3b83678df560bfc1cf4d0ba2eb3e1
+      uses: bazel-contrib/publish-to-bcr@3a6e6cfba7f20806d57c943d7e7ee748159aa397
       with:
         attest: true
         attestations-dest: attestations
@@ -264,7 +264,7 @@ jobs:
 
     - name: Create final entry
       id: create-final-entry
-      uses: bazel-contrib/publish-to-bcr@ff2c5e3fe8c3b83678df560bfc1cf4d0ba2eb3e1
+      uses: bazel-contrib/publish-to-bcr@3a6e6cfba7f20806d57c943d7e7ee748159aa397
       with:
         tag: ${{ inputs.tag_name }}
         module-version: ${{ env.VERSION }}
