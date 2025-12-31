@@ -137,7 +137,7 @@ jobs:
       TAG_NAME: ${{ inputs.tag_name }}
     steps:
     - name: Checkout the module repository
-      uses: actions/checkout@v4.3.1
+      uses: actions/checkout@v6.0.1
       with:
         ref: ${{ inputs.templates_ref || inputs.tag_name }}
         repository: ${{ inputs.repository }}
@@ -145,7 +145,7 @@ jobs:
         persist-credentials: false
 
     - name: Checkout BCR
-      uses: actions/checkout@v4.3.1
+      uses: actions/checkout@v6.0.1
       with:
         repository: ${{ inputs.registry }}
         token: ${{ secrets.GITHUB_TOKEN }}
