@@ -76,18 +76,21 @@ Create a "Classic" PAT, see [documentation](https://docs.github.com/en/authentic
 It requires "workflow" and "repo" permissions.
 
 > [!NOTE]
-> At the moment, fine-grained PATs are not _fully_ supported because they cannot open pull requests against public
-> repositories, although this is on GitHub's roadmap: https://github.com/github/roadmap/issues/600. To use a fine-grained
-> PAT without opening a pull request, set `open_pull_request` to `false`. This will run a step outputting a URL to create
+> Fine-grained PATs are not _fully_ supported because they cannot open pull requests against public
+> repositories: https://github.com/github/roadmap/issues/600. However, a fine-grained PAT can be using in combination with setting `open_pull_request` to `false` to run a step outputting a URL to create
 > the pull request manually. The fine-grained PAT should be created for the owner of the registry fork.
 
-Save it as `BCR_PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
+> [!TIP]
+> If the ruleset belongs to an organization, it may be desirable to create a new "machine" user account with a classic PAT to avoid storing an individual's PAT as a secret.
+> For example, the [bazel-contrib-bot](https://github.com/bazel-contrib-bot) user opens pull requests for rulesets in bazel-contrib.
+> Create the machine user, invite them to the org, and create the PAT as you would for a human user.
+
+Save the token as `BCR_PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
 Alternatively, create a GitHub Actions deployment [environment](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) and save the secret there, then set the name of the environment
 in the `environment` input of the reusable workflow.
 
-> [!TIP]
->  See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
-> Example workflows are also included in the Bazel [rules template](https://github.com/bazel-contrib/rules-template/tree/main/.github/workflows).
+See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
+Example workflows are also included in the Bazel [rules template](https://github.com/bazel-contrib/rules-template/tree/main/.github/workflows).
 
 ## Publishing multiple modules in the same repo
 
