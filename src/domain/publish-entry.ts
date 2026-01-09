@@ -107,6 +107,8 @@ export class PublishEntryService {
       'main',
       moduleNames.map((moduleName) => `${moduleName}@${version}`).join(', '),
       `\
+:warning: The Publish to BCR GitHub app will be discontinued after June 30, 2026. Please migrate to the GitHub Actions [reusable workflow](https://github.com/bazel-contrib/publish-to-bcr?tab=readme-ov-file#setup) before then.
+      
 Release: ${releaseUrl}
 
 _Automated by [Publish to BCR](https://github.com/apps/publish-to-bcr)_`

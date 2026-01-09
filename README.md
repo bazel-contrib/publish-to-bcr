@@ -126,6 +126,8 @@ Create an issue in this repository for support.
 
 ## LEGACY GitHub App
 
+:warning: The GitHub app will be discontinued after June 30, 2026. Please migrate to the GitHub Actions [reusable workflow](https://github.com/bazel-contrib/publish-to-bcr?tab=readme-ov-file#setup) before then.
+
 Prior to the introduction of the attestation feature in March 2025, this functionality was provided by a GitHub App.
 
 This documentation remains for users of that method to reference before upgrading.
