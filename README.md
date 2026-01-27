@@ -15,7 +15,7 @@ Create a GitHub Actions workflow in your ruleset repository by creating a file, 
 This repository provides a reusable workflow that contains all the boilerplate.
 See complete documentation in the [reusable workflow file](./.github/workflows/publish.yaml).
 
-1. Decide how your workflow will be invoked
+### 1. Decide how your workflow will be invoked
 
 Use an `on` block, and provide at least the `tag_name` as an input.
 
@@ -46,7 +46,9 @@ on:
         type: string
 ```
 
-2. Reference the reusable workflow in your `publish` job (replacing the `[version]` placeholder).
+### 2. Reference the reusable workflow in your `publish` job
+
+Replace the `[version]` placeholder.
 
 ```yaml
 jobs:
@@ -69,11 +71,11 @@ jobs:
       publish_token: ${{ secrets.BCR_PUBLISH_TOKEN }}
 ```
 
-3. Create a Personal Access Token
+### 3. Create a Personal Access Token
 
 Create a "Classic" PAT, see [documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
 
-It requires "workflow" and "repo" permissions.
+It requires "workflow" and "repo" permissions. The PAT is used to push a branch to the `registry_fork` and to open the pull request.
 
 > [!NOTE]
 > Fine-grained PATs are not _fully_ supported because they cannot open pull requests against public
@@ -88,6 +90,12 @@ It requires "workflow" and "repo" permissions.
 Save the token as `BCR_PUBLISH_TOKEN` in your repository or org, under _Settings > Secrets and variables > Actions_.
 Alternatively, create a GitHub Actions deployment [environment](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) and save the secret there, then set the name of the environment
 in the `environment` input of the reusable workflow.
+
+### 4. Consider whether to open the PR as a draft
+
+By default, pull requests are opened in draft mode. This is ideal for ruleset owners who host their repository in their personal account and use a personal access token. The BCR allows authors to click "Ready for review" as a way to approve the entry for merging, since GitHub does not allow an author to review their own pull request.
+
+When using a bot/machine user PAT to open the pull request, set `draft: false` on the reusable workflow. Otherwise, non-bot users will be unable to mark it as ready for review. Maintainers listed in `metadata.json` are allowed to approve the pull request.
 
 See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
 Example workflows are also included in the Bazel [rules template](https://github.com/bazel-contrib/rules-template/tree/main/.github/workflows).
