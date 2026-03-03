@@ -113,7 +113,8 @@ export class CreateEntryCommand {
           patchesPath,
           args.localRegistry,
           args.moduleVersion,
-          attestationsTemplate
+          attestationsTemplate,
+          args.ghToken
         );
 
         console.error(

@@ -18,6 +18,8 @@ jest.mock('axios-retry');
 jest.mock('./integrity-hash');
 
 const ARTIFACT_URL = 'https://foo.bar/artifact.baz';
+const GITHUB_RELEASES_URL =
+  'https://github.com/owner/repo/releases/download/v2.20.2/archive.tar.gz';
 const TEMP_DIR = '/tmp';
 const TEMP_FOLDER = 'artifact-1234';
 
@@ -146,6 +148,76 @@ describe('Artifact', () => {
 
       expect(thrownError.message.includes(ARTIFACT_URL)).toEqual(true);
       expect(thrownError.message.includes('401')).toEqual(true);
+    });
+  });
+
+  describe('GitHub API fallback', () => {
+    const optionsWithToken: DownloadOptions = {
+      backoffDelayFactor: 2000,
+      ghToken: 'my-token',
+    };
+
+    test('falls back to GitHub API when 404 + token + GitHub releases URL', async () => {
+      mocked(axios.get)
+        .mockRejectedValueOnce({ response: { status: 404 } })
+        .mockResolvedValueOnce({
+          data: [
+            {
+              tag_name: 'v2.20.2',
+              assets: [{ id: 123, name: 'archive.tar.gz' }],
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          data: { pipe: jest.fn() },
+          status: 200,
+        });
+
+      const artifact = new Artifact(GITHUB_RELEASES_URL);
+      await artifact.download(optionsWithToken);
+
+      const expectedPath = path.join(TEMP_DIR, TEMP_FOLDER, 'archive.tar.gz');
+      expect(artifact.diskPath).toEqual(expectedPath);
+    });
+
+    test('does not fall back when 404 + no token', async () => {
+      mocked(axios.get).mockRejectedValueOnce({ response: { status: 404 } });
+
+      const artifact = new Artifact(GITHUB_RELEASES_URL);
+      const thrownError = await expectThrownError(
+        () => artifact.download(options),
+        ArtifactDownloadError
+      );
+
+      expect(thrownError.statusCode).toEqual(404);
+      expect(axios.get).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not fall back when 404 + token + non-GitHub URL', async () => {
+      mocked(axios.get).mockRejectedValueOnce({ response: { status: 404 } });
+
+      const artifact = new Artifact(ARTIFACT_URL);
+      const thrownError = await expectThrownError(
+        () => artifact.download(optionsWithToken),
+        ArtifactDownloadError
+      );
+
+      expect(thrownError.statusCode).toEqual(404);
+      expect(axios.get).toHaveBeenCalledTimes(1);
+    });
+
+    test('throws ArtifactDownloadError when API fallback fails', async () => {
+      mocked(axios.get)
+        .mockRejectedValueOnce({ response: { status: 404 } })
+        .mockRejectedValueOnce(new Error('API unavailable'));
+
+      const artifact = new Artifact(GITHUB_RELEASES_URL);
+      const thrownError = await expectThrownError(
+        () => artifact.download(optionsWithToken),
+        ArtifactDownloadError
+      );
+
+      expect(thrownError.statusCode).toEqual(404);
     });
   });
 

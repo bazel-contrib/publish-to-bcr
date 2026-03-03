@@ -4,6 +4,7 @@ import { hideBin } from 'yargs/helpers';
 import { CreateEntryCommand } from './create-entry-command';
 
 export interface CreateEntryArgs {
+  ghToken?: string;
   githubRepository?: string;
   moduleVersion: string;
   localRegistry: string;
@@ -26,6 +27,13 @@ export function createParser(
       'create-entry',
       'Create a new module version entry for the BCR',
       (yargs) => {
+        yargs.option('gh-token', {
+          describe:
+            'GitHub token for downloading release artifacts from draft releases.',
+          type: 'string',
+          required: false,
+          requiresArg: true,
+        });
         yargs.option('github-repository', {
           describe:
             'GitHub repository for the module being published. Used to substititue the OWNER and REPO vars into the source template.',

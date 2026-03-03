@@ -10,7 +10,7 @@ inputs:
     required: false
     default: ''
   gh-token:
-    description: 'Token for persisting attestations to the repo. This must be a token with id-token and attestation write permissions.'
+    description: 'Token used for persisting attestations to the repo (requires id-token and attestation write permissions) and for downloading release artifacts from draft releases (supports GitHub Immutable Releases).'
     required: false
     default: ${{ github.token }}
   github-repository:

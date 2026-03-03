@@ -53,6 +53,9 @@ async function main() {
       `--module-version=${inputs.moduleVersion}`,
     ];
 
+    if (inputs.ghToken) {
+      cliArgs.push(`--gh-token=${inputs.ghToken}`);
+    }
     if (inputs.githubRepo) {
       cliArgs.push(`--github-repository=${inputs.githubRepo}`);
     }

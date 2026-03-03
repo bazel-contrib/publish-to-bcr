@@ -47,16 +47,21 @@ export class CreateEntryService {
     patchesPath: string,
     registryPath: string,
     version: string,
-    attestationsTemplate: AttestationsTemplate | null = null
+    attestationsTemplate: AttestationsTemplate | null = null,
+    ghToken?: string
   ): Promise<{ moduleName: string }> {
     sourceTemplate.substitute({ VERSION: version });
     sourceTemplate.validateFullySubstituted();
+
+    const downloadOptions = ghToken
+      ? { ...this.artifactDownloadOptions, ghToken }
+      : this.artifactDownloadOptions;
 
     console.error(`Fetching release archive ${sourceTemplate.url}`);
     const releaseArchive = await ReleaseArchive.fetch(
       sourceTemplate.url,
       sourceTemplate.stripPrefix,
-      this.artifactDownloadOptions
+      downloadOptions
     );
 
     try {
@@ -111,9 +116,7 @@ export class CreateEntryService {
       if (attestationsTemplate) {
         attestationsTemplate.substitute({ VERSION: version });
         attestationsTemplate.validateFullySubstituted();
-        await attestationsTemplate.computeIntegrityHashes(
-          this.artifactDownloadOptions
-        );
+        await attestationsTemplate.computeIntegrityHashes(downloadOptions);
         attestationsTemplate.save(
           path.join(bcrVersionEntryPath, 'attestations.json')
         );
