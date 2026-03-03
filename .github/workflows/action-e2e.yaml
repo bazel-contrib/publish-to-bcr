@@ -82,7 +82,9 @@ jobs:
       - name: Test repository substitution
         run: this/e2e/action/test-github-repository-default-substitution.sh
   test-attestations:
-    # Test that attestations are created when `attest` is set to true
+    # Test that attestations are created when `attest` is set to true.
+    # Skipped on fork PRs since id-token: write is not granted there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -115,7 +117,9 @@ jobs:
           [ -f attestations/MODULE.bazel.intoto.jsonl ]
           [ -f attestations/source.json.intoto.jsonl ]
   test-multi-module:
-    # Tests a multi-module publish
+    # Tests a multi-module publish.
+    # Skipped on fork PRs since id-token: write is not granted there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
