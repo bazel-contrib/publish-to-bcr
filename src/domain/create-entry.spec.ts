@@ -36,7 +36,23 @@ let mockGitClient: Mocked<GitClient>;
 jest.mock('../infrastructure/git');
 jest.mock('./integrity-hash');
 jest.mock('./release-archive');
-jest.mock('./artifact');
+
+const mockDownload = jest.fn();
+const mockComputeIntegrityHash = jest.fn();
+jest.mock('./artifact', () => {
+  return {
+    Artifact: {
+      remote: jest.fn().mockImplementation((url) => {
+        return {
+          url,
+          _diskPath: null,
+          download: mockDownload,
+          computeIntegrityHash: mockComputeIntegrityHash,
+        };
+      }),
+    },
+  };
+});
 jest.mock('./user');
 jest.mock('node:fs');
 jest.mock('exponential-backoff');
@@ -1337,9 +1353,7 @@ describe('createEntryFiles', () => {
       await bcrRepo.shallowCloneAndCheckout('main');
 
       const hash = `sha256-${randomUUID()}`;
-      jest
-        .spyOn(Artifact.prototype, 'computeIntegrityHash')
-        .mockReturnValue(hash);
+      mockComputeIntegrityHash.mockReturnValue(hash);
 
       await createEntryService.createEntryFiles(
         rulesetRepo.metadataTemplate('.'),
@@ -1353,7 +1367,7 @@ describe('createEntryFiles', () => {
 
       // Called once for the attestation. Note that the Artifact.download
       // for the release archive is mocked out above in the test setup.
-      expect(Artifact.prototype.download).toHaveBeenCalledTimes(1);
+      expect(mockDownload).toHaveBeenCalledTimes(1);
 
       const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
         (call[0] as string).includes('attestations.json')

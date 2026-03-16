@@ -13,6 +13,7 @@ export interface Inputs {
   attestationsDest: string;
   ghToken: string;
   githubRepo: string;
+  localArtifactPath: string[];
   localRegistry: string;
   metadataTemplate: string;
   moduleVersion: string;
@@ -33,6 +34,7 @@ async function main() {
       attestationsDest: core.getInput('attestations-dest'),
       ghToken: core.getInput('gh-token'),
       githubRepo: core.getInput('github-repository'),
+      localArtifactPath: core.getMultilineInput('local-artifact-path'),
       localRegistry: core.getInput('local-registry', { required: true }),
       metadataTemplate: core.getInput('metadata-template'),
       moduleVersion: core.getInput('module-version', { required: true }),
@@ -58,6 +60,11 @@ async function main() {
     }
     if (inputs.tag) {
       cliArgs.push(`--tag=${inputs.tag}`);
+    }
+    if (inputs.localArtifactPath) {
+      inputs.localArtifactPath.forEach((localArtifactPath) =>
+        cliArgs.push(`--local-artifact-path=${localArtifactPath}`)
+      );
     }
 
     const { code, output: cliOutput } = await executeCli(cliBin, cliArgs);

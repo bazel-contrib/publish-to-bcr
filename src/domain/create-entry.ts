@@ -8,6 +8,7 @@ import { DownloadOptions } from './artifact.js';
 import { AttestationsTemplate } from './attestations-template.js';
 import { UserFacingError } from './error.js';
 import { computeIntegrityHash } from './integrity-hash.js';
+import { LocalArtifacts } from './local-artifact.js';
 import { MetadataFile } from './metadata-file.js';
 import {
   ModuleFile,
@@ -47,18 +48,35 @@ export class CreateEntryService {
     patchesPath: string,
     registryPath: string,
     version: string,
-    attestationsTemplate: AttestationsTemplate | null = null
+    attestationsTemplate: AttestationsTemplate | null = null,
+    localArtifacts: LocalArtifacts = new LocalArtifacts()
   ): Promise<{ moduleName: string }> {
     sourceTemplate.substitute({ VERSION: version });
     sourceTemplate.validateFullySubstituted();
 
-    console.error(`Fetching release archive ${sourceTemplate.url}`);
-    const releaseArchive = await ReleaseArchive.fetch(
-      sourceTemplate.url,
-      sourceTemplate.stripPrefix,
-      this.artifactDownloadOptions
-    );
-
+    const releaseArchive = await localArtifacts
+      .search(sourceTemplate.url)
+      .mapOrElse(
+        () => {
+          console.error(`Fetching release archive ${sourceTemplate.url}`);
+          return ReleaseArchive.fetch(
+            sourceTemplate.url,
+            sourceTemplate.stripPrefix,
+            this.artifactDownloadOptions
+          );
+        },
+        (releaseArchiveLocalpath) => {
+          console.error(
+            `Using local release archive ${releaseArchiveLocalpath}`
+          );
+          return Promise.resolve(
+            ReleaseArchive.from_file(
+              releaseArchiveLocalpath,
+              sourceTemplate.stripPrefix
+            )
+          );
+        }
+      );
     try {
       sourceTemplate.setIntegrityHash(
         releaseArchive.artifact.computeIntegrityHash()
@@ -112,7 +130,8 @@ export class CreateEntryService {
         attestationsTemplate.substitute({ VERSION: version });
         attestationsTemplate.validateFullySubstituted();
         await attestationsTemplate.computeIntegrityHashes(
-          this.artifactDownloadOptions
+          this.artifactDownloadOptions,
+          localArtifacts
         );
         attestationsTemplate.save(
           path.join(bcrVersionEntryPath, 'attestations.json')

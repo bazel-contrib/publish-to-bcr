@@ -17,6 +17,10 @@ inputs:
     description: 'GitHub repository for the module being published. Used to substititue the OWNER and REPO vars into the source template. Defaults to the repository this action runs in.'
     required: false
     default: ${{ github.repository }}
+  local-artifact-path:
+    description: 'A newline separated list of local file paths to scan for artifacts declared in source.json and attestations.json instead of downloading them to compute an integrity checksum.'
+    required: false
+    default: ''
   local-registry:
     description: 'Path to a locally checked out registry where the entry files will be created.'
     required: true

@@ -51,7 +51,7 @@ describe('Artifact', () => {
 
   describe('download', () => {
     test('downloads the artifact', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
       await artifact.download(options);
 
       expect(axios.get).toHaveBeenCalledWith(ARTIFACT_URL, {
@@ -60,7 +60,7 @@ describe('Artifact', () => {
     });
 
     test('retries the request if it fails', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
 
       // Restore the original behavior of exponentialDelay.
       mocked(axiosRetry.exponentialDelay).mockImplementation(
@@ -102,7 +102,7 @@ describe('Artifact', () => {
     });
 
     test('saves the artifact to disk', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
 
       await artifact.download(options);
 
@@ -122,7 +122,7 @@ describe('Artifact', () => {
     });
 
     test('sets the diskPath', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
 
       await artifact.download(options);
 
@@ -131,7 +131,7 @@ describe('Artifact', () => {
     });
 
     test('throws on a non 200 status', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
 
       mocked(axios.get).mockRejectedValue({
         response: {
@@ -151,7 +151,7 @@ describe('Artifact', () => {
 
   describe('computeIntegrityHash', () => {
     test('throws when artifact has not yet been downloaded', () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
 
       expect(() => artifact.computeIntegrityHash()).toThrowWithMessage(
         Error,
@@ -160,7 +160,7 @@ describe('Artifact', () => {
     });
 
     test('computes the integrity of the file', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
       await artifact.download(options);
 
       const expected = `sha256-${randomUUID()}`;
@@ -175,7 +175,7 @@ describe('Artifact', () => {
 
   describe('cleanup', () => {
     test('removed the stored file', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
       await artifact.download(options);
       const diskPath = artifact.diskPath;
       artifact.cleanup();
@@ -184,7 +184,7 @@ describe('Artifact', () => {
     });
 
     test('removes the diskPath', async () => {
-      const artifact = new Artifact(ARTIFACT_URL);
+      const artifact = Artifact.remote(ARTIFACT_URL);
       await artifact.download(options);
       artifact.cleanup();
 
