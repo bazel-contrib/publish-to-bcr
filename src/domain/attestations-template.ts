@@ -6,6 +6,7 @@ import {
   DownloadOptions,
 } from './artifact.js';
 import { UserFacingError } from './error.js';
+import { LocalArtifacts } from './local-artifact.js';
 import {
   getUnsubstitutedVars,
   SubstitutableVar,
@@ -152,7 +153,8 @@ export class AttestationsTemplate {
   }
 
   public async computeIntegrityHashes(
-    downloadOptions: DownloadOptions
+    downloadOptions: DownloadOptions,
+    localArtifacts: LocalArtifacts
   ): Promise<void> {
     const urls: string[] = [];
     const keys = Object.keys(this.json.attestations);
@@ -162,7 +164,18 @@ export class AttestationsTemplate {
       urls.push(attestation.url);
     }
 
-    const artifacts = urls.map((url) => new Artifact(url));
+    const artifacts = urls.map((url) =>
+      localArtifacts.search(url).mapOrElse(
+        () => {
+          console.error(`Fetching attestation ${url}`);
+          return Artifact.remote(url);
+        },
+        (artifactLocalPath) => {
+          console.error(`Using local attestation ${artifactLocalPath}`);
+          return Artifact.local(artifactLocalPath);
+        }
+      )
+    );
 
     try {
       await Promise.all(

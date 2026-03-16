@@ -29,9 +29,27 @@ export interface DownloadOptions {
 export class Artifact {
   public static readonly MAX_RETRIES = 3;
   private _diskPath: string | null = null;
-  public constructor(public readonly url: string) {}
+
+  public static local(diskPath: string): Artifact {
+    return new Artifact(null, diskPath);
+  }
+
+  public static remote(url: string): Artifact {
+    return new Artifact(url, null);
+  }
+
+  public constructor(
+    public readonly url: string | null,
+    diskPath: string | null
+  ) {
+    this._diskPath = diskPath;
+  }
 
   public async download(options: DownloadOptions): Promise<void> {
+    if (this.url === null) {
+      // Noop when the artifact is local
+      return;
+    }
     let url = this.url;
     if (this._diskPath !== null) {
       throw new Error(
@@ -130,8 +148,12 @@ export class Artifact {
   }
 
   public cleanup(): void {
-    fs.rmSync(this._diskPath, { force: true });
-    this._diskPath = null;
+    // Only clean up the archive if we downloaded.
+    // Don't delete a locally used artifact.
+    if (this.url) {
+      fs.rmSync(this._diskPath, { force: true });
+      this._diskPath = null;
+    }
   }
 }
 

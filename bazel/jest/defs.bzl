@@ -34,6 +34,7 @@ def jest_test(name, **kwargs):
             "//:node_modules/babel-plugin-transform-import-meta",
             "//:package_json",
         ],
+        colors = False,
         node_modules = "//:node_modules",
         **kwargs
     )

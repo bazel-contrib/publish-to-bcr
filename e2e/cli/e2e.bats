@@ -210,3 +210,32 @@ mock_attestation() {
 
     assert_equal "${EXPECTED}" "${ACTUAL}"
 }
+
+@test 'create entry with local release artifact' {
+    FIXTURE="e2e/fixtures/versioned"
+    cp -R "${FIXTURE}" "${TEST_TMPDIR}"
+    FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
+    TEMPLATES_DIR="${FIXTURE}/.bcr"
+    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
+
+    LOCALDIR="${TEST_TMPDIR}/local"
+    mkdir -p "${LOCALDIR}"
+    cp "${RELEASE_ARCHIVE}" "${LOCALDIR}/v1.0.0.tar.gz"
+
+    run "${NODE_BIN}" "${CLI_BIN}" create-entry \
+        --local-artifact-path "${LOCALDIR}" \
+        --local-registry "${REGISTRY_PATH}" \
+        --templates-dir "${TEMPLATES_DIR}" \
+        --module-version 1.0.0 \
+        --github-repository owner/versioned \
+        --tag v1.0.0
+
+    assert_success
+
+    ENTRY_PATH="${REGISTRY_PATH}/modules/versioned"
+
+    assert_file_exists "${ENTRY_PATH}/metadata.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/MODULE.bazel"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/source.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/presubmit.yml"
+}
