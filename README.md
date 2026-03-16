@@ -100,6 +100,28 @@ When using a bot/machine user PAT to open the pull request, set `draft: false` o
 See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
 Example workflows are also included in the Bazel [rules template](https://github.com/bazel-contrib/rules-template/tree/main/.github/workflows).
 
+## Immutable releases
+
+If using GitHub [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) while enabling attestations `attest: true`, then the reusable workflow needs to know that it's uploading attestations to a draft release. Set `upload_attestations_to_draft: true`.
+
+```yaml
+jobs:
+  publish:
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@[version]
+    with:
+      attest: true
+      upload_attestations_to_draft: true
+      ...
+```
+
+Ensure that `draft: true` is also passed to the [bazel-contrib release_ruleset](https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml) workflow. This workflow must be used when publishing attestations to the Bazel Central Registry.
+
+If the reusable release and publish workflows do _not_ run inside the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran.
+
+Don't forget to add additional automation to publish the final release.
+
+If attestations are not enabled, then no additional inputs are required.
+
 ## Publishing multiple modules in the same repo
 
 Multple modules that are versioned together in the same git repository can be published by configuring [`moduleRoots`](./templates/README.md#optional-configyml).

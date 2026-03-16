@@ -45,6 +45,7 @@
     "source-map-support": "^0.5.21",
     "tar": "^6.2.0",
     "tree-node-cli": "^1.6.0",
+    "ts-results-es": "7.0.0",
     "yaml": "^2.1.1",
     "yargs": "~17.7.2"
   },

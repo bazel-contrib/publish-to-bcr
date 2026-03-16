@@ -9,6 +9,7 @@ export interface CreateEntryArgs {
   localRegistry: string;
   tag: string;
   templatesDir: string;
+  localArtifactPath: string[];
 }
 
 export type ApplicationArgs = CreateEntryArgs;
@@ -32,6 +33,30 @@ export function createParser(
           type: 'string',
           required: false,
           requiresArg: true,
+        });
+        yargs.option('local-artifact-path', {
+          describe: `\
+            A list of local directories to search for artifacts locally instead of
+            downloading them from their url in source.json or attestations.json.
+
+            For example, if a release archive that would normally be downloaded from
+
+              https://github.com/foo/bar/releases/download/v1.0.0/bar-v1.0.0.tar.gz
+
+            exists locally under /tmp/release/bar-v1.0.0.tar.gz, then setting
+
+              --local-artifact-path /tmp/release
+
+            will allow Publish to BCR to find the file, bypass the download, and
+            compute the integrity check from the local file. The name of the file
+            must match the basename in the url.
+
+            Multiple instances of --local-artifact-path may be passed. The paths
+            will be searched in order until a matching file is found.
+            `,
+          type: 'array',
+          required: false,
+          default: [],
         });
         yargs.option('local-registry', {
           describe:

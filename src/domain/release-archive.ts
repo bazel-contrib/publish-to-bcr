@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import extractZip from 'extract-zip';
@@ -57,7 +58,7 @@ export class ReleaseArchive {
     stripPrefix: string,
     options: DownloadOptions
   ): Promise<ReleaseArchive> {
-    const artifact = new Artifact(url);
+    const artifact = Artifact.remote(url);
 
     try {
       await artifact.download(options);
@@ -71,6 +72,10 @@ export class ReleaseArchive {
     return new ReleaseArchive(artifact, stripPrefix);
   }
 
+  public static from_file(file: string, stripPrefix: string): ReleaseArchive {
+    return new ReleaseArchive(Artifact.local(file), stripPrefix);
+  }
+
   private extractDir: string | undefined;
 
   private constructor(
@@ -79,7 +84,9 @@ export class ReleaseArchive {
   ) {}
 
   public async extractModuleFile(): Promise<ModuleFile> {
-    this.extractDir = path.dirname(this.artifact.diskPath);
+    this.extractDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'release-contents-')
+    );
 
     if (this.isSupportedTarball()) {
       await this.extractReleaseTarball(this.extractDir);
