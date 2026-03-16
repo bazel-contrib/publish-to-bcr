@@ -100,6 +100,28 @@ When using a bot/machine user PAT to open the pull request, set `draft: false` o
 See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
 Example workflows are also included in the Bazel [rules template](https://github.com/bazel-contrib/rules-template/tree/main/.github/workflows).
 
+## Immutable releases
+
+If attestations are not enabled, then workflow is already compatible with immutable releases and no additional action is required.
+
+If attestations are enabled with `attest: true`, then the reusable workflow needs to know that it's uploading attestations to a draft release. Set `upload_attestations_to_draft_release: true`.
+
+```yaml
+jobs:
+  publish:
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@[version]
+    with:
+      attest: true
+      upload_attestations_to_draft_release: true
+      ...
+```
+
+To perform attestations the [bazel-contrib release_ruleset](https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml) workflow must be used to perform the release. Ensure `draft: true` is passed as an input to that workflow.
+
+If the reusable release and publish workflows do _not_ run inside the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran.
+
+The publish workflow will not finalize a draft release. The release must be published after the workflow runs, either manually or using additional automation such as [softprops/action-gh-release](https://github.com/softprops/action-gh-release).
+
 ## Publishing multiple modules in the same repo
 
 Multple modules that are versioned together in the same git repository can be published by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
