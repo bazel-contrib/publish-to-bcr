@@ -62,18 +62,24 @@ export async function setupLocalRemoteRulesetRepo(
 }
 
 /**
- * Clone the real bazel-central-registry and place it under the same
- * prepared fixtures directory as the rulesets. This way,
- * the swap-url-for-local-path logic that runs when integration testing
- * (see Repository.url) doesn't need a special case when cloning the
- * BCR. It will also get cleaned up alongside the ruleset repos in
- * deleteLocalRemoteRepos.
+ * Create a fake bazel-central-registry repo on disk that
+ * we swap in at test time instead of cloning the real one.
  */
 export async function setupLocalRemoteBcr(): Promise<void> {
-  await simpleGit().clone(
-    'https://github.com/bazelbuild/bazel-central-registry',
-    path.join(PREPARED_FIXTURES_PATH, 'bazel-central-registry')
+  const bcrPath = path.join(PREPARED_FIXTURES_PATH, 'bazel-central-registry');
+  fs.mkdirSync(path.join(bcrPath, 'modules'), { recursive: true });
+  fs.writeFileSync(
+    path.join(bcrPath, 'modules', 'README.md'),
+    'Bazel Central Registry'
   );
+
+  await simpleGit(bcrPath)
+    .init()
+    .addConfig('user.email', 'foo@bar.ca')
+    .addConfig('user.name', 'Foo McBar')
+    .checkoutLocalBranch('main')
+    .add('.')
+    .commit('First commit!');
 }
 
 export async function getLatestBranch(git: SimpleGit): Promise<string> {

@@ -65,9 +65,6 @@ describe('e2e tests', () => {
     cloudFunctions = new CloudFunctions(fakeGitHub, fakeSecrets, emailAccount);
     await cloudFunctions.start();
 
-    // Clone the real bazel-central-registry to disk
-    // and treat that as the canonical 'remote' so that
-    // each test doesn't have to re-clone it.
     await setupLocalRemoteBcr();
   });
 
