@@ -45,12 +45,12 @@ export class MetadataFile {
     }
 
     if (
-      !('yanked_versions' in json) ||
-      typeof json.yanked_versions !== 'object' ||
-      Array.isArray(json.yanked_versions) ||
-      !Object.entries(json.yanked_versions).every(
-        ([k, v]) => typeof k === 'string' && typeof v === 'string'
-      )
+      'yanked_versions' in json &&
+      (typeof json.yanked_versions !== 'object' ||
+        Array.isArray(json.yanked_versions) ||
+        !Object.entries(json.yanked_versions).every(
+          ([k, v]) => typeof k === 'string' && typeof v === 'string'
+        ))
     ) {
       throw new MetadataFileError(
         filepath,
@@ -68,6 +68,7 @@ export class MetadataFile {
 
     this.metadata = json;
     this.metadata.versions.sort(compareVersions);
+    this.metadata.yanked_versions = this.metadata.yanked_versions || {};
   }
 
   public get maintainers(): readonly Maintainer[] {
