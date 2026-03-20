@@ -92,10 +92,6 @@ export class MetadataFile {
     this.metadata.versions = [];
   }
 
-  public clearYankedVersions(): void {
-    this.metadata.yanked_versions = {};
-  }
-
   public addVersions(...versions: readonly string[]): void {
     this.metadata.versions.push(...versions);
     this.metadata.versions.sort(compareVersions);
