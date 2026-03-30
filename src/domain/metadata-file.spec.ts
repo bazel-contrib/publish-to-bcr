@@ -101,7 +101,7 @@ describe('constructor', () => {
     );
   });
 
-  test("complains if the 'yanked_versions' field is missing'", () => {
+  test("does not compalain if the 'yanked_versions' field is missing'", () => {
     mockMetadataFile(`\
 {
     "homepage": "https://foo.bar",
@@ -118,10 +118,8 @@ describe('constructor', () => {
     "versions": []
 }
 `);
-    expect(() => new MetadataFile('metadata.json')).toThrowWithMessage(
-      MetadataFileError,
-      /yanked_versions/
-    );
+    const metadata = new MetadataFile('metadata.json');
+    expect(metadata.yankedVersions).toEqual({});
   });
 
   test("complains if the 'yanked_versions' field is not an object'", () => {
