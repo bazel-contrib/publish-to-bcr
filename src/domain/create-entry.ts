@@ -222,10 +222,10 @@ export class CreateEntryService {
     version: string
   ) {
     // Ignore any versions in the template metadata file since the
-    // canonical source for released and yanked versions exists in
-    // the metadata file stored in the Bazel Central Registry.
+    // canonical source for released versions exists in the metadata
+    // file stored in the Bazel Central Registry. Merge in any yanked
+    // versions to support the yank being done as part of the release.
     metadataTemplate.clearVersions();
-    metadataTemplate.clearYankedVersions();
 
     await this.updateMaintainerIdsIfMissing(metadataTemplate);
 

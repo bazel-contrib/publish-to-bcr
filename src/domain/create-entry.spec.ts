@@ -409,6 +409,47 @@ describe('createEntryFiles', () => {
       ).toEqual(JSON.parse(writtenMetadataContent));
     });
 
+    test('merges yanked_versions from the ruleset metadata file', async () => {
+      mockRulesetFiles({
+        metadataVersions: ['1.0.0', '2.0.0'],
+        metadataYankedVersions: {
+          '2.0.0': 'bad release',
+        },
+      });
+
+      const tag = 'v3.0.0';
+      const version = RulesetRepository.getVersionFromTag(tag);
+      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
+      const bcrRepo = CANONICAL_BCR;
+
+      await bcrRepo.shallowCloneAndCheckout('main');
+      mockBcrMetadataExists(bcrRepo, 'fake_ruleset', true);
+      mockBcrMetadataFile(bcrRepo, 'fake_ruleset', {
+        versions: ['1.0.0', '2.0.0'],
+        yankedVersions: {
+          '1.0.0': 'has attack vector',
+        },
+      });
+
+      await rulesetRepo.shallowCloneAndCheckout(tag);
+      await createEntryService.createEntryFiles(
+        rulesetRepo.metadataTemplate('.'),
+        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
+        rulesetRepo.presubmitPath('.'),
+        rulesetRepo.patchesPath('.'),
+        bcrRepo.diskPath,
+        version
+      );
+      const writeMetadataCall = mocked(fs.writeFileSync).mock.calls.find(
+        (call) => (call[0] as string).includes('metadata.json')
+      );
+      const writtenMetadataContent = writeMetadataCall[1] as string;
+      expect({
+        '1.0.0': 'has attack vector',
+        '2.0.0': 'bad release',
+      }).toEqual(JSON.parse(writtenMetadataContent).yanked_versions);
+    });
+
     test('updates bcr metadata file if there were changes to the template', async () => {
       mockRulesetFiles({ metadataHomepage: 'foo.bar.com' });
 
