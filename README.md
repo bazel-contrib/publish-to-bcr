@@ -100,14 +100,6 @@ When using a bot/machine user PAT to open the pull request, set `draft: false` o
 See an example of [release](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/release.yml) and [publish](https://github.com/aspect-build/rules_lint/blob/main/.github/workflows/publish.yaml) workflows working together in rules_lint.
 Example workflows are also included in the Bazel [rules template](https://github.com/bazel-contrib/rules-template/tree/main/.github/workflows).
 
-## Immutable releases
-
-The reusable publish workflow is compatible with [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
-
-If `attest: true` is set, attestations will be uploaded to the latest release draft for the tag. The workflow will _not_ finalize the release—it must be published manually or by using automation such as [softprops/action-gh-release](https://github.com/softprops/action-gh-release).
-
-If the reusable release and publish workflows do _not_ run inside of the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran.
-
 ## Publishing multiple modules in the same repo
 
 Multple modules that are versioned together in the same git repository can be published by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
@@ -134,7 +126,28 @@ To patch in a submodule, add the patch to a patches folder under the submodule p
 ## Attestation support
 
 BCR supports the upload of attestations with your build. This workflow will produce them by default but BCR requires that you also release your ruleset using the [bazel-contrib release_ruleset](https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml) workflow. Source archive attestations produced in other ways will currently be rejected by BCR. If you are not using the release_ruleset, you will want
-to set `attest: false`
+to set `attest: false`.
+
+## Immutable releases
+
+The reusable publish workflow is compatible with [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
+
+If `attest: true` is set, the release must remain as a draft during the publish workflow run. Set `draft: true` on the reusable release workflow that runs before publish. During the publish workflow, attestations will be uploaded to the latest release draft for the tag.
+
+The workflow will _not_ finalize the release—it must be published manually or by using automation such as [softprops/action-gh-release](https://github.com/softprops/action-gh-release). For example:
+
+```yaml
+  finalize:
+    # Publish the draft release
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        with:
+          tag_name: ${{ inputs.tag_name || github.ref_name }}
+```
+
+If the reusable release and publish workflows do _not_ run inside of the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran.
 
 ## Reporting issues
 
