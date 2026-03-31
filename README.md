@@ -137,14 +137,11 @@ If `attest: true` is set, the release must remain as a draft during the publish 
 The workflow will _not_ finalize the release—it must be published manually or by using automation such as [softprops/action-gh-release](https://github.com/softprops/action-gh-release). For example:
 
 ```yaml
-  finalize:
-    # Publish the draft release
-    needs: publish
+  publish-release:
     runs-on: ubuntu-latest
+    needs: publish
     steps:
-      - uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
-        with:
-          tag_name: ${{ inputs.tag_name || github.ref_name }}
+      - run: gh release edit "${{ inputs.tag_name }}" --draft=false --repo "${{ github.repository }}"
 ```
 
 If the reusable release and publish workflows do _not_ run inside of the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran.
