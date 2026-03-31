@@ -245,7 +245,7 @@ jobs:
       # However all the context is the caller repo (like this workflow is inlined)
       # https://github.com/orgs/community/discussions/18602
       # https://github.com/orgs/community/discussions/63863
-      uses: bazel-contrib/publish-to-bcr@ff2c5e3fe8c3b83678df560bfc1cf4d0ba2eb3e1
+      uses: bazel-contrib/publish-to-bcr@1c1b9247c57596241947e4f8aa54fa7a21a818b6
       with:
         attest: true
         attestations-dest: attestations
@@ -266,7 +266,7 @@ jobs:
         tag_name: ${{ inputs.tag_name }}
         # We must explicitly indicate when the release is a draft
         # for the upload to work.
-        draft: ${{ inputs.upload_attestations_to_draft_release }}
+        draft: true
 
     # Publish to BCR can run substitutions on an attestations.template.json file. Add a default
     # template here rather than requiring users to add one the module repo's .bcr templates folder.
@@ -332,7 +332,7 @@ jobs:
 
     - name: Create final entry
       id: create-final-entry
-      uses: bazel-contrib/publish-to-bcr@ff2c5e3fe8c3b83678df560bfc1cf4d0ba2eb3e1
+      uses: bazel-contrib/publish-to-bcr@1c1b9247c57596241947e4f8aa54fa7a21a818b6
       with:
         tag: ${{ inputs.tag_name }}
         module-version: ${{ env.VERSION }}
