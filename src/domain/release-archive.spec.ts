@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { parse as parseUrl } from 'node:url';
 
@@ -16,14 +17,17 @@ import {
 } from './release-archive';
 
 jest.mock('node:fs');
+jest.mock('node:os');
 jest.mock('tar');
 jest.mock('extract-zip');
 jest.mock('./artifact', () => {
   return {
-    Artifact: jest.fn().mockImplementation((url) => {
-      mockArtifact.url = url;
-      return mockArtifact;
-    }),
+    Artifact: {
+      remote: jest.fn().mockImplementation((url) => {
+        mockArtifact.url = url;
+        return mockArtifact;
+      }),
+    },
     ArtifactDownloadError:
       jest.requireActual('./artifact').ArtifactDownloadError,
   };
@@ -42,7 +46,12 @@ const options: DownloadOptions = {
   backoffDelayFactor: 2000,
 };
 
+const TEMP_DIR = '/tmp';
+const EXTRACT_FOLDER = 'release-contents-1234';
+
 beforeEach(() => {
+  mocked(os.tmpdir).mockReturnValue(TEMP_DIR);
+  mocked(fs.mkdtempSync).mockReturnValue(path.join(TEMP_DIR, EXTRACT_FOLDER));
   mocked(fs.readFileSync).mockReturnValue(
     fakeModuleFile({ moduleName: 'rules_foo', version: '1.2.3' })
   );
@@ -52,7 +61,8 @@ beforeEach(() => {
   mockArtifact.url = null;
   mockArtifact.download.mockImplementation(() => {
     (mockArtifact as any).diskPath = path.join(
-      '/tmp/artifact-1234',
+      TEMP_DIR,
+      'artifact-1234',
       path.basename(parseUrl(mockArtifact.url).pathname)
     );
     return Promise.resolve(null);
@@ -67,7 +77,7 @@ describe('fetch', () => {
       options
     );
 
-    expect(Artifact).toHaveBeenCalledWith(RELEASE_ARCHIVE_URL);
+    expect(Artifact.remote).toHaveBeenCalledWith(RELEASE_ARCHIVE_URL);
     expect(archive.artifact.download).toHaveBeenCalled();
   });
 
@@ -114,7 +124,7 @@ describe('extractModuleFile', () => {
     await releaseArchive.extractModuleFile();
 
     expect(tar.x).toHaveBeenCalledWith({
-      cwd: path.dirname(releaseArchive.artifact.diskPath),
+      cwd: path.join(TEMP_DIR, EXTRACT_FOLDER),
       file: releaseArchive.artifact.diskPath,
     });
   });
@@ -128,7 +138,7 @@ describe('extractModuleFile', () => {
     await releaseArchive.extractModuleFile();
 
     const expectedPath = path.join(
-      path.dirname(releaseArchive.artifact.diskPath),
+      path.join(TEMP_DIR, EXTRACT_FOLDER),
       STRIP_PREFIX,
       'MODULE.bazel'
     );

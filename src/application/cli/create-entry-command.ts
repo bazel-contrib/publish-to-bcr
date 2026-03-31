@@ -21,6 +21,7 @@ import {
   CreateEntryService,
   VersionAlreadyPublishedError,
 } from '../../domain/create-entry.js';
+import { LocalArtifacts } from '../../domain/local-artifact.js';
 import { MetadataFile } from '../../domain/metadata-file.js';
 import { MetadataFileError } from '../../domain/metadata-file.js';
 import { ModuleNameError } from '../../domain/module-file.js';
@@ -60,6 +61,11 @@ export class CreateEntryCommand {
       console.error(
         `Detected multiple module roots: ${JSON.stringify(configuration.moduleRoots)}`
       );
+    }
+
+    const localArtifacts = new LocalArtifacts();
+    for (const localArtifactPath of args.localArtifactPath) {
+      localArtifacts.addSearchPath(localArtifactPath);
     }
 
     const moduleNames: string[] = [];
@@ -114,7 +120,8 @@ export class CreateEntryCommand {
           patchesPath,
           args.localRegistry,
           args.moduleVersion,
-          attestationsTemplate
+          attestationsTemplate,
+          localArtifacts
         );
 
         console.error(

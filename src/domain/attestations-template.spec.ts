@@ -11,10 +11,28 @@ import {
   AttestationsTemplateError,
   UnsubstitutedAttestationVarsError,
 } from './attestations-template';
+import { LocalArtifacts } from './local-artifact';
 import { SubstitutableVar } from './substitution';
 
+const mockDownload = jest.fn();
+const mockComputeIntegrityHash = jest.fn();
 jest.mock('node:fs');
-jest.mock('./artifact');
+jest.mock('./artifact', () => {
+  return {
+    Artifact: {
+      remote: jest.fn().mockImplementation((url) => {
+        return {
+          url,
+          _diskPath: null,
+          download: mockDownload,
+          computeIntegrityHash: mockComputeIntegrityHash,
+        };
+      }),
+    },
+    ArtifactDownloadError:
+      jest.requireActual('./artifact').ArtifactDownloadError,
+  };
+});
 
 const ATTESTATIONS_TEMPLATE_PATH = 'attestations.json';
 const VALID_ATTESTATIONS_TEMPLATE = `\
@@ -247,6 +265,7 @@ describe('AttestationsTemplate', () => {
     const options: DownloadOptions = {
       backoffDelayFactor: 2000,
     };
+    const localArtifacts = new LocalArtifacts();
 
     test('downloads each attestation', async () => {
       const template = AttestationsTemplate.tryLoad(ATTESTATIONS_TEMPLATE_PATH);
@@ -255,60 +274,43 @@ describe('AttestationsTemplate', () => {
         REPO: 'bar',
         TAG: 'v1.0.0',
       });
-      await template.computeIntegrityHashes(options);
+      await template.computeIntegrityHashes(options, localArtifacts);
 
-      const artifacts = mocked(Artifact).mock.instances;
-      expect(artifacts.length).toEqual(3);
+      expect(Artifact.remote).toHaveBeenCalledTimes(3);
+      expect(Artifact.remote).toHaveBeenCalledWith(
+        'https://github.com/foo/bar/releases/download/v1.0.0/source.json.intoto.jsonl'
+      );
+      expect(Artifact.remote).toHaveBeenCalledWith(
+        'https://github.com/foo/bar/releases/download/v1.0.0/MODULE.bazel.intoto.jsonl'
+      );
+      expect(Artifact.remote).toHaveBeenCalledWith(
+        'https://github.com/foo/bar/releases/download/v1.0.0/bar-v1.0.0.tar.gz.intoto.jsonl'
+      );
 
-      const a1 = artifacts.find(
-        (_, i) =>
-          mocked(Artifact).mock.calls[i][0] ===
-          'https://github.com/foo/bar/releases/download/v1.0.0/source.json.intoto.jsonl'
-      )!;
-      const a2 = artifacts.find(
-        (_, i) =>
-          mocked(Artifact).mock.calls[i][0] ===
-          'https://github.com/foo/bar/releases/download/v1.0.0/MODULE.bazel.intoto.jsonl'
-      )!;
-      const a3 = artifacts.find(
-        (_, i) =>
-          mocked(Artifact).mock.calls[i][0] ===
-          'https://github.com/foo/bar/releases/download/v1.0.0/bar-v1.0.0.tar.gz.intoto.jsonl'
-      )!;
-
-      expect([a1, a2, a3].every((a) => a !== undefined)).toBe(true);
-
-      expect(a1.download).toHaveBeenCalled();
-      expect(a2.download).toHaveBeenCalled();
-      expect(a3.download).toHaveBeenCalled();
+      expect(mockDownload).toHaveBeenCalledTimes(3);
     });
 
     test('fills out the correct integrity hashes', async () => {
-      jest
-        .spyOn(Artifact.prototype, 'computeIntegrityHash')
-        .mockImplementation(function () {
-          const index = mocked(Artifact).mock.instances.indexOf(this);
-          const url = mocked(Artifact).mock.calls[index][0];
+      mockComputeIntegrityHash.mockImplementation(function () {
+        if (
+          this.url ===
+          'https://github.com/foo/bar/releases/download/v1.0.0/source.json.intoto.jsonl'
+        ) {
+          return 'sha256-source';
+        } else if (
+          this.url ===
+          'https://github.com/foo/bar/releases/download/v1.0.0/MODULE.bazel.intoto.jsonl'
+        ) {
+          return 'sha256-module';
+        } else if (
+          this.url ===
+          'https://github.com/foo/bar/releases/download/v1.0.0/bar-v1.0.0.tar.gz.intoto.jsonl'
+        ) {
+          return 'sha256-archive';
+        }
 
-          if (
-            url ===
-            'https://github.com/foo/bar/releases/download/v1.0.0/source.json.intoto.jsonl'
-          ) {
-            return 'sha256-source';
-          } else if (
-            url ===
-            'https://github.com/foo/bar/releases/download/v1.0.0/MODULE.bazel.intoto.jsonl'
-          ) {
-            return 'sha256-module';
-          } else if (
-            url ===
-            'https://github.com/foo/bar/releases/download/v1.0.0/bar-v1.0.0.tar.gz.intoto.jsonl'
-          ) {
-            return 'sha256-archive';
-          }
-
-          throw new Error('Unexpected archive');
-        });
+        throw new Error('Unexpected archive');
+      });
 
       const template = AttestationsTemplate.tryLoad(ATTESTATIONS_TEMPLATE_PATH);
       template.substitute({
@@ -316,10 +318,9 @@ describe('AttestationsTemplate', () => {
         REPO: 'bar',
         TAG: 'v1.0.0',
       });
-      await template.computeIntegrityHashes(options);
+      await template.computeIntegrityHashes(options, localArtifacts);
 
-      const artifacts = mocked(Artifact).mock.instances;
-      expect(artifacts.length).toEqual(3);
+      expect(mockComputeIntegrityHash).toHaveBeenCalledTimes(3);
 
       template.save('attestations.json');
       const written = JSON.parse(
@@ -338,11 +339,9 @@ describe('AttestationsTemplate', () => {
     });
 
     test('throws when an attestation fails to download', async () => {
-      jest
-        .spyOn(Artifact.prototype, 'download')
-        .mockRejectedValue(
-          new ArtifactDownloadError('https://foo/bar/artifact.baz', 404)
-        );
+      mockDownload.mockRejectedValue(
+        new ArtifactDownloadError('https://foo/bar/artifact.baz', 404)
+      );
 
       const template = AttestationsTemplate.tryLoad(ATTESTATIONS_TEMPLATE_PATH);
       template.substitute({
@@ -351,9 +350,9 @@ describe('AttestationsTemplate', () => {
         TAG: 'v1.0.0',
       });
 
-      await expect(template.computeIntegrityHashes(options)).rejects.toThrow(
-        AttestationDownloadError
-      );
+      await expect(
+        template.computeIntegrityHashes(options, localArtifacts)
+      ).rejects.toThrow(AttestationDownloadError);
     });
   });
 
