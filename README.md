@@ -2,6 +2,14 @@
 
 Release automation that mirrors releases of your Bazel ruleset to the [Bazel Central Registry](https://github.com/bazelbuild/bazel-central-registry).
 
+* [Prerequisites](#prerequisites)
+* [Setup](#setup)
+* [Publishing multiple modules in the same repo](#publishing-multiple-modules-in-the-same-repo)
+* [Including patches](#including-patches)
+* [Attestations](#attestations)
+* [Immutable releases](#immutable-releases)
+* [LEGACY GitHub app](#legacy-github-app)
+
 ## Prerequisites
 
 Prepare your ruleset for bzlmod by following the [Bzlmod User Guide](https://bazel.build/docs/bzlmod).
@@ -123,7 +131,7 @@ corresponding `source.json` file:
 
 To patch in a submodule, add the patch to a patches folder under the submodule path `.bcr/[sub/module]/patches` where sub/module is the path to the WORKSPACE folder relative to the repository root.
 
-## Attestation support
+## Attestations
 
 BCR supports the upload of attestations with your build. This workflow will produce them by default but BCR requires that you also release your ruleset using the [bazel-contrib release_ruleset](https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml) workflow. Source archive attestations produced in other ways will currently be rejected by BCR. If you are not using the release_ruleset, you will want
 to set `attest: false`.
@@ -132,9 +140,9 @@ to set `attest: false`.
 
 The reusable publish workflow is compatible with [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
 
-If `attest: true` is set, the release must remain as a draft during the publish workflow run. Set `draft: true` on the reusable release workflow that runs before publish. During the publish workflow, attestations will be uploaded to the latest release draft for the tag.
+If using attestations (`attest: true`, the default), the release must remain as a draft during the publish workflow run. Set `draft: true` on the [reusable release workflow](https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml) (required for attestations) that runs before publish. During the publish workflow, attestations will be uploaded to the latest release draft for the tag.
 
-The workflow will _not_ finalize the release—it must be published manually or by using automation such as [softprops/action-gh-release](https://github.com/softprops/action-gh-release). For example:
+The workflow will _not_ finalize the release—it must be published manually or by adding an additional job to your workflow such as:
 
 ```yaml
   publish-release:
@@ -144,11 +152,7 @@ The workflow will _not_ finalize the release—it must be published manually or 
       - run: gh release edit "${{ inputs.tag_name }}" --draft=false --repo "${{ github.repository }}"
 ```
 
-If the reusable release and publish workflows do _not_ run inside of the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran.
-
-## Reporting issues
-
-Create an issue in this repository for support.
+The publish workflow downloads artifacts produced by the reusable release workflow by default. If the release and publish jobs do _not_ run in the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran (see workflow [docs](./.github/workflows/publish.yaml)).
 
 ## LEGACY GitHub App
 
