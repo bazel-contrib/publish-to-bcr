@@ -8,6 +8,9 @@ ts_project(
         "types.ts",
         "webhook.ts",
     ],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     visibility = ["//e2e:__subpackages__"],
     deps = [
         "//:node_modules/@octokit/webhooks-methods",

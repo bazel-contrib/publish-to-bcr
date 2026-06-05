@@ -8,6 +8,9 @@ ts_project(
         "main.ts",
         "providers.ts",
     ],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     visibility = ["//src:__pkg__"],
     deps = [
         "//:node_modules/@google-cloud/functions-framework",

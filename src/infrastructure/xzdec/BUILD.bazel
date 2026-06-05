@@ -31,7 +31,10 @@ genrule(
 ts_project(
     name = "xzdec",
     srcs = ["xzdec.ts"],
+    allow_js = True,
     data = [":xzdec_wasm_gz"],
+    source_map = True,
+    tsconfig = "//:tsconfig",
     visibility = [
         "//src:__pkg__",
         "//src/domain:__subpackages__",

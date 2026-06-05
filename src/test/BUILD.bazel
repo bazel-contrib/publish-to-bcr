@@ -6,6 +6,9 @@ ts_project(
         "mock-template-files.ts",
         "util.ts",
     ],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     visibility = ["//src/domain:__pkg__"],
     deps = [
         "//:node_modules/@types/jest",  # keep
