@@ -57,6 +57,12 @@ export class CreateEntryCommand {
     const configuration = this.loadConfigurationFromDirectoryOrDefault(
       args.templatesDir
     );
+
+    if (args.moduleRoots !== undefined) {
+      console.error(`Overriding module roots to ${args.moduleRoots.join(',')}`);
+      configuration.setModuleRoots(args.moduleRoots);
+    }
+
     if (configuration.moduleRoots.length > 1) {
       console.error(
         `Detected multiple module roots: ${JSON.stringify(configuration.moduleRoots)}`

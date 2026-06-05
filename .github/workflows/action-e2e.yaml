@@ -172,3 +172,44 @@ jobs:
             echo "Expected output short-description to be '${EXPECTED}' but it was '${ACTUAL}'"
             exit 1
           fi
+  test-override-module-roots:
+    # tests overriding module roots to publish one module from a multi-module repo 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: this
+      - name: Setup test fixture
+        run: this/e2e/action/setup-test-fixture.sh multi-module multi-module-1.0.0
+      - name: Create registry
+        run: |
+          mkdir -p bazel-central-registry/modules
+          cd bazel-central-registry
+          git init
+      - name: Create entry
+        id: create_entry
+        uses: ./this
+        with:
+          tag: v1.0.0
+          module-roots: submodule # override to only publish submodule
+          module-version: 1.0.0
+          github-repository: testorg/multi-module
+          templates-dir: this/e2e/fixtures/multi-module/.bcr
+          local-registry: bazel-central-registry
+      - name: Test outputs
+        run: |-
+          set -o errexit -o nounset -o pipefail -o xtrace
+
+          EXPECTED="submodule"
+          ACTUAL="${{ steps.create_entry.outputs.module-names }}"
+          if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
+            echo "expected output module-names to be '${EXPECTED}' but it was '${ACTUAL}'"
+            exit 1
+          fi
+
+          EXPECTED="submodule@1.0.0"
+          ACTUAL="${{ steps.create_entry.outputs.short-description }}"
+          if [[ "${ACTUAL}" != "${EXPECTED}" ]]; then
+            echo "expected output short-description to be '${EXPECTED}' but it was '${ACTUAL}'"
+            exit 1
+          fi

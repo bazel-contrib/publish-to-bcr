@@ -5,6 +5,7 @@ import { CreateEntryCommand } from './create-entry-command';
 
 export interface CreateEntryArgs {
   githubRepository?: string;
+  moduleRoots?: string[];
   moduleVersion: string;
   localRegistry: string;
   tag: string;
@@ -63,6 +64,21 @@ export function createParser(
             'Path to a locally checked out registry where the entry files will be created.',
           type: 'string',
           required: true,
+          requiresArg: true,
+        });
+        yargs.option('module-roots', {
+          describe: `\
+            A list of of relative paths of modules to publish. This option overrides
+            moduleRoots in the configuration file.
+
+            Multiple roots may be passed as a single space-delimited option or over
+            multiple --module-roots arguments:
+    
+              --module-roots . a b/c
+              --module-roots . --module-roots a --module-roots b/c
+          `,
+          type: 'array',
+          required: false,
           requiresArg: true,
         });
         yargs.option('module-version', {
