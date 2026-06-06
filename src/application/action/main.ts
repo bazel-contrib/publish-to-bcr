@@ -16,6 +16,7 @@ export interface Inputs {
   localArtifactPath: string[];
   localRegistry: string;
   metadataTemplate: string;
+  moduleRoots: string[];
   moduleVersion: string;
   patch: string;
   presubmit: string;
@@ -37,6 +38,7 @@ async function main() {
       localArtifactPath: core.getMultilineInput('local-artifact-path'),
       localRegistry: core.getInput('local-registry', { required: true }),
       metadataTemplate: core.getInput('metadata-template'),
+      moduleRoots: core.getMultilineInput('module-roots'),
       moduleVersion: core.getInput('module-version', { required: true }),
       patch: core.getInput('patch'),
       presubmit: core.getInput('presubmit'),
@@ -65,6 +67,10 @@ async function main() {
       inputs.localArtifactPath.forEach((localArtifactPath) =>
         cliArgs.push(`--local-artifact-path=${localArtifactPath}`)
       );
+    }
+
+    if (inputs.moduleRoots && inputs.moduleRoots.length > 0) {
+      cliArgs.push(`--module-roots=${inputs.moduleRoots.join(' ')}`);
     }
 
     const { code, output: cliOutput } = await executeCli(cliBin, cliArgs);

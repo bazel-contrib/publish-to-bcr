@@ -239,3 +239,39 @@ mock_attestation() {
     assert_file_exists "${ENTRY_PATH}/1.0.0/source.json"
     assert_file_exists "${ENTRY_PATH}/1.0.0/presubmit.yml"
 }
+
+@test 'override module roots' {
+    FIXTURE="e2e/fixtures/multi-module"
+    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
+    TEMPLATES_DIR="${FIXTURE}/.bcr"
+    RELEASE_ARCHIVE="e2e/fixtures/multi-module-multi-module-1.0.0.tar.gz"
+
+    swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
+    swap_source_url "${TEMPLATES_DIR}/submodule/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
+
+    run "${NODE_BIN}" "${CLI_BIN}" create-entry \
+        --local-registry "${REGISTRY_PATH}" \
+        --templates-dir "${TEMPLATES_DIR}" \
+        --module-version 1.0.0 \
+        --github-repository testorg/multi-module \
+        --tag v1.0.0 \
+        --module-roots submodule # only submodule, ignore root '.'
+
+    assert_success
+
+    # The root module entry should NOT have been created
+    ENTRY_PATH="${REGISTRY_PATH}/modules/module"
+
+    assert_file_not_exist "${ENTRY_PATH}/metadata.json"
+    assert_file_not_exist "${ENTRY_PATH}/1.0.0/MODULE.bazel"
+    assert_file_not_exist "${ENTRY_PATH}/1.0.0/source.json"
+    assert_file_not_exist "${ENTRY_PATH}/1.0.0/presubmit.yml"
+
+    ENTRY_PATH="${REGISTRY_PATH}/modules/submodule"
+
+    assert_file_exists "${ENTRY_PATH}/metadata.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/MODULE.bazel"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/source.json"
+    assert_file_exists "${ENTRY_PATH}/1.0.0/presubmit.yml"
+}

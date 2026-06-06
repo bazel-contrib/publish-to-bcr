@@ -85,9 +85,17 @@ export class Configuration {
 
   private constructor(
     public readonly filepath: string | null,
-    public readonly moduleRoots: string[],
+    private _moduleRoots: string[],
     public readonly fixedReleaser?: FixedReleaser
   ) {}
+
+  public setModuleRoots(moduleRoots: string[]) {
+    this._moduleRoots = moduleRoots.slice();
+  }
+
+  public get moduleRoots(): string[] {
+    return this._moduleRoots;
+  }
 }
 
 export interface FixedReleaser {

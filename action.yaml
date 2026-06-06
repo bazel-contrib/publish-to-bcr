@@ -28,6 +28,9 @@ inputs:
     description: 'Content of the metadata template. An alternative to supplying a metadata.template.json file in the templates dir.'
     required: false
     default: ''
+  module-roots:
+    description: 'A newline separated list of relative paths of modules to publish. Overrides the content of moduleRoots in the configuration file.'
+    required: false
   module-version:
     description: 'The module version to publish to the registry.'
     required: true
