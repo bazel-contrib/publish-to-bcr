@@ -70,7 +70,9 @@ async function main() {
     }
 
     if (inputs.moduleRoots && inputs.moduleRoots.length > 0) {
-      cliArgs.push(`--module-roots=${inputs.moduleRoots.join(' ')}`);
+      for (let root of inputs.moduleRoots) {
+        cliArgs.push(`--module-roots=${root}`);
+      }
     }
 
     const { code, output: cliOutput } = await executeCli(cliBin, cliArgs);
