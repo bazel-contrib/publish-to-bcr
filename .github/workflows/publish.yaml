@@ -20,7 +20,8 @@
 # See https://github.com/bazel-contrib/publish-to-bcr/tree/main/templates.
 #
 # Repositories containing multiple modules that are versioned together will have all modules included in
-# the published entry. This is controlled via the `moduleRoots` property in .bcr/config.yml.
+# the published entry. This is controlled via the `moduleRoots` property in .bcr/config.yml or by setting
+# the `module_roots` input in this workflow.
 
 on:
   # Make this workflow reusable, see
@@ -112,6 +113,18 @@ on:
           For example, with prefix 'v' and tag 'v1.2.3', the version becomes '1.2.3'.
           With prefix 'bazel-v' and tag 'bazel-v1.2.3', the version becomes '1.2.3'.
         default: "v"
+        type: string
+      module_roots:
+        description: |
+          A new-line separated list of relative paths of modules to publish.
+
+          By default, Publish to BCR looks at `moduleRoots` in the .bcr/config.yaml file
+          to determine which modules to publish. Setting `module_roots` will override
+          the contents of the config file.
+          
+          Set this to selectively publish modules, for example, if modules are versioned
+          differently for different release tags.
+        required: false
         type: string
       environment:
         type: string
@@ -242,11 +255,13 @@ jobs:
       # However all the context is the caller repo (like this workflow is inlined)
       # https://github.com/orgs/community/discussions/18602
       # https://github.com/orgs/community/discussions/63863
-      uses: bazel-contrib/publish-to-bcr@bde22e6f14b0b5882f73a12434d2d1c2ec410317
+      uses: bazel-contrib/publish-to-bcr@ca1bcb10cc946bb22e151ee5b6f4e55e29ef1e63
       with:
         attest: true
         attestations-dest: attestations
         tag: ${{ inputs.tag_name }}
+        module-roots: |
+          ${{ inputs.module_roots }}
         module-version: ${{ env.VERSION }}
         local-registry: bazel-central-registry
         templates-dir: this/.bcr
@@ -277,7 +292,10 @@ jobs:
       run: |
         # Determine whether this is a multi-module repo because it affects the names of the
         # uploaded attestaton files.
-        if [ -f "config.yml" ]; then
+        OVERRIDDEN_MODULE_ROOTS=$(echo "${{ inputs.module_roots }}" | xargs)
+        if [ -n "${OVERRIDDEN_MODULE_ROOTS}" ]; then
+            read -ra MODULE_ROOTS <<< "${OVERRIDDEN_MODULE_ROOTS}"
+        elif [ -f "config.yml" ]; then
             readarray -t MODULE_ROOTS < <(cat "config.yml" | yq --unwrapScalar '.moduleRoots.[] // "."')
         elif [ -f "config.yaml" ]; then
             readarray -t MODULE_ROOTS < <(cat "config.yaml" | yq --unwrapScalar '.moduleRoots.[] // "."')
@@ -329,10 +347,12 @@ jobs:
 
     - name: Create final entry
       id: create-final-entry
-      uses: bazel-contrib/publish-to-bcr@bde22e6f14b0b5882f73a12434d2d1c2ec410317
+      uses: bazel-contrib/publish-to-bcr@ca1bcb10cc946bb22e151ee5b6f4e55e29ef1e63
       with:
         tag: ${{ inputs.tag_name }}
         module-version: ${{ env.VERSION }}
+        module-roots: |
+          ${{ inputs.module_roots }}
         local-registry: bazel-central-registry
         templates-dir: this/.bcr
         local-artifact-path: |

@@ -110,7 +110,27 @@ Example workflows are also included in the Bazel [rules template](https://github
 
 ## Publishing multiple modules in the same repo
 
-Multple modules that are versioned together in the same git repository can be published by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
+Multiple modules that are versioned together in the same git repository can be published by configuring [`moduleRoots`](./templates/README.md#optional-configyml).
+
+When modules are versioned separately on different tags, pass in `module_roots` to the reusable publish workflow to override which module(s) get published. Ensure that `tag_prefix` is correctly set to match the tagging scheme for the release (defaults to "v").
+
+```yaml
+jobs:
+  publish-foobar:
+    if: startsWith(inputs.tag_name, "foobar-v")
+    uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@[version]
+    with:
+      ...
+      tag_prefix: foobar-v  # e.g., for tag foobar-v1.2.3
+      module_roots: | # only publish modules rooted at ./foo and ./bar
+        foo
+        bar
+```
+
+Some ways publish to different modules on different releases:
+1. Declare separate publish jobs that are triggered conditionally on the release tag (as above).
+1. Use a single publish job but dynamically set the value of `tag_prefix` and `module_roots` using GitHub Actions expressions.
+1. Use entirely separate release publish workflows for different tag patterns.
 
 ## Including patches
 
