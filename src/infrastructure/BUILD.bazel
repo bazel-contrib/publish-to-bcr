@@ -8,6 +8,9 @@ ts_project(
         "github.ts",
         "secrets.ts",
     ],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     visibility = [
         "//e2e:__subpackages__",
         "//src:__pkg__",

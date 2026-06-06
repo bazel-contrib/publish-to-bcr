@@ -16,13 +16,15 @@ bats_test(
         "//src/application/cli:bundle",
         "@jq_toolchains//:resolved_toolchain",
         "@nodejs_toolchains//:resolved_toolchain",
+        "@rules_nodejs//nodejs:current_node_runtime",
     ],
     env = {
         "CLI_BIN": "$(rootpath //src/application/cli:bundle)",
         "JQ_BIN": "$(JQ_BIN)",
-        "NODE_BIN": "$(rootpath @nodejs_toolchains//:resolved_toolchain)",
+        "NODE_BIN": "$(NODE_PATH)",
     },
     toolchains = [
         "@jq_toolchains//:resolved_toolchain",
+        "@rules_nodejs//nodejs:current_node_runtime",
     ],
 )

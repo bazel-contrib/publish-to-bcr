@@ -16,6 +16,11 @@ repos:
         language: system
         entry: bazel run //:format
         files: .*
+      - id: gazelle
+        name: Gazelle
+        language: system
+        entry: bazel run //:gazelle
+        files: .*
   - repo: https://github.com/keith/pre-commit-buildifier
     rev: 8.2.1
     hooks:

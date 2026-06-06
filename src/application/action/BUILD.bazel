@@ -7,6 +7,9 @@ ts_project(
         "attest.ts",
         "main.ts",
     ],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     deps = [
         "//:node_modules/@actions/attest",
         "//:node_modules/@actions/core",

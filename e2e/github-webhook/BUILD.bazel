@@ -5,6 +5,7 @@ ts_project(
     name = "github-webhook_tests",
     testonly = True,
     srcs = ["e2e.spec.ts"],
+    allow_js = True,
     data = [
         "//e2e/fixtures",
         "//e2e/fixtures:attestations",
@@ -27,6 +28,8 @@ ts_project(
         # link all node_modules so that the emulation can resolve its deps.
         "//:node_modules",
     ],
+    source_map = True,
+    tsconfig = "//:tsconfig",
     deps = [
         "//:node_modules/@octokit/core",
         "//:node_modules/@octokit/webhooks-types",

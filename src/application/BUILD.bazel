@@ -8,6 +8,9 @@ ts_project(
         "octokit.ts",
         "release-event-handler.ts",
     ],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     visibility = [
         "//src:__pkg__",
         "//src/application:__subpackages__",

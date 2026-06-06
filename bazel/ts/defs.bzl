@@ -19,8 +19,6 @@ def ts_project(name, **kwargs):
     _ts_project(
         name = name,
         declaration = True,
-        source_map = True,
-        allow_js = True,
         tsconfig = {"include": ["**/*.ts"]},
         extends = tsconfig,
         **kwargs

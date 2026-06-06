@@ -12,6 +12,9 @@ ts_project(
         "providers.ts",
         "yargs.ts",
     ],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     visibility = [
         "//e2e/cli:__pkg__",
         "//src/application/action:__pkg__",
@@ -73,6 +76,9 @@ ts_project(
     name = "cli_tests",
     testonly = True,
     srcs = ["yargs.spec.ts"],
+    allow_js = True,
+    source_map = True,
+    tsconfig = "//:tsconfig",
     deps = [
         ":cli",
         "//:node_modules/@types/jest",  # keep

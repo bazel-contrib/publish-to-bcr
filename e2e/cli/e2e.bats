@@ -7,6 +7,7 @@ setup() {
     mkdir -p "${REGISTRY_PATH}/modules"
 
     export jq="../${JQ_BIN#"external/"}"
+    export NODE_BIN="../${NODE_BIN#"external/"}"
 }
 
 teardown() {
@@ -25,7 +26,6 @@ swap_attestation_url() {
     local SRC=$1
     local FIELD=$2
     local URL=$3
-
     cat "${SRC}" | jq ".attestations[\"${FIELD}\"].url = \"${URL}\"" > "${TEST_TMPDIR}/tmp"
     mv "${TEST_TMPDIR}/tmp" "${SRC}"
 }
