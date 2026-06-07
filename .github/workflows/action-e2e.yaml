@@ -1,16 +1,7 @@
 # End-to-end tests for the Publish to BCR custom GitHub action
 name: action-e2e
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-concurrency:
-  # Cancel previous actions from the same PR or branch except 'main' branch.
-  # See https://docs.github.com/en/actions/using-jobs/using-concurrency and https://docs.github.com/en/actions/learn-github-actions/contexts for more info.
-  group: concurrency-group::${{ github.workflow }}::${{ github.event.pull_request.number > 0 && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}${{ github.ref_name == 'main' && format('::{0}', github.run_id) || ''}}
-  cancel-in-progress: ${{ github.ref_name != 'main' }}
+  workflow_call:
 jobs:
   # Each job is an e2e test. Unfortunately a full workflow cannot be added as
   # required status check on branch protection rules, so each test must be added
