@@ -71,3 +71,5 @@ jobs:
           # Don't save cache on pull requests to avoid polluting it
           cache-save: ${{ github.event_name != 'pull_request' }}
       - run: bazel test //... --config=ci
+  action-e2e:
+    uses: ./.github/workflows/action-e2e.yaml
