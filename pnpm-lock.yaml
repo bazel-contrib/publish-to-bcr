@@ -72,6 +72,9 @@ dependencies:
   extract-zip:
     specifier: ^2.0.1
     version: 2.0.1
+  fzstd:
+    specifier: ^0.1.1
+    version: 0.1.1
   gcp-metadata:
     specifier: ^6.0.0
     version: 6.1.1(encoding@0.1.13)
@@ -5617,6 +5620,10 @@ packages:
 
   /function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+
+  /fzstd@0.1.1:
+    resolution: {integrity: sha512-dkuVSOKKwh3eas5VkJy1AW1vFpet8TA/fGmVA5krThl8YcOVE/8ZIoEA1+U1vEn5ckxxhLirSdY837azmbaNHA==}
+    dev: false
 
   /gaxios@6.7.1(encoding@0.1.13):
     resolution: {integrity: sha512-LDODD4TMYx7XXdpwxAVRAIAuB0bzv0s+ywFonY46k126qzQHT9ygyoa9tncmOiQmmDrik65UYsEkv3lbfqQ3yQ==}

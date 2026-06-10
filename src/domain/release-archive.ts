@@ -6,6 +6,7 @@ import extractZip from 'extract-zip';
 import tar from 'tar';
 
 import { decompress as decompressXz } from '../infrastructure/xzdec/xzdec.js';
+import { decompress as decompressZst } from '../infrastructure/zstdec/zstdec.js';
 import {
   Artifact,
   ArtifactDownloadError,
@@ -52,6 +53,7 @@ export class ReleaseArchive {
     '.tar',
     '.tar.gz',
     '.tar.xz',
+    '.tar.zst',
   ];
   public static async fetch(
     url: string,
@@ -118,6 +120,9 @@ export class ReleaseArchive {
     if (this.artifact.diskPath.endsWith('.tar.xz')) {
       return true;
     }
+    if (this.artifact.diskPath.endsWith('.tar.zst')) {
+      return true;
+    }
     return false;
   }
 
@@ -128,6 +133,20 @@ export class ReleaseArchive {
         cwd: extractDir,
       });
       await decompressXz(reader, writer);
+      await new Promise((resolve) => {
+        writer.on('finish', resolve);
+        writer.end();
+      });
+
+      return;
+    }
+
+    if (this.artifact.diskPath.endsWith('.tar.zst')) {
+      const reader = fs.createReadStream(this.artifact.diskPath);
+      const writer = tar.x({
+        cwd: extractDir,
+      });
+      await decompressZst(reader, writer);
       await new Promise((resolve) => {
         writer.on('finish', resolve);
         writer.end();
