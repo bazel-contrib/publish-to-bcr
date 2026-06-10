@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -6,6 +7,7 @@ import { parse as parseUrl } from 'node:url';
 import { mocked } from 'jest-mock';
 import tar from 'tar';
 
+import { decompress as decompressZst } from '../infrastructure/zstdec/zstdec';
 import { fakeModuleFile } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
 import { Artifact, ArtifactDownloadError, DownloadOptions } from './artifact';
@@ -20,6 +22,12 @@ jest.mock('node:fs');
 jest.mock('node:os');
 jest.mock('tar');
 jest.mock('extract-zip');
+jest.mock('../infrastructure/xzdec/xzdec', () => ({
+  decompress: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('../infrastructure/zstdec/zstdec', () => ({
+  decompress: jest.fn().mockResolvedValue(undefined),
+}));
 jest.mock('./artifact', () => {
   return {
     Artifact: {
@@ -127,6 +135,33 @@ describe('extractModuleFile', () => {
       cwd: path.join(TEMP_DIR, EXTRACT_FOLDER),
       file: releaseArchive.artifact.diskPath,
     });
+  });
+
+  test('decompresses zstd-compressed tarballs through fzstd', async () => {
+    // tar.x returns a stream when called without `file:` so the decompressor
+    // can pipe into it. Provide a fake stream that emits 'finish' on end().
+    const fakeWriter = new EventEmitter() as EventEmitter & {
+      end: () => void;
+      write: () => boolean;
+    };
+    fakeWriter.write = () => true;
+    fakeWriter.end = () => {
+      fakeWriter.emit('finish');
+    };
+    mocked(tar.x).mockReturnValueOnce(fakeWriter as never);
+    mocked(fs.createReadStream).mockReturnValueOnce({} as never);
+
+    const releaseArchive = await ReleaseArchive.fetch(
+      'https://foo.bar/rules-foo-v1.2.3.tar.zst',
+      STRIP_PREFIX,
+      options
+    );
+    await releaseArchive.extractModuleFile();
+
+    expect(tar.x).toHaveBeenCalledWith({
+      cwd: path.join(TEMP_DIR, EXTRACT_FOLDER),
+    });
+    expect(decompressZst).toHaveBeenCalled();
   });
 
   test('loads the extracted MODULE.bazel file', async () => {

@@ -12,6 +12,7 @@ copy_to_directory(
         "//src/infrastructure",
         "//src/infrastructure/xzdec",
         "//src/infrastructure/xzdec:xzdec_wasm_gz",
+        "//src/infrastructure/zstdec",
     ],
     visibility = ["//e2e:__subpackages__"],
 )
