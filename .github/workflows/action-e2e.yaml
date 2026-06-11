@@ -10,7 +10,7 @@ jobs:
     # Create a new module entry and test the content
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           path: this
       - name: Setup test fixture
@@ -53,7 +53,7 @@ jobs:
     # indirectly by checking the resulting subtituted source.json file in the entry.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           path: this
       - name: Setup test fixture
@@ -81,7 +81,7 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           path: this
       - name: Setup test fixture
@@ -116,7 +116,7 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           path: this
       - name: Setup test fixture
@@ -167,7 +167,7 @@ jobs:
     # tests overriding module roots to publish one module from a multi-module repo 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           path: this
       - name: Setup test fixture
