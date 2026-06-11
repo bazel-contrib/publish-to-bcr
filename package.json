@@ -21,7 +21,7 @@
     "@google-cloud/functions-framework": "^3.1.2",
     "@google-cloud/secret-manager": "^5.0.1",
     "@nestjs/common": "^10.3.9",
-    "@nestjs/core": "^10.3.9",
+    "@nestjs/core": "^11.0.0",
     "@octokit/auth-app": "^4.0.4",
     "@octokit/core": "^4.0.4",
     "@octokit/rest": "^19.0.3",
