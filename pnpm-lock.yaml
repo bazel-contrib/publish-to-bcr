@@ -195,8 +195,8 @@ devDependencies:
     specifier: ^29.7.0
     version: 29.7.0
   mailparser:
-    specifier: 3.9.1
-    version: 3.9.1
+    specifier: 3.9.3
+    version: 3.9.3
   mockttp:
     specifier: ^3.10.0
     version: 3.17.1(encoding@0.1.13)
@@ -6009,6 +6009,13 @@ packages:
       safer-buffer: 2.1.2
     dev: true
 
+  /iconv-lite@0.7.2:
+    resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
+    engines: {node: '>=0.10.0'}
+    dependencies:
+      safer-buffer: 2.1.2
+    dev: true
+
   /ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
     dev: false
@@ -6932,17 +6939,17 @@ packages:
     engines: {node: 14 || >=16.14}
     dev: false
 
-  /mailparser@3.9.1:
-    resolution: {integrity: sha512-6vHZcco3fWsDMkf4Vz9iAfxvwrKNGbHx0dV1RKVphQ/zaNY34Buc7D37LSa09jeSeybWzYcTPjhiZFxzVRJedA==}
+  /mailparser@3.9.3:
+    resolution: {integrity: sha512-AnB0a3zROum6fLaa52L+/K2SoRJVyFDk78Ea6q1D0ofcZLxWEWDtsS1+OrVqKbV7r5dulKL/AwYQccFGAPpuYQ==}
     dependencies:
       '@zone-eu/mailsplit': 5.4.8
       encoding-japanese: 2.2.0
       he: 1.2.0
       html-to-text: 9.0.5
-      iconv-lite: 0.7.0
+      iconv-lite: 0.7.2
       libmime: 5.3.7
       linkify-it: 5.0.0
-      nodemailer: 7.0.11
+      nodemailer: 7.0.13
       punycode.js: 2.3.1
       tlds: 1.261.0
     dev: true
@@ -7245,6 +7252,11 @@ packages:
   /nodemailer@7.0.11:
     resolution: {integrity: sha512-gnXhNRE0FNhD7wPSCGhdNh46Hs6nm+uTyg+Kq0cZukNQiYdnCsoQjodNP9BQVG9XrcK/v6/MgpAPBUFyzh9pvw==}
     engines: {node: '>=6.0.0'}
+
+  /nodemailer@7.0.13:
+    resolution: {integrity: sha512-PNDFSJdP+KFgdsG3ZzMXCgquO7I6McjY2vlqILjtJd0hy8wEvtugS9xKRF2NWlPNGxvLCXlTNIae4serI7dinw==}
+    engines: {node: '>=6.0.0'}
+    dev: true
 
   /normalize-package-data@2.5.0:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
