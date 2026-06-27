@@ -1,7 +1,11 @@
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_file")
+load("@diff.bzl", "diff")
 
-write_source_file(
+diff(
     name = "action",
-    in_file = "//src/application/action:bundle",
-    out_file = "index.js",
+    srcs = [
+        "index.js",
+        "//src/application/action:bundle",
+    ],
+    source_patch_output_groups = ["autopatch"],
+    validate = 1,
 )
