@@ -60,6 +60,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Check out the branch rather than a detached commit so that we can
+          # push patched changes if needed.
+          ref: ${{ github.event.pull_request.head.ref }}
       - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
         with:
           # Avoid downloading Bazel every time.
@@ -71,5 +75,43 @@ jobs:
           # Don't save cache on pull requests to avoid polluting it
           cache-save: ${{ github.event_name != 'pull_request' }}
       - run: bazel test //... --config=ci
+      - if: failure() && github.event_name == 'pull_request'
+        name: Apply patches and re-test
+        run: |
+          BUILD_EVENTS=$(mktemp)
+
+          # Build targets that produce source file patches
+          if ! bazel build //... \
+            --config=ci \
+            --keep_going \
+            --output_groups=autopatch \
+            --build_event_json_file="${BUILD_EVENTS}" \
+            --remote_download_regex='.*\.patch'; then
+              echo "Build failed, applying patches"
+
+              # Extract patch files from the build events json file
+              FILTER='.namedSetOfFiles | values | .files[] | select(.name | endswith($ext)) | ((.pathPrefix | join("/")) + "/" + .name)'
+              PATCHES_TO_APPLY=$(jq --arg ext .patch --raw-output "${FILTER}" "${BUILD_EVENTS}" | tr -d '\r')
+              WKSP=$(bazel info workspace)
+              for patch in $PATCHES_TO_APPLY; do
+                  # Check if patch is empty (no diff). Check if byte length <= 1 because diff.bzl has a bug
+                  # where it prints a newline char to an empty patch.
+                  if [[ "$(wc -c < "${WKSP}/${patch}")" -le 1 ]]; then
+                      continue
+                  fi
+                  echo "Applying patch ${patch}"
+                  patch -p0 < "${WKSP}/${patch}"
+              done
+              rm "${BUILD_EVENTS}"
+          fi
+
+          # Re-run tests with patches applied
+          bazel test //... --config=ci
+
+          # Push patches to branch
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git commit -a -m "fix: apply patches"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
   action-e2e:
     uses: ./.github/workflows/action-e2e.yaml
