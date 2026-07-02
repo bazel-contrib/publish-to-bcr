@@ -181,7 +181,7 @@ jobs:
       TAG_NAME: ${{ inputs.tag_name }}
     steps:
     - name: Checkout the module repository
-      uses: actions/checkout@v4.3.1
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
         ref: ${{ inputs.templates_ref || inputs.tag_name }}
         repository: ${{ inputs.repository }}
@@ -189,7 +189,7 @@ jobs:
         persist-credentials: false
 
     - name: Checkout BCR
-      uses: actions/checkout@v4.3.1
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
         repository: ${{ inputs.registry }}
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -271,7 +271,7 @@ jobs:
     # were already uploaded on a previous run.
     - name: Upload attestations to release
       if: ${{ inputs.attest }}
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
       with:
         files: attestations/*
         repository: ${{ inputs.repository }}
