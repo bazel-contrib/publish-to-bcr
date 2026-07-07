@@ -1,7 +1,5 @@
 import { randomUUID } from 'crypto';
 
-import { FixedReleaser } from '../domain/configuration';
-
 export function fakeModuleFile(
   overrides: {
     moduleName?: string;
@@ -144,26 +142,13 @@ export function fakeMetadataFile(
 
 export function fakeConfigFile(
   options: {
-    fixedReleaser?: FixedReleaser;
-    invalidFixedReleaser?: boolean;
     content?: string;
   } = {}
 ) {
   if (options.content) {
     return options.content;
   }
-  if (options.invalidFixedReleaser) {
-    return `\
-fixedReleaser: foobar
-`;
-  }
-  return `\
-${
-  options.fixedReleaser
-    ? `fixedReleaser: ${JSON.stringify(options.fixedReleaser)}`
-    : ''
-}
-`;
+  return '';
 }
 
 export function fakeAttestationsFile(

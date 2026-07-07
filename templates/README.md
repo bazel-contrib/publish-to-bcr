@@ -95,12 +95,11 @@ The `integrity` hash will automatically be filled out.
 A configuration file to override default behaviour.
 
 ```yaml
-fixedReleaser:
-  login: <GITHUB_USERNAME>
-  email: <EMAIL>
+moduleRoots: [".", "sub/module"]
+- .
+- sub/module
 ```
 
 | Field         | Description                                                                                                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| fixedReleaser | [Only used by the Legacy GitHub app, not the reusable workflow] GitHub username and email to use as the author for commits. Set this if you want a single user to always be the author of BCR entries regardless of who cut the release. |
 | moduleRoots | List of relative paths to Bazel modules within the repository. Set this if your MODULE.bazel file is not in the root directory, or if you want to publish multiple modules to the BCR. Defaults to `["."]`. Each module root must have a corresponding set of template files (metadata.template.json, source.template.json, presubmit.yml) under `.bcr` with the same relative path as the module. For example, if `moduleRoots` is `[".", "sub/module"]`, then there must be separate sets of template files under `.bcr` and `.bcr/sub/module`.  |

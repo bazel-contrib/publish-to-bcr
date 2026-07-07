@@ -14,12 +14,6 @@ fixture_archive(
 )
 
 fixture_archive(
-    name = "fixed-releaser",
-    archive = "tar.gz",
-    prefix = "fixed-releaser-1.0.0",
-)
-
-fixture_archive(
     name = "missing-module-name",
     archive = "tar.gz",
     prefix = "missing-module-name-1.0.0",

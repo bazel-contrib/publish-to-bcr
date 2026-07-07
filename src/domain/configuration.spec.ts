@@ -17,12 +17,6 @@ describe('Configuration', () => {
 
       expect(config.moduleRoots).toEqual(['.']);
     });
-
-    test('does not set a fixed releaser', () => {
-      const config = Configuration.defaults();
-
-      expect(config.fixedReleaser).toBeUndefined();
-    });
   });
 
   describe('loadFromDirectory', () => {
@@ -51,38 +45,7 @@ describe('Configuration', () => {
     test('empty file loads defaults', () => {
       mockConfig('config.yml', '');
       const config = Configuration.fromFile('config.yml');
-      expect(config.fixedReleaser).toBeUndefined();
       expect(config.moduleRoots).toEqual(['.']);
-    });
-
-    test('loads a fixedReleaser', () => {
-      mockConfig(
-        'config.yml',
-        `\
-fixedReleaser:
-  login: jbedard
-  email: json@bearded.ca                
-`
-      );
-      const config = Configuration.fromFile('config.yml');
-      expect(config.fixedReleaser).toEqual({
-        login: 'jbedard',
-        email: 'json@bearded.ca',
-      });
-    });
-
-    test('throws on invalid fixedReleaser', () => {
-      mockConfig(
-        'config.yml',
-        `\
-fixedReleaser: foobar             
-`
-      );
-
-      expect(() => Configuration.fromFile('config.yml')).toThrowWithMessage(
-        InvalidConfigurationFileError,
-        "Invalid configuration file at config.yml: could not parse 'fixedReleaser'"
-      );
     });
 
     test('loads moduleRoots', () => {
