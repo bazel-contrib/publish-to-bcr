@@ -61,9 +61,11 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-          # Check out the branch rather than a detached commit so that we can
-          # push patched changes if needed.
-          ref: ${{ github.event.pull_request.head.ref }}
+          # Check out the PR head branch (rather than the merge commit) so that
+          # auto-applied patches can be pushed back to it. Fork PRs can't be
+          # pushed to and their head branch doesn't exist in this repo, so fall
+          # back to the default checkout (the merge ref) for them.
+          ref: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref || '' }}
       - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
         with:
           # Avoid downloading Bazel every time.
@@ -75,16 +77,20 @@ jobs:
           # Don't save cache on pull requests to avoid polluting it
           cache-save: ${{ github.event_name != 'pull_request' }}
       - run: bazel test //... --config=ci
-      - if: failure() && github.event_name == 'pull_request'
+      # Only same-repo PRs can be pushed to; fork PRs get a read-only token and
+      # their head branch lives in another repo.
+      - if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         name: Apply patches and re-test
         run: |
           BUILD_EVENTS=$(mktemp)
 
-          # Build targets that produce source file patches
+          # Build targets that produce source file patches.
+          # --lockfile_mode=update: Renovate might alter package.json whose hash
+          # is recorded in the bzlmod lockfile.
           if ! bazel build //... \
             --config=ci \
             --keep_going \
-            --lockfile_mode=update \ # Renovate might alter package.json whose hash is recorded in the bzlmod lockfile
+            --lockfile_mode=update \
             --output_groups=autopatch \
             --build_event_json_file="${BUILD_EVENTS}" \
             --remote_download_regex='.*\.patch'; then
