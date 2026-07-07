@@ -1,13 +1,10 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
 
 copy_to_directory(
     name = "dist",
     srcs = [
         "//:package_json",
         "//:pnpm-lock.yaml",
-        "//src/application",
-        "//src/application/webhook",
         "//src/domain",
         "//src/infrastructure",
         "//src/infrastructure/xzdec",
@@ -15,11 +12,4 @@ copy_to_directory(
         "//src/infrastructure/zstdec",
     ],
     visibility = ["//e2e:__subpackages__"],
-)
-
-pkg_zip(
-    name = "cloudfunction",
-    srcs = ["dist"],
-    strip_prefix = "dist",
-    visibility = ["//deployment/environments:__subpackages__"],
 )
