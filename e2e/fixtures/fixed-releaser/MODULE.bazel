@@ -1,4 +1,0 @@
-module(
-    name = "fixed-releaser",
-    version = "1.0.0",
-)

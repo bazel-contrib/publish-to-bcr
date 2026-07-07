@@ -7,7 +7,7 @@ module.exports = {
   singleQuote: true,
   overrides: [
     {
-      files: ['**/*.tf', '**/*.yaml', '**/*.yml', '**/*.json'],
+      files: ['**/*.yaml', '**/*.yml', '**/*.json'],
       options: {
         tabWidth: 2,
       },

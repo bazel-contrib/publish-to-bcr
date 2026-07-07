@@ -90,21 +90,4 @@ export class RepositoryService {
     }
     return null;
   }
-
-  public async getForkedRepositoriesByOwner(
-    owner: string
-  ): Promise<Repository[]> {
-    const repositories = await this.githubClient.listRepositoriesForUser(owner);
-
-    return repositories
-      .filter((repo) => repo.fork)
-      .map((repo) => new Repository(repo.name, repo.owner.login));
-  }
-
-  public async hasAppInstallation(repository: Repository): Promise<boolean> {
-    return this.githubClient.hasAppInstallation(
-      repository.owner,
-      repository.name
-    );
-  }
 }
