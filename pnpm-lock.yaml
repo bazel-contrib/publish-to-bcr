@@ -82,8 +82,8 @@ dependencies:
     specifier: ^9.15.0
     version: 9.15.1(encoding@0.1.13)
   nodemailer:
-    specifier: ^8.0.0
-    version: 8.0.11
+    specifier: ^9.0.0
+    version: 9.0.3
   reflect-metadata:
     specifier: ^0.2.2
     version: 0.2.2
@@ -6543,8 +6543,8 @@ packages:
     engines: {node: '>=6.0.0'}
     dev: true
 
-  /nodemailer@8.0.11:
-    resolution: {integrity: sha512-nrO/pDAUKl+wXX+lx16tDLbnm0fW6sK/x8mgohaCpg+CdCEl482bD4tCuAZk2DyliruiNTIZxRCoWkDqJEnAiA==}
+  /nodemailer@9.0.3:
+    resolution: {integrity: sha512-n+YP+NKwR5zRWa60k3GiQ6Q3B4KXCoAw40dAKeCtYn020iNN74aWK2liXIC3ZEATeGql7we3tE3t8QwhY0eskw==}
     engines: {node: '>=6.0.0'}
     dev: false
 
