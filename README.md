@@ -174,18 +174,3 @@ The workflow will _not_ finalize the release—it must be published manually or 
 
 The publish workflow downloads artifacts produced by the reusable release workflow by default. If the release and publish jobs do _not_ run in the same workflow run, set `release_artifacts_run_id` to the ID of the run where the release ran (see workflow [docs](./.github/workflows/publish.yaml)).
 
-## LEGACY GitHub App
-
-:warning: The GitHub app will be discontinued after June 30, 2026. Please migrate to the GitHub Actions [reusable workflow](https://github.com/bazel-contrib/publish-to-bcr?tab=readme-ov-file#setup) before then.
-
-Prior to the introduction of the attestation feature in March 2025, this functionality was provided by a GitHub App.
-
-This documentation remains for users of that method to reference before upgrading.
-
-[Configure](https://github.com/apps/publish-to-bcr) the app for two repositories:
-
-   - Your ruleset repository.
-   - A fork of [bazelbuild/bazel-central-registry](https://github.com/bazelbuild/bazel-central-registry). The fork can be in the same GitHub account as your ruleset _or_ in the release author's personal account. If you use release automation and the release author is the github-actions bot, then the fork must
-     be in ruleset's account unless you [override the releaser](./templates/README.md#optional-configyml).
-
-   _Note: Authors of rulesets under the `bazelbuild` org should add the app to their personal fork of `bazelbuild/bazel-central-registry`._

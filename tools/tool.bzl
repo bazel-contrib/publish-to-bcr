@@ -1,4 +1,4 @@
-"""Makes tool macros for terraform et al"""
+"""Makes tool macros"""
 
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
