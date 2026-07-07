@@ -80608,7 +80608,7 @@ function createParser(createEntryCommand) {
       requiresArg: true
     });
     yargs.option("templates-dir", {
-      describe: "Directory containing BCR release template files: metadata.template.json, source.template.json, presubmit.yaml, patches/. Equivalent to the .bcr directory required by the legacy GitHub app.",
+      describe: "Directory containing BCR release template files: metadata.template.json, source.template.json, presubmit.yaml, patches/.",
       type: "string",
       required: true,
       requiresArg: true

@@ -56,7 +56,6 @@ jest.mock('./artifact', () => {
 });
 jest.mock('./user');
 jest.mock('node:fs');
-jest.mock('exponential-backoff');
 
 const mockedFileReads: Record<string, string> = {};
 const EXTRACTED_MODULE_PATH = '/fake/path/to/MODULE.bazel';

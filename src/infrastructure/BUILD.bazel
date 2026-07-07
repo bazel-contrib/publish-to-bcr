@@ -19,7 +19,7 @@ ts_project(
         "//:node_modules/@nestjs/common",
         "//:node_modules/@octokit/rest",
         "//:node_modules/@octokit/types",
-        "//:node_modules/@types/node",
+        "//:node_modules/@types/node",  # keep
         "//:node_modules/simple-git",
     ],
 )

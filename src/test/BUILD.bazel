@@ -13,6 +13,5 @@ ts_project(
     deps = [
         "//:node_modules/@types/jest",  # keep
         "//:node_modules/@types/node",
-        "//src/domain",
     ],
 )

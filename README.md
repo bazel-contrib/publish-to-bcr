@@ -8,7 +8,6 @@ Release automation that mirrors releases of your Bazel ruleset to the [Bazel Cen
 * [Including patches](#including-patches)
 * [Attestations](#attestations)
 * [Immutable releases](#immutable-releases)
-* [LEGACY GitHub app](#legacy-github-app)
 
 ## Prerequisites
 
