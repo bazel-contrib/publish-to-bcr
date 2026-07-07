@@ -95,9 +95,7 @@ The `integrity` hash will automatically be filled out.
 A configuration file to override default behaviour.
 
 ```yaml
-moduleRoots: [".", "sub/module"]
-- .
-- sub/module
+moduleRoots: ["."]
 ```
 
 | Field         | Description                                                                                                                                                                  |
