@@ -83,6 +83,7 @@ ts_project(
         "//:node_modules/jest-mock",
         "//:node_modules/tar",
         "//src/infrastructure",
+        "//src/infrastructure/xzdec",
         "//src/infrastructure/zstdec",
         "//src/test",
     ],
