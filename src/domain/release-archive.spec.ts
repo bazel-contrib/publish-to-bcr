@@ -7,6 +7,7 @@ import { parse as parseUrl } from 'node:url';
 import { mocked } from 'jest-mock';
 import tar from 'tar';
 
+import { decompress as decompressXz } from '../infrastructure/xzdec/xzdec';
 import { decompress as decompressZst } from '../infrastructure/zstdec/zstdec';
 import { fakeModuleFile } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
@@ -162,6 +163,45 @@ describe('extractModuleFile', () => {
       cwd: path.join(TEMP_DIR, EXTRACT_FOLDER),
     });
     expect(decompressZst).toHaveBeenCalled();
+  });
+
+  test('extracts the contents of a .tgz archive', async () => {
+    const releaseArchive = await ReleaseArchive.fetch(
+      'https://foo.bar/rules-foo-v1.2.3.tgz',
+      STRIP_PREFIX,
+      options
+    );
+    await releaseArchive.extractModuleFile();
+
+    expect(tar.x).toHaveBeenCalledWith({
+      cwd: path.join(TEMP_DIR, EXTRACT_FOLDER),
+      file: releaseArchive.artifact.diskPath,
+    });
+  });
+
+  test('extracts a .txz archive using the xz decompressor', async () => {
+    const fakeWriter = new EventEmitter() as EventEmitter & {
+      end: () => void;
+      write: () => boolean;
+    };
+    fakeWriter.write = () => true;
+    fakeWriter.end = () => {
+      fakeWriter.emit('finish');
+    };
+    mocked(tar.x).mockReturnValueOnce(fakeWriter as never);
+    mocked(fs.createReadStream).mockReturnValueOnce({} as never);
+
+    const releaseArchive = await ReleaseArchive.fetch(
+      'https://foo.bar/rules-foo-v1.2.3.txz',
+      STRIP_PREFIX,
+      options
+    );
+    await releaseArchive.extractModuleFile();
+
+    expect(tar.x).toHaveBeenCalledWith({
+      cwd: path.join(TEMP_DIR, EXTRACT_FOLDER),
+    });
+    expect(decompressXz).toHaveBeenCalled();
   });
 
   test('loads the extracted MODULE.bazel file', async () => {
