@@ -126,7 +126,6 @@ module(
     mocked(fs.readFileSync).mockReturnValue(`\
 module(
     name = "gazelle",
-    # Updated by the Publish to BCR app.
     version = "",
     repo_name = "bazel_gazelle",
 )
@@ -138,7 +137,6 @@ bazel_dep(name = "bazel_features", version = "1.9.1")`);
     expect(moduleFile.content).toEqual(`\
 module(
     name = "gazelle",
-    # Updated by the Publish to BCR app.
     version = "4.5.6",
     repo_name = "bazel_gazelle",
 )
@@ -151,7 +149,6 @@ bazel_dep(name = "bazel_features", version = "1.9.1")`);
 module(
     name = "gazelle",
     repo_name = "bazel_gazelle",
-    # version is set by the Publish to BCR app.
 )
 
 bazel_dep(name = "bazel_features", version = "1.9.1")
@@ -163,7 +160,6 @@ bazel_dep(name = "bazel_skylib", version = "1.5.0")`);
 module(
     name = "gazelle",
     repo_name = "bazel_gazelle",
-    # version is set by the Publish to BCR app.,
     version = "4.5.6",
 )
 
