@@ -20,7 +20,6 @@ import {
   PatchModuleError,
   VersionAlreadyPublishedError,
 } from './create-entry';
-import { CANONICAL_BCR } from './find-registry-fork';
 import { computeIntegrityHash } from './integrity-hash';
 import { MetadataFileError } from './metadata-file';
 import { ModuleFile } from './module-file';
@@ -28,6 +27,8 @@ import { ReleaseArchive } from './release-archive';
 import { Repository } from './repository';
 import { RulesetRepository } from './ruleset-repository';
 import { UserService } from './user';
+
+const CANONICAL_BCR = new Repository('bazel-central-registry', 'bazelbuild');
 
 let createEntryService: CreateEntryService;
 let mockUserService: UserService;
@@ -55,7 +56,6 @@ jest.mock('./artifact', () => {
 });
 jest.mock('./user');
 jest.mock('node:fs');
-jest.mock('exponential-backoff');
 
 const mockedFileReads: Record<string, string> = {};
 const EXTRACTED_MODULE_PATH = '/fake/path/to/MODULE.bazel';

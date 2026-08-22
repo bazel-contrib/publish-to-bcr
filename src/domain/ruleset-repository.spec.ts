@@ -11,7 +11,7 @@ import {
   fakeSourceFile,
 } from '../test/mock-template-files';
 import { expectThrownError } from '../test/util';
-import { Configuration, FixedReleaser } from './configuration';
+import { Configuration } from './configuration';
 import {
   InvalidConfigurationFileError,
   InvalidMetadataTemplateError,
@@ -150,7 +150,12 @@ describe('create', () => {
     });
 
     test('throws when the configuration file is invalid', async () => {
-      mockRulesetFiles({ configExists: true, invalidFixedReleaser: true });
+      mockRulesetFiles({
+        configExists: true,
+        configContent: `\
+moduleRoots: "foobar"
+`,
+      });
       await expect(
         RulesetRepository.create('foo', 'bar', 'main')
       ).rejects.toThrow(InvalidConfigurationFileError);
@@ -160,19 +165,14 @@ describe('create', () => {
       mockRulesetFiles({
         configExists: true,
         configExt: 'yaml',
-        fixedReleaser: { login: 'jbedard', email: 'json@bearded.ca' },
       });
       const rulesetRepo = await RulesetRepository.create('foo', 'bar', 'main');
-      expect(rulesetRepo.config.fixedReleaser).toEqual({
-        login: 'jbedard',
-        email: 'json@bearded.ca',
-      });
+      expect(rulesetRepo.config.moduleRoots).toEqual(['.']);
     });
 
     test('should be accessible after a non-config related error', async () => {
       mockRulesetFiles({
         configExists: true,
-        fixedReleaser: { login: 'jbedard', email: 'json@bearded.ca' },
         invalidSourceTemplate: true,
       });
 
@@ -182,10 +182,7 @@ describe('create', () => {
       );
 
       expect(thrownError.repository.config).toBeTruthy();
-      expect(thrownError.repository.config.fixedReleaser).toEqual({
-        login: 'jbedard',
-        email: 'json@bearded.ca',
-      });
+      expect(thrownError.repository.config.moduleRoots).toEqual(['.']);
     });
   });
 });
@@ -320,8 +317,6 @@ function mockRulesetFiles(
     configExists?: boolean;
     configExt?: 'yml' | 'yaml';
     configContent?: string;
-    fixedReleaser?: FixedReleaser;
-    invalidFixedReleaser?: boolean;
     invalidSourceTemplate?: boolean;
     fileExistsMocks?: Record<string, boolean>;
     fileContentMocks?: Record<string, string>;
@@ -393,8 +388,6 @@ function mockRulesetFiles(
             ) {
               return fakeConfigFile({
                 content: options.configContent,
-                fixedReleaser: options.fixedReleaser,
-                invalidFixedReleaser: options.invalidFixedReleaser,
               });
             }
             return (jest.requireActual('node:fs') as any).readFileSync.apply([

@@ -47,18 +47,6 @@ export class Configuration {
     }
 
     if (
-      config.fixedReleaser &&
-      (typeof config.fixedReleaser !== 'object' ||
-        typeof config.fixedReleaser.login !== 'string' ||
-        typeof config.fixedReleaser.email !== 'string')
-    ) {
-      throw new InvalidConfigurationFileError(
-        filepath,
-        "could not parse 'fixedReleaser'"
-      );
-    }
-
-    if (
       config.moduleRoots !== undefined &&
       (!Array.isArray(config.moduleRoots) ||
         !config.moduleRoots.every((value) => typeof value === 'string'))
@@ -72,11 +60,7 @@ export class Configuration {
     config.moduleRoots =
       config.moduleRoots || Configuration.DEFAULT_MODULE_ROOTS;
 
-    return new Configuration(
-      filepath,
-      config.moduleRoots,
-      config.fixedReleaser
-    );
+    return new Configuration(filepath, config.moduleRoots);
   }
 
   public static defaults(): Configuration {
@@ -85,8 +69,7 @@ export class Configuration {
 
   private constructor(
     public readonly filepath: string | null,
-    private _moduleRoots: string[],
-    public readonly fixedReleaser?: FixedReleaser
+    private _moduleRoots: string[]
   ) {}
 
   public setModuleRoots(moduleRoots: string[]) {
@@ -96,9 +79,4 @@ export class Configuration {
   public get moduleRoots(): string[] {
     return this._moduleRoots;
   }
-}
-
-export interface FixedReleaser {
-  readonly login: string;
-  readonly email: string;
 }

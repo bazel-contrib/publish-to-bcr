@@ -1,30 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("//bazel/ts:defs.bzl", "ts_project")
 
-ts_project(
-    name = "application",
-    srcs = [
-        "notifications.ts",
-        "octokit.ts",
-        "release-event-handler.ts",
-    ],
-    allow_js = True,
-    source_map = True,
-    tsconfig = "//:tsconfig",
-    visibility = [
-        "//src:__pkg__",
-        "//src/application:__subpackages__",
-    ],
-    deps = [
-        "//:node_modules/@nestjs/common",
-        "//:node_modules/@octokit/rest",
-        "//:node_modules/@octokit/webhooks",
-        "//:node_modules/@octokit/webhooks-types",
-        "//src/domain",
-        "//src/infrastructure",
-    ],
-)
-
 js_library(
     name = "cjs-shim",
     srcs = [
