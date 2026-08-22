@@ -27,33 +27,5 @@
         "cpu": "arm64"
       }
     ]
-  },
-  "terraform": {
-    "binaries": [
-      {
-        "kind": "archive",
-        "url": "https://releases.hashicorp.com/terraform/1.9.3/terraform_1.9.3_darwin_arm64.zip",
-        "file": "terraform",
-        "sha256": "168cfeb339dbbfea6be651573ec168e6ca08bab79a4fc0474681eee1e9a95de9",
-        "os": "macos",
-        "cpu": "arm64"
-      },
-      {
-        "kind": "archive",
-        "url": "https://releases.hashicorp.com/terraform/1.9.3/terraform_1.9.3_linux_amd64.zip",
-        "file": "terraform",
-        "sha256": "e52520cf6d677155e69a8fcfe64054891f4d991802b0d36d4c8b670d60a7e899",
-        "os": "linux",
-        "cpu": "x86_64"
-      },
-      {
-        "kind": "archive",
-        "url": "https://releases.hashicorp.com/terraform/1.9.3/terraform_1.9.3_linux_arm64.zip",
-        "file": "terraform",
-        "sha256": "193ce269aafd5c44f359cd73a75c5cc7aaab924eb5c3601784c1873575828ec7",
-        "os": "linux",
-        "cpu": "arm64"
-      }
-    ]
   }
 }

@@ -1,7 +1,3 @@
 bazel-*
 node_modules
 .DS_Store
-.terraform
-*.tfstate.backup
-*.terraform.lock.hcl
-*.tfstate
