@@ -39,6 +39,18 @@ mock_attestation() {
     echo -n "${FILE}"
 }
 
+fixture_path() {
+    local NAME=$1
+
+    echo -n "e2e/fixtures/${NAME}"
+}
+
+release_archive_path() {
+    local FILENAME=$1
+
+    echo -n "e2e/fixtures/${FILENAME}"
+}
+
 @test 'no_args_shows_help' {
     run "${NODE_BIN}" "${CLI_BIN}"
 
@@ -59,11 +71,11 @@ mock_attestation() {
 }
 
 @test 'create entry with tar archive' {
-    FIXTURE="e2e/fixtures/versioned"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path versioned)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path versioned-v1.0.0.tar.gz)"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 
@@ -80,11 +92,11 @@ mock_attestation() {
 }
 
 @test 'create entry with zip archive' {
-    FIXTURE="e2e/fixtures/zip"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path zip)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/zip-zip-1.0.0.zip"
+    RELEASE_ARCHIVE="$(release_archive_path zip-v1.0.0.zip)"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 
@@ -101,11 +113,11 @@ mock_attestation() {
 }
 
 @test 'multi-module entry' {
-    FIXTURE="e2e/fixtures/multi-module"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path multi-module)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/multi-module-multi-module-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path multi-module-v1.0.0.tar.gz)"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
     swap_source_url "${TEMPLATES_DIR}/submodule/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
@@ -130,11 +142,11 @@ mock_attestation() {
 }
 
 @test 'create entry with attestations' {
-    FIXTURE="e2e/fixtures/attestations"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path attestations)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/attestations-attestations-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path attestations-v1.0.0.tar.gz)"
 
     SOURCE_ATTESTATION=$(mock_attestation "source.json.intoto.jsonl")
     MODULE_ATTESTATION=$(mock_attestation "MODULE.bazel.intoto.jsonl")
@@ -155,11 +167,11 @@ mock_attestation() {
 }
 
 @test 'missing OWNER/REPO vars' {
-    FIXTURE="e2e/fixtures/versioned"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path versioned)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path versioned-v1.0.0.tar.gz)"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 
@@ -171,11 +183,11 @@ mock_attestation() {
 }
 
 @test 'missing module name' {
-    FIXTURE="e2e/fixtures/missing-module-name"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path missing-module-name)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/missing-module-name-missing-module-name-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path missing-module-name-1.0.0.tar.gz)"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 
@@ -194,11 +206,11 @@ mock_attestation() {
 }
 
 @test 'outputs json blob with info about entry to stdout' {
-    FIXTURE="e2e/fixtures/versioned"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path versioned)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path versioned-v1.0.0.tar.gz)"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
 
@@ -212,15 +224,15 @@ mock_attestation() {
 }
 
 @test 'create entry with local release artifact' {
-    FIXTURE="e2e/fixtures/versioned"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}"
+    FIXTURE="$(fixture_path versioned)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/versioned-versioned-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path versioned-v1.0.0.tar.gz)"
 
     LOCALDIR="${TEST_TMPDIR}/local"
     mkdir -p "${LOCALDIR}"
-    cp "${RELEASE_ARCHIVE}" "${LOCALDIR}/v1.0.0.tar.gz"
+    cp "${RELEASE_ARCHIVE}" "${LOCALDIR}/"
 
     run "${NODE_BIN}" "${CLI_BIN}" create-entry \
         --local-artifact-path "${LOCALDIR}" \
@@ -241,11 +253,11 @@ mock_attestation() {
 }
 
 @test 'override module roots' {
-    FIXTURE="e2e/fixtures/multi-module"
-    cp -R "${FIXTURE}" "${TEST_TMPDIR}/"
+    FIXTURE="$(fixture_path multi-module)"
+    cp -RL "${FIXTURE}" "${TEST_TMPDIR}/"
     FIXTURE="${TEST_TMPDIR}/$(basename "${FIXTURE}")"
     TEMPLATES_DIR="${FIXTURE}/.bcr"
-    RELEASE_ARCHIVE="e2e/fixtures/multi-module-multi-module-1.0.0.tar.gz"
+    RELEASE_ARCHIVE="$(release_archive_path multi-module-v1.0.0.tar.gz)"
 
     swap_source_url "${TEMPLATES_DIR}/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"
     swap_source_url "${TEMPLATES_DIR}/submodule/source.template.json" "file://$(realpath "${RELEASE_ARCHIVE}")"

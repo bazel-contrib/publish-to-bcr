@@ -1,94 +1,129 @@
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
-load(":fixture.bzl", "fixture_archive")
+load("@aspect_bazel_lib//lib:jq.bzl", "jq")
+load(":fixture.bzl", "release_archive")
 
-fixture_archive(
-    name = "attestations",
-    archive = "tar.gz",
+package(default_visibility = ["//e2e:__subpackages__"])
+
+exports_files([
+    "attestations",
+    "empty-prefix",
+    "missing-module-name",
+    "multi-module",
+    "no-github-id",
+    "no-prefix",
+    "tarball",
+    "tarball-xz",
+    "unversioned",
+    "versioned",
+    "zero-versioned",
+    "zip",
+])
+
+release_archive(
+    name = "attestations_1.0.0",
+    out = "attestations-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "attestations",
     prefix = "attestations-1.0.0",
 )
 
-fixture_archive(
-    name = "empty-prefix",
-    archive = "tar.gz",
-    prefix = None,
+# attestation artifacts to go along with the above release archive
+jq(
+    name = "source_attestation",
+    srcs = [],
+    out = "source.json.intoto.jsonl",
+    filter = "{}",
 )
 
-fixture_archive(
-    name = "missing-module-name",
-    archive = "tar.gz",
+jq(
+    name = "module_attestation",
+    srcs = [],
+    out = "MODULE.bazel.intoto.jsonl",
+    filter = "{}",
+)
+
+jq(
+    name = "archive_attestation",
+    srcs = [],
+    out = "attestations-v1.0.0.tar.gz.intoto.jsonl",
+    filter = "{}",
+)
+
+release_archive(
+    name = "empty-prefix_1.0.0",
+    out = "empty-prefix-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "empty-prefix",
+    prefix = "",
+)
+
+release_archive(
+    name = "missing-module-name_1.0.0",
+    out = "missing-module-name-1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "missing-module-name",
     prefix = "missing-module-name-1.0.0",
 )
 
-fixture_archive(
-    name = "multi-module",
-    archive = "tar.gz",
+release_archive(
+    name = "multi-module_1.0.0",
+    out = "multi-module-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "multi-module",
     prefix = "multi-module-1.0.0",
 )
 
-fixture_archive(
-    name = "multi-module_invalid_prefix",
-    archive = "tar.gz",
-    fixture = "multi-module",
-    prefix = "invalid-prefix",
+release_archive(
+    name = "no-prefix_1.0.0",
+    out = "no-prefix-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "no-prefix",
+    prefix = "",
 )
 
-fixture_archive(
-    name = "no-github-id",
-    archive = "tar.gz",
-    prefix = "no-github-id-1.0.0",
-)
-
-fixture_archive(
-    name = "no-prefix",
-    archive = "tar.gz",
-    prefix = None,
-)
-
-fixture_archive(
-    name = "tarball",
-    archive = "tar.gz",
+release_archive(
+    name = "tarball_1.0.0",
+    out = "tarball-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "tarball",
     prefix = "tarball-1.0.0",
 )
 
-fixture_archive(
-    name = "tarball-xz",
-    archive = "tar.xz",
+release_archive(
+    name = "tarball-xz_1.0.0",
+    out = "tarball-xz-v1.0.0.tar.xz",
+    extension = "tar.xz",
+    fixture = "tarball-xz",
     prefix = "tarball-xz-1.0.0",
 )
 
-fixture_archive(
-    name = "unversioned",
-    archive = "tar.gz",
+release_archive(
+    name = "unversioned_1.0.0",
+    out = "unversioned-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "unversioned",
     prefix = "unversioned-1.0.0",
 )
 
-fixture_archive(
-    name = "versioned",
-    archive = "tar.gz",
+release_archive(
+    name = "versioned_1.0.0",
+    out = "versioned-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "versioned",
     prefix = "versioned-1.0.0",
 )
 
-fixture_archive(
-    name = "versioned_invalid_prefix",
-    archive = "tar.gz",
-    fixture = "versioned",
-    prefix = "invalid-prefix",
-)
-
-fixture_archive(
-    name = "zero-versioned",
-    archive = "tar.gz",
+release_archive(
+    name = "zero-versioned_1.0.0",
+    out = "zero-versioned-v1.0.0.tar.gz",
+    extension = "tar.gz",
+    fixture = "zero-versioned",
     prefix = "zero-versioned-1.0.0",
 )
 
-fixture_archive(
-    name = "zip",
-    archive = "zip",
+release_archive(
+    name = "zip_1.0.0",
+    out = "zip-v1.0.0.zip",
+    extension = "zip",
+    fixture = "zip",
     prefix = "zip-1.0.0",
-)
-
-copy_to_bin(
-    name = "fixtures",
-    srcs = glob(["**/*"]),
-    visibility = ["//e2e:__subpackages__"],
 )

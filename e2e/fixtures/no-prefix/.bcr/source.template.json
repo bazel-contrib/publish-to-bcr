@@ -1,4 +1,4 @@
 {
   "integrity": "",
-  "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{TAG}.tar.gz"
+  "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{REPO}-{TAG}.tar.gz"
 }

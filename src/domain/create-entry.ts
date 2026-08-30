@@ -84,6 +84,7 @@ export class CreateEntryService {
 
       const moduleFile = await releaseArchive.extractModuleFile();
 
+      fs.mkdirSync(path.join(registryPath, 'modules'), { recursive: true });
       const bcrEntryPath = path.resolve(
         registryPath,
         'modules',

@@ -1,0 +1,4 @@
+module(
+    name = "zero-versioned",
+    version = "1.0.0",
+)

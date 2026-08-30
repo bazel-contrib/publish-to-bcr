@@ -1,0 +1,4 @@
+module(
+    name = "attestations",
+    version = "1.0.0",
+)

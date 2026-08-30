@@ -32,7 +32,7 @@ module(
 EOF
 cat > "${EXPECTED_PATH}/1.0.0/source.json" <<- EOF
 {
-    "integrity": "sha256-eLJUZjOh+76IBFAfzeh/4WHDIneTz/JE2I3omT4EVng=",
+    "integrity": "sha256-fE9oqnVaY/+5v/D48WxeVFmZyUZOYL2ZxolZXIbV2ho=",
     "strip_prefix": "versioned-1.0.0",
     "url": "file:///home/runner/work/publish-to-bcr/publish-to-bcr/archive.tar.gz"
 }
