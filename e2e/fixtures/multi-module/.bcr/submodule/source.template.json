@@ -1,5 +1,5 @@
 {
   "integrity": "",
   "strip_prefix": "{REPO}-{VERSION}/submodule",
-  "url": "https://github.com/{OWNER}/{REPO}/releases/download/{TAG}.tar.gz"
+  "url": "https://github.com/{OWNER}/{REPO}/archive/refs/tags/{REPO}-{TAG}.tar.gz"
 }

@@ -36,7 +36,7 @@ js_binary(
     name = "bin",
     data = [":cli"],
     entry_point = "main.js",
-    visibility = ["//e2e/cli:__pkg__"],
+    visibility = ["//e2e/cli:__subpackages__"],
 )
 
 esbuild(

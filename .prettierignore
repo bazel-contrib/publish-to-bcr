@@ -1,4 +1,5 @@
 dist/*
+e2e/cli/snapshots
 pnpm-lock.yaml
 templates/.bcr
 templates/README.md

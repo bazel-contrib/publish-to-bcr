@@ -1,0 +1,116 @@
+load(":snapshot.bzl", "snapshot_test")
+
+# ruleset using attestations
+snapshot_test(
+    name = "attestations",
+    extra_srcs = [
+        "//e2e/fixtures:source_attestation",
+        "//e2e/fixtures:module_attestation",
+        "//e2e/fixtures:archive_attestation",
+    ],
+    gh_repo = "testorg/attestations",
+    module_name = "attestations",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:attestations_1.0.0",
+    repo_fixture = "//e2e/fixtures:attestations",
+    tag = "v1.0.0",
+)
+
+# release archive with an empty strip prefix
+snapshot_test(
+    name = "empty-prefix",
+    gh_repo = "testorg/empty-prefix",
+    module_name = "empty-prefix",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:empty-prefix_1.0.0",
+    repo_fixture = "//e2e/fixtures:empty-prefix",
+    tag = "v1.0.0",
+)
+
+# multi-module release
+snapshot_test(
+    name = "multi-module",
+    gh_repo = "testorg/multi-module",
+    module_name = "multi-module",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:multi-module_1.0.0",
+    repo_fixture = "//e2e/fixtures:multi-module",
+    tag = "v1.0.0",
+)
+
+# ruleset is missing strip prefix in source.template.json
+snapshot_test(
+    name = "no-prefix",
+    gh_repo = "testorg/no-prefix",
+    module_name = "no-prefix",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:no-prefix_1.0.0",
+    repo_fixture = "//e2e/fixtures:no-prefix",
+    tag = "v1.0.0",
+)
+
+# ruleset with unversioned MODULE.bazel
+snapshot_test(
+    name = "unversioned",
+    gh_repo = "testorg/unversioned",
+    module_name = "unversioned",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:unversioned_1.0.0",
+    repo_fixture = "//e2e/fixtures:unversioned",
+    tag = "v1.0.0",
+)
+
+# ruleset with versioned module in source
+snapshot_test(
+    name = "versioned",
+    gh_repo = "owner/versioned",
+    module_name = "versioned",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:versioned_1.0.0",
+    repo_fixture = "//e2e/fixtures:versioned",
+    tag = "v1.0.0",
+)
+
+# ruleset with zero-versioned module in source
+snapshot_test(
+    name = "zero-versioned",
+    gh_repo = "testorg/zero-versioned",
+    module_name = "zero-versioned",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:zero-versioned_1.0.0",
+    repo_fixture = "//e2e/fixtures:zero-versioned",
+    tag = "v1.0.0",
+)
+
+# ruleset with tarball release archive
+snapshot_test(
+    name = "tarball",
+    gh_repo = "owner/tarball",
+    module_name = "tarball",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:tarball_1.0.0",
+    repo_fixture = "//e2e/fixtures:tarball",
+    tag = "v1.0.0",
+)
+
+# ruleset with tar.xz release archive
+snapshot_test(
+    name = "tarball-xz",
+    gh_repo = "owner/tarball-xz",
+    module_name = "tarball-xz",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:tarball-xz_1.0.0",
+    repo_fixture = "//e2e/fixtures:tarball-xz",
+    tag = "v1.0.0",
+)
+
+# ruleset with zip release archive
+snapshot_test(
+    name = "zip",
+    gh_repo = "owner/zip",
+    module_name = "zip",
+    module_version = "1.0.0",
+    release_archive = "//e2e/fixtures:zip_1.0.0",
+    repo_fixture = "//e2e/fixtures:zip",
+    tag = "v1.0.0",
+)

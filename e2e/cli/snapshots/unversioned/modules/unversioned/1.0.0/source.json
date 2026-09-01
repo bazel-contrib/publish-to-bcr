@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-r3/sqZMqZViN/+IXWVJ5pioTjScw4m+Z7yt0xqJnUq0=",
+    "strip_prefix": "unversioned-1.0.0",
+    "url": "https://github.com/testorg/unversioned/archive/refs/tags/unversioned-v1.0.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-6+XCBXtNxFGKuL182vqWxZkECRxHLHSe1gd+hfpnL8A="
+    },
+    "patch_strip": 1
+}

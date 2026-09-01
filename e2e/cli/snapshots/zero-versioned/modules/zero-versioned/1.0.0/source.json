@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-Ktt9niITglPYarlxSytr7WZF4EVoNnZ40vqqOWByeVY=",
+    "strip_prefix": "zero-versioned-1.0.0",
+    "url": "https://github.com/testorg/zero-versioned/archive/refs/tags/zero-versioned-v1.0.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-KpbuC1vv5mfhdTs5nnTl3/pH7Y/6JCnD1b1XLsqyOAo="
+    },
+    "patch_strip": 1
+}
