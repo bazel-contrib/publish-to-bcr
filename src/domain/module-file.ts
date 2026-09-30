@@ -14,6 +14,9 @@ export class ModuleNameError extends Error {
   }
 }
 
+// The regexes below anchor `module(` to the start of a line so that they only
+// match the top-level module() call and not module extension tags of the same
+// name such as `go_deps.module(...)`.
 export class ModuleFile {
   private moduleContent: string;
 
@@ -23,7 +26,8 @@ export class ModuleFile {
 
   public get moduleName(): string {
     // See https://cs.opensource.google/bazel/bazel/+/master:src/main/java/com/google/devtools/build/lib/cmdline/RepositoryName.java
-    const regex = /module\([^)]*?name\s*=\s*"([a-z]([a-z0-9._-]*[a-z0-9])?)"/s;
+    const regex =
+      /^module\([^)]*?name\s*=\s*"([a-z]([a-z0-9._-]*[a-z0-9])?)"/ms;
     const matches = this.moduleContent.match(regex);
     if (matches === null) {
       throw new ModuleNameError(this.filePath);
@@ -32,7 +36,7 @@ export class ModuleFile {
   }
 
   public get version(): string | undefined {
-    const regex = /module\([^)]*?version\s*=\s*"(.+?)"/s;
+    const regex = /^module\([^)]*?version\s*=\s*"(.+?)"/ms;
     const match = this.moduleContent.match(regex);
     return match ? match[1] : undefined;
   }
@@ -45,13 +49,13 @@ export class ModuleFile {
     if (this.version !== undefined) {
       // update the version
       this.moduleContent = this.moduleContent.replace(
-        /(^.*?module\(.*?version\s*=\s*")[\w.]*(".*$)/s,
+        /(^module\([^)]*?version\s*=\s*")[\w.]*(")/ms,
         `$1${version}$2`
       );
     } else {
       // add the version
       this.moduleContent = this.moduleContent.replace(
-        /(^.*?module\(.*?),?(\s*)\)/s,
+        /(^module\([^)]*?),?(\s*)\)/ms,
         `$1,\n    version = "${version}",\n)`
       );
     }

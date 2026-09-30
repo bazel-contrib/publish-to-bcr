@@ -55,6 +55,21 @@ module(
       ModuleNameError
     );
   });
+
+  test('ignores the name of a module extension tag called module', () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(
+    version = "1.0.0",
+)
+
+foo = use_extension("//:extensions.bzl", "foo")
+foo.module(
+    name = "bar",
+)`);
+    expect(() => new ModuleFile('MODULE.bazel').moduleName).toThrow(
+      ModuleNameError
+    );
+  });
 });
 
 describe('version', () => {
@@ -67,6 +82,21 @@ describe('version', () => {
     mocked(fs.readFileSync).mockReturnValue(`\
 module(name = "rules_foo")
 `);
+    const moduleFile = new ModuleFile('MODULE.bazel');
+    expect(moduleFile.version).toBeUndefined();
+  });
+
+  test('ignores the version of a module extension tag called module', () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(
+    name = "rules_go",
+)
+
+go_deps = use_extension("//go:extensions.bzl", "go_deps")
+go_deps.module(
+    path = "github.com/bazelbuild/buildtools",
+    version = "v0.0.0-20231103205921-433ea8554e82",
+)`);
     const moduleFile = new ModuleFile('MODULE.bazel');
     expect(moduleFile.version).toBeUndefined();
   });
@@ -165,6 +195,39 @@ module(
 
 bazel_dep(name = "bazel_features", version = "1.9.1")
 bazel_dep(name = "bazel_skylib", version = "1.5.0")`);
+  });
+
+  test('stamps the version when the version field was missing and a module extension tag called module has a version', () => {
+    mocked(fs.readFileSync).mockReturnValue(`\
+module(
+    name = "rules_go",
+    repo_name = "io_bazel_rules_go",
+)
+
+bazel_dep(name = "bazel_features", version = "1.36.0")
+
+go_deps = use_extension("//go:extensions.bzl", "go_deps")
+go_deps.module(
+    path = "github.com/bazelbuild/buildtools",
+    version = "v0.0.0-20231103205921-433ea8554e82",
+)`);
+    const moduleFile = new ModuleFile('MODULE.bazel');
+    moduleFile.stampVersion('4.5.6');
+
+    expect(moduleFile.content).toEqual(`\
+module(
+    name = "rules_go",
+    repo_name = "io_bazel_rules_go",
+    version = "4.5.6",
+)
+
+bazel_dep(name = "bazel_features", version = "1.36.0")
+
+go_deps = use_extension("//go:extensions.bzl", "go_deps")
+go_deps.module(
+    path = "github.com/bazelbuild/buildtools",
+    version = "v0.0.0-20231103205921-433ea8554e82",
+)`);
   });
 });
 
