@@ -25,7 +25,10 @@ genrule(
     srcs = [":xzdec_wasm"],
     outs = ["xzdec.wasm.gz"],
     cmd = "cat $< | gzip -9 -k -n > $@",
-    visibility = ["//src:__pkg__"],
+    visibility = [
+        "//dist/cli:__pkg__",
+        "//src:__pkg__",
+    ],
 )
 
 ts_project(

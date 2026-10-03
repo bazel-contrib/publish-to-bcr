@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@diff.bzl", "diff")
 
 diff(
@@ -8,4 +9,11 @@ diff(
     ],
     source_patch_output_groups = ["autopatch"],
     validate = 1,
+)
+
+write_source_files(
+    name = "xzdec",
+    files = {
+        "xzdec.wasm.gz": "//src/infrastructure/xzdec:xzdec_wasm_gz",
+    },
 )
