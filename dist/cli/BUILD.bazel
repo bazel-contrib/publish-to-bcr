@@ -1,19 +1,14 @@
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
-load("@diff.bzl", "diff")
+load("@diff.bzl", "sync_source_bin", "sync_source_file")
 
-diff(
+sync_source_file(
     name = "cli",
-    srcs = [
-        "index.js",
-        "//src/application/cli:bundle",
-    ],
+    out = "index.js",
+    origin = "//src/application/cli:bundle",
     source_patch_output_groups = ["autopatch"],
-    validate = 1,
 )
 
-write_source_files(
+sync_source_bin(
     name = "xzdec",
-    files = {
-        "xzdec.wasm.gz": "//src/infrastructure/xzdec:xzdec_wasm_gz",
-    },
+    out = "xzdec.wasm.gz",
+    origin = "//src/infrastructure/xzdec:xzdec_wasm_gz",
 )
