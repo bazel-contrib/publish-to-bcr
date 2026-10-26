@@ -23,7 +23,7 @@
     "fzstd": "^0.1.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "7.8.2",
-    "simple-git": "^3.16.0",
+    "simple-git": "^4.0.0",
     "tar": "^6.2.0",
     "tree-node-cli": "^1.6.0",
     "ts-results-es": "7.0.0",
