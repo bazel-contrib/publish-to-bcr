@@ -2,7 +2,7 @@ import fs, { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { Inject, Injectable } from '@nestjs/common';
-import { createTwoFilesPatch, parsePatch } from 'diff';
+import { parsePatch } from 'diff';
 
 import { DownloadOptions } from './artifact.js';
 import { AttestationsTemplate } from './attestations-template.js';
@@ -112,12 +112,7 @@ export class CreateEntryService {
         bcrVersionEntryPath
       );
 
-      this.patchModuleVersionIfMismatch(
-        moduleFile,
-        version,
-        sourceTemplate,
-        bcrVersionEntryPath
-      );
+      this.stampModuleVersionIfMismatch(moduleFile, version);
 
       sourceTemplate.save(path.join(bcrVersionEntryPath, 'source.json'));
       moduleFile.save(path.join(bcrVersionEntryPath, 'MODULE.bazel'));
@@ -172,8 +167,8 @@ export class CreateEntryService {
       sourceTemplate.addPatch(patch, computeIntegrityHash(patchDest), 1);
 
       // If the user-provided patch patches MODULE.bazel, also apply it to
-      // the copy in the entry since it needs to be identical to the archived
-      // MODULE.bazel with any patches.
+      // the copy in the entry since Bazel uses it instead of the archived
+      // MODULE.bazel.
       const diffs = parsePatch(readFileSync(patchSrc, 'utf8'));
       for (const diff of diffs) {
         if (
@@ -193,45 +188,21 @@ export class CreateEntryService {
     }
   }
 
-  // The version in the archived MODULE.bazel version should match the release version.
-  // If it doesn't, add a patch to set the correct version. This is useful when a release
-  // archive is just an archive of the source, and the source MODULE.bazel is kept unstamped
-  // (e.g., has '0.0.0' as the version).
-  private patchModuleVersionIfMismatch(
+  // The version in the entry's MODULE.bazel should match the release version. If it doesn't,
+  // stamp the correct version. This is useful when a release archive is just an archive of
+  // the source, and the source MODULE.bazel is kept unstamped (e.g., has '0.0.0' as the version).
+  // The archived MODULE.bazel doesn't need to be patched since Bazel always uses the one in the
+  // registry.
+  private stampModuleVersionIfMismatch(
     moduleFile: ModuleFile,
-    version: string,
-    sourceTemplate: SourceTemplate,
-    bcrVersionEntryPath: string
+    version: string
   ): void {
     if (moduleFile.version !== version) {
       console.error(
         `The release archive's MODULE.bazel version ${moduleFile.version} does not match release version ${version}.`,
-        'Creating a version patch.'
+        'Stamping the release version.'
       );
-      const patchFileName = 'module_dot_bazel_version.patch';
-      const existingContent = moduleFile.content;
       moduleFile.stampVersion(version);
-      const stampedContent = moduleFile.content;
-
-      const patch = createTwoFilesPatch(
-        'a/MODULE.bazel',
-        'b/MODULE.bazel',
-        existingContent,
-        stampedContent
-      );
-
-      const patchesDir = path.join(bcrVersionEntryPath, 'patches');
-      if (!fs.existsSync(path.join(bcrVersionEntryPath, 'patches'))) {
-        fs.mkdirSync(path.join(bcrVersionEntryPath, 'patches'));
-      }
-      const patchFilePath = path.join(patchesDir, patchFileName);
-      fs.writeFileSync(patchFilePath, patch);
-
-      sourceTemplate.addPatch(
-        patchFileName,
-        computeIntegrityHash(patchFilePath),
-        1
-      );
     }
   }
 

@@ -817,7 +817,10 @@ describe('createEntryFiles', () => {
       expect(writtenSourceContent.endsWith('\n')).toEqual(true);
     });
 
-    test('adds a patch entry when the release version does not match the archived version', async () => {
+    test('does not add a patch entry when the release version does not match the archived version', async () => {
+      // The BCR no longer requires the source archive's MODULE.bazel to match
+      // the entry's, so the version is stamped without a patch. See
+      // https://github.com/bazelbuild/bazel-central-registry/pull/11138.
       mockRulesetFiles({
         extractedModuleName: 'rules_bar',
         extractedModuleVersion: '1.2.3',
@@ -827,9 +830,6 @@ describe('createEntryFiles', () => {
       const version = RulesetRepository.getVersionFromTag(tag);
       const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
       const bcrRepo = CANONICAL_BCR;
-
-      const hash = `sha256-${randomUUID()}`;
-      mocked(computeIntegrityHash).mockReturnValue(hash);
 
       await rulesetRepo.shallowCloneAndCheckout(tag);
       await bcrRepo.shallowCloneAndCheckout('main');
@@ -845,42 +845,8 @@ describe('createEntryFiles', () => {
         (call[0] as string).includes('source.json')
       );
       const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
-      expect(
-        writtenSourceContent.patches['module_dot_bazel_version.patch']
-      ).toEqual(hash);
-    });
-
-    test('sets the patch_strip to 1 when a release version patch is added', async () => {
-      mockRulesetFiles({
-        extractedModuleName: 'rules_bar',
-        extractedModuleVersion: '1.2.3',
-      });
-
-      const tag = 'v4.5.6';
-      const version = RulesetRepository.getVersionFromTag(tag);
-      const rulesetRepo = await RulesetRepository.create('repo', 'owner', tag);
-      const bcrRepo = CANONICAL_BCR;
-
-      const hash = `sha256-${randomUUID()}`;
-      mocked(mockReleaseArchive.artifact.computeIntegrityHash).mockReturnValue(
-        hash
-      );
-
-      await rulesetRepo.shallowCloneAndCheckout(tag);
-      await bcrRepo.shallowCloneAndCheckout('main');
-      await createEntryService.createEntryFiles(
-        rulesetRepo.metadataTemplate('.'),
-        rulesetRepo.sourceTemplate('.').substitute({ TAG: tag }),
-        rulesetRepo.presubmitPath('.'),
-        rulesetRepo.patchesPath('.'),
-        bcrRepo.diskPath,
-        version
-      );
-      const writeSourceCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
-        (call[0] as string).includes('source.json')
-      );
-      const writtenSourceContent = JSON.parse(writeSourceCall[1] as string);
-      expect(writtenSourceContent.patch_strip).toEqual(1);
+      expect(writtenSourceContent.patches).toBeUndefined();
+      expect(writtenSourceContent.patch_strip).toBeUndefined();
     });
 
     test('adds a patch entry for each patch in the patches folder', async () => {
@@ -996,7 +962,10 @@ describe('createEntryFiles', () => {
   });
 
   describe('patches', () => {
-    test('creates a patch file when the release version does not match the archived version', async () => {
+    test('does not create a patch file when the release version does not match the archived version', async () => {
+      // The BCR no longer requires the source archive's MODULE.bazel to match
+      // the entry's, so the version is stamped without a patch. See
+      // https://github.com/bazelbuild/bazel-central-registry/pull/11138.
       mockRulesetFiles({
         extractedModuleName: 'rules_bar',
         extractedModuleVersion: '1.2.3',
@@ -1017,34 +986,19 @@ describe('createEntryFiles', () => {
         bcrRepo.diskPath,
         version
       );
-      const expectedPatchPath = path.join(
+      const patchesDir = path.join(
         bcrRepo.diskPath,
         'modules',
         'rules_bar',
         version,
-        'patches',
-        'module_dot_bazel_version.patch'
+        'patches'
       );
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
-        expectedPatchPath,
-        expect.any(String)
-      );
-      const writePatchCall = mocked(fs.writeFileSync).mock.calls.find((call) =>
-        (call[0] as string).includes('module_dot_bazel_version.patch')
-      );
-      const writtenPatchContent = writePatchCall[1] as string;
+      expect(fs.mkdirSync).not.toHaveBeenCalledWith(patchesDir);
       expect(
-        writtenPatchContent.includes(`\
---- a/MODULE.bazel
-+++ b/MODULE.bazel
-@@ -1,5 +1,5 @@
- module(
-   name = "rules_bar",
-   compatibility_level = 1,
--  version = "1.2.3",
-+  version = "${version}",
- )`)
-      ).toEqual(true);
+        mocked(fs.writeFileSync).mock.calls.some((call) =>
+          (call[0] as string).startsWith(patchesDir)
+        )
+      ).toEqual(false);
     });
   });
 
