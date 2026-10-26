@@ -818,6 +818,9 @@ describe('createEntryFiles', () => {
     });
 
     test('does not add a patch entry when the release version does not match the archived version', async () => {
+      // The BCR no longer requires the source archive's MODULE.bazel to match
+      // the entry's, so the version is stamped without a patch. See
+      // https://github.com/bazelbuild/bazel-central-registry/pull/11138.
       mockRulesetFiles({
         extractedModuleName: 'rules_bar',
         extractedModuleVersion: '1.2.3',
@@ -960,6 +963,9 @@ describe('createEntryFiles', () => {
 
   describe('patches', () => {
     test('does not create a patch file when the release version does not match the archived version', async () => {
+      // The BCR no longer requires the source archive's MODULE.bazel to match
+      // the entry's, so the version is stamped without a patch. See
+      // https://github.com/bazelbuild/bazel-central-registry/pull/11138.
       mockRulesetFiles({
         extractedModuleName: 'rules_bar',
         extractedModuleVersion: '1.2.3',
