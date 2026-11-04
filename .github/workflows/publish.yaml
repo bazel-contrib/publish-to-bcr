@@ -170,10 +170,22 @@ on:
         description: |
           A Personal Access Token (PAT) used for pushing to a registry fork and opening up a pull request.
           If a deployment environment is used, the secret will be referenced from the environment.
+    outputs:
+      pr_number:
+        description: |
+          The number of the pull request created against the registry, if one was created.
+        value: ${{ jobs.publish.outputs.pr_number }}
+      pr_url:
+        description: |
+          The URL of the pull request created against the registry, if one was created.
+        value: ${{ jobs.publish.outputs.pr_url }}
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    outputs:
+      pr_number: ${{ steps.open-pr.outputs.pr_number }}
+      pr_url: ${{ steps.open-pr.outputs.pr_url }}
     env:
       REGISTRY_BRANCH: ${{ inputs.registry_branch }}
       REGISTRY: ${{ inputs.registry }}
@@ -405,6 +417,7 @@ jobs:
         echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Open pull request
+      id: open-pr
       if: ${{ inputs.open_pull_request }}
       env:
         DRAFT: ${{ inputs.draft }}
@@ -445,8 +458,11 @@ jobs:
 
         if [[ "${RESPONSE_CODE}" == 201 ]]; then
           PULL_REQUEST_URL=$(jq --raw-output .html_url <"${RESPONSE_BODY}")
+          PULL_REQUEST_NUMBER=$(jq --raw-output .number <"${RESPONSE_BODY}")
           echo "Created pull request ${PULL_REQUEST_URL}"
           echo "${PULL_REQUEST_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "pr_number=${PULL_REQUEST_NUMBER}" >> $GITHUB_OUTPUT
+          echo "pr_url=${PULL_REQUEST_URL}" >> $GITHUB_OUTPUT
         elif [[ "${RESPONSE_CODE}" == 422 && "$(jq -r ".errors[0].message" <"${RESPONSE_BODY}")" == *"already exists"* ]]; then
           echo "A pull request for branch ${BRANCH} on ${REGISTRY_FORK} already exists."
         else
