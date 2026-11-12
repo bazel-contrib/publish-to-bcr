@@ -297,6 +297,9 @@ jobs:
     - name: Create attestations template
       if: ${{ inputs.attest }}
       working-directory: this/.bcr
+      env:
+        MODULE_ROOTS_INPUT: ${{ inputs.module_roots }}
+        MODULE_NAMES_CSV: ${{ steps.create-entry.outputs.module-names }}
       # Ideally this would be in its own file, but it's not currently trivial to source files from a
       # reusable workflow in a different repository:
       # https://github.com/orgs/community/discussions/63863
@@ -304,7 +307,7 @@ jobs:
       run: |
         # Determine whether this is a multi-module repo because it affects the names of the
         # uploaded attestaton files.
-        OVERRIDDEN_MODULE_ROOTS=$(echo "${{ inputs.module_roots }}" | xargs)
+        OVERRIDDEN_MODULE_ROOTS=$(echo "${MODULE_ROOTS_INPUT}" | xargs)
         if [ -n "${OVERRIDDEN_MODULE_ROOTS}" ]; then
             read -ra MODULE_ROOTS <<< "${OVERRIDDEN_MODULE_ROOTS}"
         elif [ -f "config.yml" ]; then
@@ -316,7 +319,7 @@ jobs:
         fi
 
         # Read comma-delimited module names into an array
-        IFS=',' read -r -a MODULE_NAMES <<< "${{ steps.create-entry.outputs.module-names }}"
+        IFS=',' read -r -a MODULE_NAMES <<< "${MODULE_NAMES_CSV}"
 
         for i in "${!MODULE_ROOTS[@]}"; do
             MODULE_ROOT="${MODULE_ROOTS[$i]}"
@@ -382,13 +385,16 @@ jobs:
         AUTHOR_EMAIL: ${{ inputs.author_email }}
         COMMITTER_NAME: ${{ inputs.committer_name }}
         COMMITTER_EMAIL: ${{ inputs.committer_email }}
+        MODULE_NAMES: ${{ steps.create-final-entry.outputs.module-names }}
+        SHORT_DESCRIPTION: ${{ steps.create-final-entry.outputs.short-description }}
+        PUBLISH_TOKEN: ${{ secrets.publish_token }}
       run: |
         set -o errexit -o nounset -o pipefail
 
         # Use an authorized remote url to push to the fork
-        git remote add authed-fork https://x-access-token:${{ secrets.publish_token }}@github.com/${REGISTRY_FORK}.git
+        git remote add authed-fork https://x-access-token:${PUBLISH_TOKEN}@github.com/${REGISTRY_FORK}.git
 
-        BRANCH="${{ steps.create-final-entry.outputs.module-names }}-${TAG_NAME}"
+        BRANCH="${MODULE_NAMES}-${TAG_NAME}"
         git checkout -b "${BRANCH}"
         git add .
         git -c "author.name=${AUTHOR_NAME}" \
@@ -396,7 +402,7 @@ jobs:
           -c "committer.name=${COMMITTER_NAME}" \
           -c "committer.email=${COMMITTER_EMAIL}" \
           commit \
-          -m "${{ steps.create-final-entry.outputs.short-description }}"
+          -m "${SHORT_DESCRIPTION}"
         git push --force authed-fork "${BRANCH}"
 
         echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
@@ -405,10 +411,10 @@ jobs:
       id: pr-vars
       env:
         REPOSITORY: ${{ inputs.repository }}
+        TITLE: ${{ steps.create-final-entry.outputs.short-description }}
       run: |
         set -o errexit -o nounset -o pipefail
 
-        TITLE="${{ steps.create-final-entry.outputs.short-description }}"
         echo "title=${TITLE}" >> $GITHUB_OUTPUT
 
         echo "body<<EOF" >> $GITHUB_OUTPUT
@@ -421,17 +427,20 @@ jobs:
       if: ${{ inputs.open_pull_request }}
       env:
         DRAFT: ${{ inputs.draft }}
+        BRANCH: ${{ steps.push-to-fork.outputs.branch }}
+        PR_TITLE: ${{ steps.pr-vars.outputs.title }}
+        PR_BODY: ${{ steps.pr-vars.outputs.body }}
+        PUBLISH_TOKEN: ${{ secrets.publish_token }}
       working-directory: bazel-central-registry
       run: |
         set -o errexit -o nounset -o pipefail
 
         FORK_OWNER="${REGISTRY_FORK%%/*}"
-        BRANCH="${{ steps.push-to-fork.outputs.branch }}"
         MAINTAINER_CAN_MODIFY=true
 
         REQUEST_BODY=$(jq --null-input \
-          --arg title "${{ steps.pr-vars.outputs.title }}" \
-          --arg body "${{ steps.pr-vars.outputs.body }}" \
+          --arg title "${PR_TITLE}" \
+          --arg body "${PR_BODY}" \
           --arg head "${FORK_OWNER}:${BRANCH}" \
           --arg base ${REGISTRY_BRANCH} \
           --argjson draft "${DRAFT}" \
@@ -450,7 +459,7 @@ jobs:
           --write-out "%{http_code}" \
           --request POST \
           --header "Accept: application/vnd.github+json" \
-          --header "Authorization: Bearer ${{ secrets.publish_token }}" \
+          --header "Authorization: Bearer ${PUBLISH_TOKEN}" \
           --header "X-GitHub-Api-Version: 2022-11-28" \
           https://api.github.com/repos/${REGISTRY}/pulls \
           --data "${REQUEST_BODY}"
@@ -476,16 +485,20 @@ jobs:
 
     - name: Open pull request manually
       if: ${{ !inputs.open_pull_request }}
+      env:
+        BRANCH: ${{ steps.push-to-fork.outputs.branch }}
+        PR_TITLE: ${{ steps.pr-vars.outputs.title }}
+        PR_BODY: ${{ steps.pr-vars.outputs.body }}
       run: |
         set -o errexit -o nounset -o pipefail
 
         FORK_OWNER="${REGISTRY_FORK%%/*}"
         FORK_REPO="${REGISTRY_FORK##*/}"
-        TITLE=$(jq --raw-input --raw-output @uri <<<"${{ steps.pr-vars.outputs.title }}")
-        BODY=$(jq --raw-input --raw-output --slurp @uri <<<"${{ steps.pr-vars.outputs.body }}")
+        TITLE=$(jq --raw-input --raw-output @uri <<<"${PR_TITLE}")
+        BODY=$(jq --raw-input --raw-output --slurp @uri <<<"${PR_BODY}")
 
         echo "Skipped creating a pull request because create_pull_request is false."
         echo -e "Create the pull request manually by visiting:"
 
         # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/using-query-parameters-to-create-a-pull-request
-        echo "https://github.com/${REGISTRY}/compare/${REGISTRY_BRANCH}...${FORK_OWNER}:${FORK_REPO}:${{ steps.push-to-fork.outputs.branch }}?title=${TITLE}&body=${BODY}&quick_pull=1"
+        echo "https://github.com/${REGISTRY}/compare/${REGISTRY_BRANCH}...${FORK_OWNER}:${FORK_REPO}:${BRANCH}?title=${TITLE}&body=${BODY}&quick_pull=1"
