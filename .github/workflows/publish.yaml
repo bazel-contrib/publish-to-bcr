@@ -180,9 +180,148 @@ on:
           The URL of the pull request created against the registry, if one was created.
         value: ${{ jobs.publish.outputs.pr_url }}
 jobs:
+  # Generate an initial BCR entry in an unprivileged job without access to OIDC signing tokens,
+  # attestation write permissions, or publish secrets so the generated MODULE.bazel and source.json
+  # files can be attested in an isolated job.
+  generate:
+    if: ${{ inputs.attest }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      attest-subjects-artifact-id: ${{ steps.upload-attest-subjects.outputs.artifact-id }}
+      module-names: ${{ steps.create-entry.outputs.module-names }}
+    steps:
+    - name: Checkout the module repository
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      with:
+        ref: ${{ inputs.templates_ref || inputs.tag_name }}
+        repository: ${{ inputs.repository }}
+        path: this
+        persist-credentials: false
+
+    - name: Checkout BCR
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      with:
+        repository: ${{ inputs.registry }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        path: bazel-central-registry
+        persist-credentials: false
+
+    # Get version from the tag, stripping the specified prefix
+    - name: Write release version
+      env:
+        TAG: ${{ inputs.tag_name }}
+        PREFIX: ${{ inputs.tag_prefix }}
+      run: |
+        VERSION=${TAG#$PREFIX}
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    # Download release artifacts published by the reusable release_ruleset workflow.
+    # https://github.com/bazel-contrib/.github/.github/workflows/release_ruleset.yaml
+    - name: Download release files
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      if: ${{ inputs.download_default_release_artifacts }}
+      # Don't fail if the artifact name cannot be found in case a different release workflow
+      # was used. Computing integrity hashes will fall back to downloading the release archive
+      # from the release itself.
+      continue-on-error: true
+      with:
+        run-id: ${{ inputs.release_artifacts_run_id }}
+        name: release_files
+        path: local_artifacts/release_files
+        github-token: ${{ inputs.release_artifacts_run_id != github.run_id && secrets.GITHUB_TOKEN || '' }}
+
+    # Remove any pre-existing attestations.template.json files so that the following (dummy) entry
+    # creation for generating attestations will succeed without trying to substitute and verify
+    # existing attestations. Any existing templates will be restored when the final entry is created.
+    - name: Remove attestations.template.json
+      working-directory: this/.bcr
+      run: find . -type f -name 'attestations.template.json' -delete
+
+    # Create an initial entry so that we can attest the generated source.json and MODULE.bazel
+    # files. These are needed to solve a chicken and egg problem where the attestations are referenced
+    # by attestations.template.json entry file, which is included in the entry published later on.
+    - name: Create entry
+      id: create-entry
+      # Ideally this should reference the action at the matching SHA with the reusable workflow.
+      # However all the context is the caller repo (like this workflow is inlined)
+      # https://github.com/orgs/community/discussions/18602
+      # https://github.com/orgs/community/discussions/63863
+      uses: bazel-contrib/publish-to-bcr@cebcb91f934347a6cec8a685b60d07378a8f0e2c
+      with:
+        tag: ${{ inputs.tag_name }}
+        module-roots: |
+          ${{ inputs.module_roots }}
+        module-version: ${{ env.VERSION }}
+        local-registry: bazel-central-registry
+        templates-dir: this/.bcr
+        local-artifact-path: local_artifacts/release_files
+
+    - name: Stage attestation subjects
+      id: stage-subjects
+      env:
+        MODULE_NAMES_CSV: ${{ steps.create-entry.outputs.module-names }}
+      run: |
+        set -o errexit -o nounset -o pipefail
+        IFS=',' read -r -a MODULE_NAMES <<<"${MODULE_NAMES_CSV}"
+        for MODULE_NAME in "${MODULE_NAMES[@]}"; do
+          ENTRY_DIR="bazel-central-registry/modules/${MODULE_NAME}/${VERSION}"
+          mkdir -p "attest_subjects/${MODULE_NAME}"
+          cp "${ENTRY_DIR}/MODULE.bazel" "attest_subjects/${MODULE_NAME}/MODULE.bazel"
+          cp "${ENTRY_DIR}/source.json" "attest_subjects/${MODULE_NAME}/source.json"
+        done
+        echo "suffix=$(cat /proc/sys/kernel/random/uuid)" >> "$GITHUB_OUTPUT"
+
+    - name: Upload entry subjects for attestation
+      id: upload-attest-subjects
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: bcr_attest_subjects-${{ steps.stage-subjects.outputs.suffix }}
+        path: attest_subjects/
+        if-no-files-found: error
+
+  # Attest the generated MODULE.bazel and source.json files in a dedicated, isolated job so no
+  # repository checkout, untrusted inputs, or build steps share the runner or OIDC signing identity.
+  # Permissions are inherited from the caller job rather than declared here so callers setting
+  # `attest: false` are not forced by GitHub's static validator to grant `id-token: write` and
+  # `attestations: write`.
+  attest:
+    needs: generate
+    runs-on: ubuntu-latest
+    outputs:
+      attestations-artifact-id: ${{ steps.upload-attestations.outputs.artifact-id }}
+    steps:
+    - name: Download entry files to attest
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        artifact-ids: ${{ needs.generate.outputs.attest-subjects-artifact-id }}
+        path: attest_subjects
+
+    - name: Attest BCR entry files
+      id: attest-entry
+      uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+      with:
+        subject-path: |
+          attest_subjects/*/MODULE.bazel
+          attest_subjects/*/source.json
+
+    - name: Upload attestations
+      id: upload-attestations
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: bcr_entry_attestations-${{ needs.generate.outputs.attest-subjects-artifact-id }}
+        path: ${{ steps.attest-entry.outputs.bundle-path }}
+        if-no-files-found: error
+
   publish:
+    needs: [generate, attest]
+    if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    permissions:
+      contents: write
     outputs:
       pr_number: ${{ steps.open-pr.outputs.pr_number }}
       pr_url: ${{ steps.open-pr.outputs.pr_url }}
@@ -231,7 +370,7 @@ jobs:
         run-id: ${{ inputs.release_artifacts_run_id }}
         name: release_files
         path: local_artifacts/release_files
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ inputs.release_artifacts_run_id != github.run_id && secrets.GITHUB_TOKEN || '' }}
 
     # Download release attestations published by the reusable release_ruleset workflow.
     # https://github.com/bazel-contrib/.github/.github/workflows/release_ruleset.yaml
@@ -246,7 +385,7 @@ jobs:
         run-id: ${{ inputs.release_artifacts_run_id }}
         name: attestations
         path: local_artifacts/release_attestation_files
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ inputs.release_artifacts_run_id != github.run_id && secrets.GITHUB_TOKEN || '' }}
 
     # Remove any pre-existing attestations.template.json files so that the following (dummy) entry
     # creation for generating attestations will succeed without trying to substitute and verify
@@ -256,28 +395,30 @@ jobs:
       working-directory: this/.bcr
       run: find . -type f -name 'attestations.template.json' -delete
 
-    # Create an initial entry so that we can attest the generated source.json and MODULE.bazel
-    # files. These are needed to solve a chicken and egg problem where the attestations are referenced
-    # by attestations.template.json entry file, which is included in the entry published later on.
-    # This entry will be discarded.
-    - name: Create entry
-      id: create-entry
+    - name: Download entry attestations
       if: ${{ inputs.attest }}
-      # Ideally this should reference the action at the matching SHA with the reusable workflow.
-      # However all the context is the caller repo (like this workflow is inlined)
-      # https://github.com/orgs/community/discussions/18602
-      # https://github.com/orgs/community/discussions/63863
-      uses: bazel-contrib/publish-to-bcr@cebcb91f934347a6cec8a685b60d07378a8f0e2c
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        attest: true
-        attestations-dest: attestations
-        tag: ${{ inputs.tag_name }}
-        module-roots: |
-          ${{ inputs.module_roots }}
-        module-version: ${{ env.VERSION }}
-        local-registry: bazel-central-registry
-        templates-dir: this/.bcr
-        local-artifact-path: local_artifacts/release_files
+        artifact-ids: ${{ needs.attest.outputs.attestations-artifact-id }}
+        path: entry_attestations
+
+    - name: Prepare release attestation files
+      if: ${{ inputs.attest }}
+      env:
+        MODULE_NAMES_CSV: ${{ needs.generate.outputs.module-names }}
+      run: |
+        set -o errexit -o nounset -o pipefail
+        IFS=',' read -r -a MODULE_NAMES <<<"${MODULE_NAMES_CSV}"
+        mkdir -p attestations
+        for MODULE_NAME in "${MODULE_NAMES[@]}"; do
+          if [[ "${#MODULE_NAMES[@]}" -gt 1 ]]; then
+            PREFIX="${MODULE_NAME}."
+          else
+            PREFIX=""
+          fi
+          cp entry_attestations/attestation.json "attestations/${PREFIX}MODULE.bazel.intoto.jsonl"
+          cp entry_attestations/attestation.json "attestations/${PREFIX}source.json.intoto.jsonl"
+        done
 
     # Upload the attestations to the release. This will override attestations that
     # were already uploaded on a previous run.
@@ -299,7 +440,7 @@ jobs:
       working-directory: this/.bcr
       env:
         MODULE_ROOTS_INPUT: ${{ inputs.module_roots }}
-        MODULE_NAMES_CSV: ${{ steps.create-entry.outputs.module-names }}
+        MODULE_NAMES_CSV: ${{ needs.generate.outputs.module-names }}
       # Ideally this would be in its own file, but it's not currently trivial to source files from a
       # reusable workflow in a different repository:
       # https://github.com/orgs/community/discussions/63863
@@ -352,13 +493,6 @@ jobs:
         EOF
             fi
         done
-
-    - name: Discard previous entry
-      if: ${{ inputs.attest }}
-      working-directory: bazel-central-registry
-      run: |
-            git checkout -- ./
-            git clean -ffxd
 
     - name: Create final entry
       id: create-final-entry
